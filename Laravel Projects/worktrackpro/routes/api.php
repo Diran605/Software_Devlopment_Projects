@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\DailyPlanController;
 use App\Http\Controllers\Api\V1\ActivityLogController;
+use App\Http\Controllers\Api\V1\DashboardController;
 
 Route::prefix('v1')->group(function () {
     Route::prefix('auth')->group(function () {
@@ -18,6 +19,8 @@ Route::prefix('v1')->group(function () {
     });
 
     Route::middleware('auth:sanctum')->group(function () {
+        Route::get('dashboard/stats/weekly', [DashboardController::class, 'weeklyStats']);
+        
         Route::apiResource('plans', DailyPlanController::class);
         Route::apiResource('logs', ActivityLogController::class);
     });

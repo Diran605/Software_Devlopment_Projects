@@ -15,7 +15,7 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Date</label>
                         <input type="date" v-model="form.date" required 
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 shadow-sm">
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500 shadow-sm">
                     </div>
                 </div>
 
@@ -26,8 +26,8 @@
                         <div class="flex items-center space-x-3">
                             <span class="text-sm text-gray-500">No</span>
                             <button type="button" @click="form.is_planned = !form.is_planned" 
-                                    :class="form.is_planned ? 'bg-indigo-600' : 'bg-gray-200'" 
-                                    class="relative inline-flex shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                    :class="form.is_planned ? 'bg-teal-600' : 'bg-gray-200'" 
+                                    class="relative inline-flex shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
                                 <span aria-hidden="true" :class="form.is_planned ? 'translate-x-5' : 'translate-x-0'" 
                                       class="pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200"></span>
                             </button>
@@ -37,7 +37,7 @@
                     
                     <div v-if="form.is_planned" class="mt-2">
                         <label class="block text-sm font-medium text-gray-700 mb-1">Select Daily Plan</label>
-                        <select v-model="form.daily_plan_id" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 shadow-sm bg-white" required>
+                        <select v-model="form.daily_plan_id" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500 shadow-sm bg-white" required>
                             <option value="" disabled>Select a plan from today...</option>
                             <option v-for="plan in availablePlans" :key="plan.id" :value="plan.id">
                                 {{ plan.task_name }} ({{ plan.project_client || 'No Project' }})
@@ -52,7 +52,7 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Task Name</label>
                     <input type="text" v-model="form.task_name" required 
-                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 shadow-sm"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500 shadow-sm"
                            placeholder="What exactly did you do?">
                 </div>
 
@@ -60,7 +60,7 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Work Type</label>
                         <select v-model="form.work_type" required
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 shadow-sm">
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500 shadow-sm">
                             <option value="direct">Direct (Client Billable)</option>
                             <option value="indirect">Indirect (Admin/Internal)</option>
                             <option value="growth">Growth (Training/RnD)</option>
@@ -69,7 +69,7 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Completion Level</label>
                         <select v-model="form.completion_type" required
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 shadow-sm">
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500 shadow-sm">
                             <option value="complete">Complete</option>
                             <option value="partial">Partial</option>
                             <option value="attempted">Attempted / Blocked</option>
@@ -82,30 +82,30 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
                         <input type="time" v-model="form.start_time"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 shadow-sm">
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500 shadow-sm">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">End Time</label>
                         <input type="time" v-model="form.end_time"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 shadow-sm">
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500 shadow-sm">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Duration (Mins)</label>
                         <input type="number" min="1" v-model="form.duration_minutes" :placeholder="calcDuration"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 shadow-sm">
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500 shadow-sm">
                     </div>
                 </div>
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Output / Results <span class="text-gray-400 font-normal">(Optional)</span></label>
                     <textarea v-model="form.output" rows="2" 
-                              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 shadow-sm"
+                              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500 shadow-sm"
                               placeholder="Briefly describe what was officially delivered or accomplished..."></textarea>
                 </div>
 
                 <div class="px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse border-t border-gray-100 mt-6 -mx-4 -mb-4 bg-gray-50 rounded-b-2xl">
                     <button type="submit" :disabled="loading"
-                            class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-70">
+                            class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-teal-600 text-base font-medium text-white hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-70">
                         {{ loading ? 'Saving...' : 'Save Activity Log' }}
                     </button>
                     <button type="button" @click="$emit('close')"
@@ -246,3 +246,4 @@ const submitForm = async () => {
     }
 };
 </script>
+

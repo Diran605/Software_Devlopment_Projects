@@ -6,7 +6,7 @@
                 <p class="text-sm text-gray-500 mt-1">Track exactly what you spent your time on today.</p>
             </div>
             <div class="mt-4 sm:mt-0">
-                <button @click="openModal()" class="inline-flex items-center justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+                <button @click="openModal()" class="inline-flex items-center justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-teal-600 text-sm font-medium text-white hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-colors">
                     <svg class="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                     </svg>
@@ -18,11 +18,11 @@
         <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-6 flex flex-wrap gap-4 items-end">
             <div>
                 <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Filter by Date</label>
-                <input type="date" v-model="filters.date" @change="fetchLogs" class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-indigo-500 focus:border-indigo-500">
+                <input type="date" v-model="filters.date" @change="fetchLogs" class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-teal-500 focus:border-teal-500">
             </div>
             <div>
                 <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Work Type</label>
-                <select v-model="filters.work_type" @change="fetchLogs" class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white">
+                <select v-model="filters.work_type" @change="fetchLogs" class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-teal-500 focus:border-teal-500 bg-white">
                     <option value="">All Types</option>
                     <option value="direct">Direct</option>
                     <option value="indirect">Indirect</option>
@@ -46,7 +46,7 @@
                 <h3 class="mt-2 text-sm font-medium text-gray-900">No activity logged yet</h3>
                 <p class="mt-1 text-sm text-gray-500">Log your first activity to start tracking time.</p>
                 <div class="mt-6">
-                    <button @click="openModal()" type="button" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-lg text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none">
+                    <button @click="openModal()" type="button" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-lg text-teal-700 bg-teal-100 hover:bg-teal-200 focus:outline-none">
                         New Activity
                     </button>
                 </div>
@@ -80,16 +80,16 @@
                         </div>
                         
                         <div class="flex items-center gap-4">
-                            <div class="text-right bg-indigo-50 p-3 rounded-xl border border-indigo-100">
-                                <div class="text-lg font-bold text-indigo-700">{{ log.duration_minutes }} <span class="text-xs font-normal text-indigo-500">mins</span></div>
-                                <div v-if="log.start_time && log.end_time" class="text-xs text-indigo-500">
+                            <div class="text-right bg-teal-50 p-3 rounded-xl border border-teal-100">
+                                <div class="text-lg font-bold text-teal-700">{{ log.duration_minutes }} <span class="text-xs font-normal text-teal-500">mins</span></div>
+                                <div v-if="log.start_time && log.end_time" class="text-xs text-teal-500">
                                     {{ formatTime(log.start_time) }} - {{ formatTime(log.end_time) }}
                                 </div>
                             </div>
                             
                             <!-- Actions -->
                             <div class="flex items-center ml-4 gap-2 border-l border-gray-200 pl-4">
-                                <button @click="openModal(log)" class="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" title="Edit">
+                                <button @click="openModal(log)" class="p-1.5 text-gray-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors" title="Edit">
                                     <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
                                 </button>
                                 <button @click="deleteLog(log.id)" class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Delete">
@@ -225,3 +225,4 @@ onMounted(() => {
     fetchLogs();
 });
 </script>
+

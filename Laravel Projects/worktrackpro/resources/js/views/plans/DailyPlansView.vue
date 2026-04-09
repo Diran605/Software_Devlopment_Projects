@@ -6,7 +6,7 @@
                 <p class="text-sm text-gray-500 mt-1">Manage what you are working on to align with your organization's goals.</p>
             </div>
             <div class="mt-4 sm:mt-0">
-                <button @click.prevent.stop="openModal()" class="inline-flex items-center justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+                <button @click.prevent.stop="openModal()" class="inline-flex items-center justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-teal-600 text-sm font-medium text-white hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-colors">
                     <svg class="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                     </svg>
@@ -19,7 +19,7 @@
         <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-6 flex gap-4 items-end">
             <div>
                 <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Filter by Date</label>
-                <input type="date" v-model="filters.date" @change="fetchPlans" class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-indigo-500 focus:border-indigo-500">
+                <input type="date" v-model="filters.date" @change="fetchPlans" class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-teal-500 focus:border-teal-500">
             </div>
             <button v-if="filters.date" @click="clearFilters" class="text-sm text-gray-500 hover:text-gray-700 py-1.5">
                 Clear filter
@@ -39,7 +39,7 @@
                 <h3 class="mt-2 text-sm font-medium text-gray-900">No plans found</h3>
                 <p class="mt-1 text-sm text-gray-500">Get started by creating a new task.</p>
                 <div class="mt-6">
-                    <button @click.prevent.stop="openModal()" type="button" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-lg text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none">
+                    <button @click.prevent.stop="openModal()" type="button" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-lg text-teal-700 bg-teal-100 hover:bg-teal-200 focus:outline-none">
                     <svg class="-ml-1 mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                     </svg>
@@ -78,7 +78,7 @@
                             
                             <!-- Actions -->
                             <div class="flex items-center ml-4 gap-2">
-                                <button @click="openModal(plan)" class="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" title="Edit">
+                                <button @click="openModal(plan)" class="p-1.5 text-gray-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors" title="Edit">
                                     <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
                                 </button>
                                 <button @click="deletePlan(plan.id)" class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Delete">
@@ -208,3 +208,4 @@ onMounted(() => {
     fetchPlans();
 });
 </script>
+

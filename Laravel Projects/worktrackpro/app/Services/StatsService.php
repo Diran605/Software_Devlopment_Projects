@@ -1,0 +1,131 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\User;
+use App\Models\DailyPlan;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
+
+class StatsService
+{
+    /**
+     * Get aggregate statistics for a specific user for a given week.
+     * Uses raw DB queries to avoid Eloquent enum casting silently dropping rows.
+     */
+    public function getPersonalWeeklyStats(User $user, Carbon $weekStart): array
+    {
+        $weekEnd = $weekStart->copy()->endOfWeek();
+        $startDate = $weekStart->format('Y-m-d');
+        $endDate = $weekEnd->format('Y-m-d');
+
+        // Time spent by work_type — RAW query to bypass enum casts
+        $timeByWorkType = DB::table('activity_logs')
+            ->where('user_id', $user->id)
+            ->whereNull('deleted_at')
+            ->whereBetween('date', [$startDate, $endDate])
+            ->select('work_type', DB::raw('SUM(duration_minutes) as total_minutes'))
+            ->groupBy('work_type')
+            ->pluck('total_minutes', 'work_type')
+            ->toArray();
+
+        // Tasks Planned vs Completed
+        $plannedCount = DailyPlan::where('user_id', $user->id)
+            ->whereBetween('date', [$startDate, $endDate])
+            ->count();
+
+        $completedPlannedCount = DB::table('activity_logs')
+            ->where('user_id', $user->id)
+            ->whereNull('deleted_at')
+            ->whereBetween('date', [$startDate, $endDate])
+            ->where('is_planned', true)
+            ->where('completion_type', 'complete')
+            ->whereNotNull('daily_plan_id')
+            ->distinct('daily_plan_id')
+            ->count('daily_plan_id');
+
+        return [
+            'total_minutes' => array_sum($timeByWorkType),
+            'work_breakdown' => [
+                'direct' => $timeByWorkType['direct'] ?? 0,
+                'indirect' => $timeByWorkType['indirect'] ?? 0,
+                'growth' => $timeByWorkType['growth'] ?? 0,
+            ],
+            'planner_stats' => [
+                'total_planned' => $plannedCount,
+                'completed_planned' => $completedPlannedCount,
+                'execution_rate' => $plannedCount > 0 ? round(($completedPlannedCount / $plannedCount) * 100, 1) : 0,
+            ],
+        ];
+    }
+
+    /**
+     * Get aggregate statistics for a department (Admins).
+     */
+    public function getDepartmentWeeklyStats(User $admin, Carbon $weekStart): array
+    {
+        if (!$admin->department_id) {
+            return [];
+        }
+
+        $weekEnd = $weekStart->copy()->endOfWeek();
+        $startDate = $weekStart->format('Y-m-d');
+        $endDate = $weekEnd->format('Y-m-d');
+
+        $userIds = User::where('department_id', $admin->department_id)
+                       ->where('is_active', true)
+                       ->pluck('id');
+
+        $timeByWorkType = DB::table('activity_logs')
+            ->whereIn('user_id', $userIds)
+            ->whereNull('deleted_at')
+            ->whereBetween('date', [$startDate, $endDate])
+            ->select('work_type', DB::raw('SUM(duration_minutes) as total_minutes'))
+            ->groupBy('work_type')
+            ->pluck('total_minutes', 'work_type')
+            ->toArray();
+
+        return [
+            'total_team_minutes' => array_sum($timeByWorkType),
+            'active_members' => $userIds->count(),
+            'work_breakdown' => [
+                'direct' => $timeByWorkType['direct'] ?? 0,
+                'indirect' => $timeByWorkType['indirect'] ?? 0,
+                'growth' => $timeByWorkType['growth'] ?? 0,
+            ],
+        ];
+    }
+
+    /**
+     * Get full organisation statistics (Super Admins).
+     */
+    public function getOrganisationWeeklyStats(User $superAdmin, Carbon $weekStart): array
+    {
+        $weekEnd = $weekStart->copy()->endOfWeek();
+        $startDate = $weekStart->format('Y-m-d');
+        $endDate = $weekEnd->format('Y-m-d');
+
+        $totalUsers = User::where('organisation_id', $superAdmin->organisation_id)
+                          ->where('is_active', true)
+                          ->count();
+
+        $timeByWorkType = DB::table('activity_logs')
+            ->where('organisation_id', $superAdmin->organisation_id)
+            ->whereNull('deleted_at')
+            ->whereBetween('date', [$startDate, $endDate])
+            ->select('work_type', DB::raw('SUM(duration_minutes) as total_minutes'))
+            ->groupBy('work_type')
+            ->pluck('total_minutes', 'work_type')
+            ->toArray();
+
+        return [
+            'total_org_minutes' => array_sum($timeByWorkType),
+            'total_active_personnel' => $totalUsers,
+            'work_breakdown' => [
+                'direct' => $timeByWorkType['direct'] ?? 0,
+                'indirect' => $timeByWorkType['indirect'] ?? 0,
+                'growth' => $timeByWorkType['growth'] ?? 0,
+            ],
+        ];
+    }
+}
