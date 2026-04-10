@@ -26,7 +26,7 @@ class AuditLogResource extends Resource
     
     public static function canViewAny(): bool
     {
-        return auth()->user()?->hasRole(['super_admin', 'admin']) ?? false;
+        return auth()->user()?->hasPermissionTo('view_audit_logs') ?? false;
     }
     
     public static function canCreate(): bool

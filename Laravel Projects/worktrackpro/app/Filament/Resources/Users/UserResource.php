@@ -20,7 +20,14 @@ class UserResource extends Resource
 {
     protected static ?string $model = User::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUsers;
+
+    protected static \UnitEnum|string|null $navigationGroup = 'Management';
+
+    public static function canViewAny(): bool
+    {
+        return auth()->user()?->hasPermissionTo('manage_users') ?? false;
+    }
 
     public static function form(Schema $schema): Schema
     {
@@ -61,7 +68,7 @@ class UserResource extends Resource
             return $query->where('organisation_id', $user->organisation_id);
         }
         
-        if ($user->hasRole('admin')) {
+        if ($user->hasPermissionTo('manage_users') && !$user->hasRole('super_admin')) {
             return $query->where('organisation_id', $user->organisation_id)
                          ->where('department_id', $user->department_id);
         }

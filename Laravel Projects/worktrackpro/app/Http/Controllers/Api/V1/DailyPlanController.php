@@ -20,6 +20,7 @@ class DailyPlanController extends Controller
     public function index(Request $request): AnonymousResourceCollection
     {
         $query = DailyPlan::where('user_id', $request->user()->id)
+            ->with(['assignedByUser:id,name', 'projectClient:id,name'])
             ->orderBy('date', 'desc')
             ->orderBy('created_at', 'desc');
 
@@ -56,5 +57,28 @@ class DailyPlanController extends Controller
         $plan->delete();
 
         return response()->noContent();
+    }
+
+    /**
+     * Mark a plan as complete.
+     */
+    public function complete(DailyPlan $plan)
+    {
+        $this->authorize('update', $plan);
+        
+        $plan->update(['status' => 'done']);
+
+        if ($plan->assigned_by && $plan->assigned_by !== $plan->user_id) {
+            $plan->assignedByUser?->notify(new \App\Notifications\TaskCompletedNotification($plan));
+        } else if ($plan->user) {
+            $admin = \App\Models\User::where('department_id', $plan->user->department_id)
+                ->whereHas('roles', fn ($q) => $q->where('name', 'admin'))
+                ->first();
+            if ($admin) {
+                $admin->notify(new \App\Notifications\TaskCompletedNotification($plan));
+            }
+        }
+
+        return new DailyPlanResource($plan->fresh());
     }
 }

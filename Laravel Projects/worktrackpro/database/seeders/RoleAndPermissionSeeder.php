@@ -15,45 +15,56 @@ class RoleAndPermissionSeeder extends Seeder
 
         // Create permissions
         $permissions = [
-            'manage-users',
-            'manage-roles',
-            'manage-system',
-            'view-all-data',
-            'view-team-data',
-            'export-team-data',
-            'view-own-data',
-            'manage-own-work',
+            // User & team management
+            'manage_users',
+            'manage_departments',
+            
+            // Configuration
+            'manage_work_types',
+            'manage_project_clients',
+            'manage_roles',
+            
+            // Task management
+            'assign_plans',
+            
+            // Viewing & reporting
+            'view_team_stats',
+            'export_reports',
+            'view_audit_logs',
+            
+            // Base (all users)
+            'view_own_data',
+            'manage_own_work',
         ];
 
         foreach ($permissions as $permission) {
-            Permission::create(['name' => $permission]);
+            Permission::firstOrCreate(['name' => $permission]);
         }
 
-        // Create super_admin role and assign permissions
-        $superAdminRole = Role::create(['name' => 'super_admin']);
-        $superAdminRole->givePermissionTo([
-            'manage-users',
-            'manage-roles',
-            'view-all-data',
-            'manage-system',
-            'view-own-data',
-            'manage-own-work',
+        // Super Admin — gets ALL permissions
+        $superAdminRole = Role::firstOrCreate(['name' => 'super_admin']);
+        $superAdminRole->syncPermissions($permissions);
+
+        // Default Admin — gets management permissions (but not manage_roles)
+        $adminRole = Role::firstOrCreate(['name' => 'admin']);
+        $adminRole->syncPermissions([
+            'manage_users',
+            'manage_departments',
+            'manage_work_types',
+            'manage_project_clients',
+            'assign_plans',
+            'view_team_stats',
+            'export_reports',
+            'view_audit_logs',
+            'view_own_data',
+            'manage_own_work',
         ]);
 
-        // Create admin role and assign permissions
-        $adminRole = Role::create(['name' => 'admin']);
-        $adminRole->givePermissionTo([
-            'view-team-data',
-            'export-team-data',
-            'view-own-data',
-            'manage-own-work',
-        ]);
-
-        // Create worker role and assign permissions
-        $workerRole = Role::create(['name' => 'worker']);
-        $workerRole->givePermissionTo([
-            'view-own-data',
-            'manage-own-work', // Workers manage their own plans and logs
+        // Worker — frontend only, basic permissions
+        $workerRole = Role::firstOrCreate(['name' => 'worker']);
+        $workerRole->syncPermissions([
+            'view_own_data',
+            'manage_own_work',
         ]);
     }
 }

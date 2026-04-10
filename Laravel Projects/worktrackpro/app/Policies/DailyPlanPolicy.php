@@ -44,7 +44,7 @@ class DailyPlanPolicy
      */
     public function create(User $user): bool
     {
-        return $user->hasPermissionTo('manage-own-work');
+        return $user->hasPermissionTo('assign_plans') || $user->hasPermissionTo('manage_own_work');
     }
 
     /**

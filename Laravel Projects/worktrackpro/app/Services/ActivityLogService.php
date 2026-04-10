@@ -53,7 +53,12 @@ class ActivityLogService
             $data['duration_minutes'] = $start->diffInMinutes($end);
         }
 
-        return ActivityLog::create($data);
+        $log = ActivityLog::create($data);
+
+        // Sync linked plan status based on completion_type
+        $this->syncPlanStatus($log);
+
+        return $log;
     }
 
     /**
@@ -87,6 +92,41 @@ class ActivityLogService
         }
 
         $log->update($data);
+
+        // Sync linked plan status based on completion_type
+        $this->syncPlanStatus($log);
+
         return $log;
+    }
+
+    /**
+     * Sync the linked DailyPlan's status based on the Activity Log's completion_type.
+     * complete → plan becomes done
+     * partial/attempted → plan stays/reverts to pending
+     */
+    private function syncPlanStatus(ActivityLog $log): void
+    {
+        if (!$log->daily_plan_id) {
+            return;
+        }
+
+        $plan = DailyPlan::find($log->daily_plan_id);
+        if (!$plan) {
+            return;
+        }
+
+        $completionType = $log->getRawOriginal('completion_type') ?? $log->completion_type;
+        // Handle if it's an enum object
+        if (is_object($completionType) && method_exists($completionType, 'value')) {
+            $completionType = $completionType->value;
+        }
+        $completionType = (string) $completionType;
+
+        if ($completionType === 'complete') {
+            $plan->update(['status' => 'done']);
+        } else {
+            // partial or attempted → revert to pending
+            $plan->update(['status' => 'pending']);
+        }
     }
 }

@@ -17,10 +17,12 @@ class DailyPlan extends Model
 
     protected $fillable = [
         'user_id',
+        'assigned_by',
         'organisation_id',
         'date',
         'task_name',
         'project_client',
+        'project_client_id',
         'priority',
         'expected_duration_minutes',
         'notes',
@@ -46,5 +48,15 @@ class DailyPlan extends Model
     public function activityLogs(): HasMany
     {
         return $this->hasMany(ActivityLog::class);
+    }
+
+    public function assignedByUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assigned_by');
+    }
+
+    public function projectClient(): BelongsTo
+    {
+        return $this->belongsTo(ProjectClient::class);
     }
 }

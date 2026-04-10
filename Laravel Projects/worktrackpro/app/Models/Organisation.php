@@ -17,6 +17,10 @@ class Organisation extends Model
         'name',
         'slug',
         'is_active',
+        'primary_color',
+        'secondary_color',
+        'logo',
+        'letterhead',
     ];
 
     protected $casts = [
@@ -41,5 +45,15 @@ class Organisation extends Model
     public function activityLogs(): HasMany
     {
         return $this->hasMany(ActivityLog::class);
+    }
+
+    public function workTypes(): HasMany
+    {
+        return $this->hasMany(WorkType::class);
+    }
+
+    public function projectClients(): HasMany
+    {
+        return $this->hasMany(ProjectClient::class);
     }
 }

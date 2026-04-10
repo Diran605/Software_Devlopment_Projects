@@ -12,9 +12,12 @@ class ExportService
      */
     public function exportToPdf(string $viewPath, array $data, string $filename = 'export.pdf')
     {
+        $this->injectBranding($data);
         $pdf = Pdf::loadView($viewPath, $data);
         
-        return $pdf->download($filename);
+        return response()->streamDownload(function () use ($pdf) {
+            echo $pdf->output();
+        }, $filename);
     }
 
     /**
@@ -22,8 +25,23 @@ class ExportService
      */
     public function previewPdf(string $viewPath, array $data)
     {
+        $this->injectBranding($data);
         $pdf = Pdf::loadView($viewPath, $data);
         
         return $pdf->stream();
+    }
+
+    /**
+     * Inject organisation branding into the view data for standard letterhead support.
+     */
+    private function injectBranding(array &$data): void
+    {
+        $user = auth()->user();
+        if ($user && $user->organisation_id) {
+            $user->loadMissing('organisation');
+            if (!isset($data['organisation'])) {
+                $data['organisation'] = $user->organisation;
+            }
+        }
     }
 }

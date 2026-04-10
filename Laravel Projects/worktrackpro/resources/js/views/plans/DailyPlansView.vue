@@ -63,6 +63,9 @@
                         <div class="flex items-center gap-4">
                             <!-- Badges -->
                             <div class="flex flex-col items-end gap-2">
+                                <span v-if="plan.assigned_by && plan.assigned_by.name" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-700 uppercase tracking-wider shadow-sm">
+                                    Assigned by {{ plan.assigned_by.name }}
+                                </span>
                                 <span :class="getStatusBadgeClass(plan.status.color)" class="px-2.5 py-0.5 rounded-full text-xs font-medium">
                                     {{ plan.status.label }}
                                 </span>
@@ -78,6 +81,9 @@
                             
                             <!-- Actions -->
                             <div class="flex items-center ml-4 gap-2">
+                                <button v-if="plan.status?.value !== 'done'" @click="markAsDone(plan.id)" class="p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors" title="Mark as Done">
+                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                </button>
                                 <button @click="openModal(plan)" class="p-1.5 text-gray-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors" title="Edit">
                                     <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
                                 </button>
@@ -166,6 +172,15 @@ const deletePlan = async (id) => {
     if(confirm('Are you sure you want to delete this plan?')) {
         await api.delete(`/plans/${id}`);
         fetchPlans(pagination.current);
+    }
+};
+
+const markAsDone = async (id) => {
+    try {
+        await api.patch(`/plans/${id}/complete`);
+        fetchPlans(pagination.current);
+    } catch (e) {
+        console.error("Failed to mark as done", e);
     }
 };
 

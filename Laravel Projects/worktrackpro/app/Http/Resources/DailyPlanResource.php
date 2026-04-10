@@ -28,6 +28,12 @@ class DailyPlanResource extends JsonResource
             ],
             'created_at' => $this->created_at->toIso8601String(),
             'updated_at' => $this->updated_at->toIso8601String(),
+            'assigned_by' => $this->whenLoaded('assignedByUser', function() {
+                return [
+                    'id' => $this->assignedByUser->id,
+                    'name' => $this->assignedByUser->name,
+                ];
+            }),
         ];
     }
 }

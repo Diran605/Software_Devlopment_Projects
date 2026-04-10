@@ -1,14 +1,17 @@
 <template>
-    <div class="h-screen w-full flex bg-gray-50 selection:bg-teal-500 selection:text-white overflow-hidden">
+    <div class="h-screen w-full flex bg-gray-50 selection:bg-teal-500 selection:text-white overflow-hidden" :style="orgColorVars">
         
         <!-- Sidebar Navigation -->
         <aside v-if="authStore.isAuthenticated" class="w-64 shrink-0 bg-white border-r border-gray-200 flex-col h-full shadow-sm relative z-20 transition-all duration-300 hidden md:flex">
-            <!-- Brand icon -->
+            <!-- Brand / Org Name -->
             <div class="h-16 flex items-center px-6 border-b border-gray-100 shrink-0">
-                <div class="w-8 h-8 bg-teal-600 rounded-lg flex items-center justify-center text-white font-bold shadow-sm mr-3">
-                    W
+                <div class="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold shadow-sm mr-3" :style="{ backgroundColor: orgPrimaryColor }">
+                    {{ orgInitial }}
                 </div>
-                <span class="text-xl font-bold text-gray-900 tracking-tight">WorkTrack <span class="text-teal-600">Pro</span></span>
+                <div class="flex flex-col">
+                    <span class="text-sm font-bold text-gray-900 tracking-tight leading-tight">{{ orgName }}</span>
+                    <span class="text-xs text-gray-400 leading-tight">WorkTrack Pro</span>
+                </div>
             </div>
             
             <!-- Navigation Links -->
@@ -55,18 +58,37 @@
                         Command Center
                     </a>
                 </div>
+
+                <!-- Settings -->
+                <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mt-6 mb-4 px-3">Account</div>
+                <router-link :to="{ name: 'Settings' }" active-class="bg-gray-100 text-gray-900 font-semibold" class="text-gray-600 hover:bg-gray-50 hover:text-gray-900 group flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-all">
+                    <svg class="w-5 h-5 mr-3 shrink-0 transition-colors" :class="$route.name === 'Settings' ? 'text-gray-700' : 'text-gray-400 group-hover:text-gray-500'" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                    Settings
+                </router-link>
             </div>
 
             <!-- Bottom User Profile Area -->
             <div class="shrink-0 p-4 border-t border-gray-100 flex items-center group">
-                <div class="w-10 h-10 rounded-full bg-teal-100 flex items-center justify-center text-teal-700 font-bold border border-teal-200">
+                <div class="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold border" :style="{ backgroundColor: orgPrimaryColor, borderColor: orgPrimaryColor + '40' }">
                     {{ authStore.user?.name?.charAt(0) || 'U' }}
                 </div>
                 <div class="ml-3 flex-1 overflow-hidden">
                     <p class="text-sm font-bold text-gray-900 truncate">{{ authStore.user?.name || 'User' }}</p>
-                    <p class="text-xs text-gray-500 truncate capitalize">{{ authStore.user?.roles?.[0]?.name?.replace('_', ' ') || 'Worker' }}</p>
+                    <p class="text-xs text-gray-500 truncate capitalize">{{ authStore.user?.roles?.[0]?.replace('_', ' ') || 'Worker' }}</p>
                 </div>
-                <button @click="handleLogout" class="ml-2 p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Log out">
+                
+                <!-- Notification Bell -->
+                <button class="ml-1 p-2 text-gray-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-colors relative" title="Notifications">
+                    <svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                    </svg>
+                    <span v-if="unreadCount > 0" class="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 border-2 border-white rounded-full"></span>
+                </button>
+
+                <button @click="handleLogout" class="ml-1 p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Log out">
                     <svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                     </svg>
@@ -77,15 +99,17 @@
         <!-- Mobile Header (Visible only on small screens) -->
         <header v-if="authStore.isAuthenticated" class="md:hidden bg-white border-b border-gray-200 w-full h-16 flex items-center justify-between px-4 fixed top-0 z-30">
             <div class="flex items-center">
-                <div class="w-8 h-8 bg-teal-600 rounded-lg flex items-center justify-center text-white font-bold shadow-sm mr-3">W</div>
-                <span class="text-lg font-bold text-gray-900 tracking-tight">WorkTrack</span>
+                <div class="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold shadow-sm mr-3" :style="{ backgroundColor: orgPrimaryColor }">{{ orgInitial }}</div>
+                <span class="text-lg font-bold text-gray-900 tracking-tight">{{ orgName }}</span>
             </div>
-            <!-- Standard top menu for mobile just wrapping around -->
              <nav class="flex items-center space-x-4">
                 <router-link :to="{ name: 'Dashboard' }" class="text-gray-500 hover:text-teal-600 font-medium">Dash</router-link>
                 <router-link :to="{ name: 'DailyPlans' }" class="text-gray-500 hover:text-teal-600 font-medium">Plans</router-link>
                 <router-link :to="{ name: 'ActivityLogs' }" class="text-gray-500 hover:text-teal-600 font-medium">Logs</router-link>
                 <router-link v-if="isAdmin" :to="{ name: 'Team' }" class="text-gray-500 hover:text-blue-600 font-medium">Team</router-link>
+                <router-link :to="{ name: 'Settings' }" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                </router-link>
                 <button @click="handleLogout" class="text-gray-400 hover:text-red-500 transition-colors ml-2">
                     <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -105,18 +129,45 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, ref, onMounted } from 'vue';
 import { useAuthStore } from './stores/auth';
 import { useRoute, useRouter } from 'vue-router';
+import api from './lib/axios';
 
 const authStore = useAuthStore();
 const router = useRouter();
 const route = useRoute();
 
+const unreadCount = ref(0);
+
 const isAdmin = computed(() => {
     const roles = authStore.user?.roles || [];
-    return roles.includes('super_admin') || roles.includes('admin') || 
-           (Array.isArray(roles) && roles.some(r => r.name === 'super_admin' || r.name === 'admin' || r === 'super_admin' || r === 'admin'));
+    const perms = authStore.user?.permissions || [];
+    return roles.includes('super_admin') || perms.includes('manage_users') || perms.includes('view_team_stats');
+});
+
+const orgName = computed(() => authStore.user?.organisation?.name || 'WorkTrack Pro');
+const orgInitial = computed(() => orgName.value.charAt(0).toUpperCase());
+const orgPrimaryColor = computed(() => authStore.user?.organisation?.primary_color || '#0d9488');
+
+const orgColorVars = computed(() => ({
+    '--org-primary': orgPrimaryColor.value,
+    '--org-secondary': authStore.user?.organisation?.secondary_color || '#6366f1',
+}));
+
+const fetchNotifications = async () => {
+    if (!authStore.isAuthenticated) return;
+    try {
+        const response = await api.get('/notifications');
+        unreadCount.value = response.data.unread_count;
+    } catch (e) {
+        console.error('Failed to fetch notifications', e);
+    }
+};
+
+onMounted(() => {
+    fetchNotifications();
+    setInterval(fetchNotifications, 60000); // Check every minute
 });
 
 const handleLogout = async () => {

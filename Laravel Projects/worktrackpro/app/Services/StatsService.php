@@ -128,4 +128,31 @@ class StatsService
             ],
         ];
     }
+
+    /**
+     * Get per-worker productivity statistics for PDF reports (Group J).
+     */
+    public function getWorkerProductivityReport(User $admin, Carbon $start, Carbon $end): array
+    {
+        $userIds = $admin->hasRole('super_admin') 
+            ? User::where('organisation_id', $admin->organisation_id)->pluck('id')
+            : User::where('department_id', $admin->department_id)->pluck('id');
+
+        $users = User::with('department')->whereIn('id', $userIds)->orderBy('name')->get();
+        $report = [];
+
+        foreach ($users as $user) {
+            $stats = $this->getPersonalWeeklyStats($user, $start);
+            $report[] = [
+                'user' => $user->name,
+                'department' => $user->department?->name ?? 'None',
+                'total_hours' => round($stats['total_minutes'] / 60, 2),
+                'direct_pct' => $stats['total_minutes'] > 0 ? round(($stats['work_breakdown']['direct'] / $stats['total_minutes']) * 100) : 0,
+                'execution_rate' => $stats['planner_stats']['execution_rate'],
+                'total_planned' => $stats['planner_stats']['total_planned']
+            ];
+        }
+
+        return $report;
+    }
 }

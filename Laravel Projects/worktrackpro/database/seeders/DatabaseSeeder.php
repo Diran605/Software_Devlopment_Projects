@@ -5,6 +5,8 @@ namespace Database\Seeders;
 use App\Models\User;
 use App\Models\Organisation;
 use App\Models\Department;
+use App\Models\WorkType;
+use App\Models\ProjectClient;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -16,14 +18,46 @@ class DatabaseSeeder extends Seeder
         // 1. Seed Roles and Permissions
         $this->call(RoleAndPermissionSeeder::class);
 
-        // 2. Default Organisation
+        // 2. Default Organisation with branding
         $org = Organisation::create([
             'name' => 'WorkTrack Demo Org',
             'slug' => 'worktrack-demo',
             'is_active' => true,
+            'primary_color' => '#0d9488',
+            'secondary_color' => '#6366f1',
         ]);
 
-        // 3. Departments
+        // 3. Seed Default Work Types for this org
+        $workTypes = [
+            ['name' => 'Direct', 'color' => 'success'],
+            ['name' => 'Indirect', 'color' => 'warning'],
+            ['name' => 'Growth', 'color' => 'info'],
+        ];
+        foreach ($workTypes as $wt) {
+            WorkType::create([
+                'organisation_id' => $org->id,
+                'name' => $wt['name'],
+                'color' => $wt['color'],
+                'is_active' => true,
+            ]);
+        }
+
+        // 4. Seed Default Project/Clients for this org
+        $clients = [
+            ['name' => 'Internal', 'description' => 'Internal company tasks'],
+            ['name' => 'Acme Corp', 'description' => 'Acme Corporation projects'],
+            ['name' => 'TechStart Inc', 'description' => 'TechStart startup project'],
+        ];
+        foreach ($clients as $client) {
+            ProjectClient::create([
+                'organisation_id' => $org->id,
+                'name' => $client['name'],
+                'description' => $client['description'],
+                'is_active' => true,
+            ]);
+        }
+
+        // 5. Departments
         $engineering = Department::create([
             'organisation_id' => $org->id,
             'name' => 'Engineering',
@@ -36,10 +70,10 @@ class DatabaseSeeder extends Seeder
             'description' => 'Product design team',
         ]);
 
-        // 4. Super Admin
+        // 6. Super Admin
         $superAdmin = User::create([
             'name' => 'Super Admin',
-            'email' => 'superadmin@worktrackpro.test',
+            'email' => 'tienojunior84@gmail.com',
             'password' => Hash::make('password'),
             'organisation_id' => $org->id,
             'department_id' => null, // Cross-department
@@ -49,7 +83,7 @@ class DatabaseSeeder extends Seeder
         ]);
         $superAdmin->assignRole('super_admin');
 
-        // 5. Admins
+        // 7. Admins
         $engAdmin = User::create([
             'name' => 'Eng Manager',
             'email' => 'admin.eng@worktrackpro.test',
@@ -75,7 +109,7 @@ class DatabaseSeeder extends Seeder
         ]);
         $designAdmin->assignRole('admin');
 
-        // 6. Workers
+        // 8. Workers
         $workers = [
             ['name' => 'Alice Dev', 'email' => 'worker1@worktrackpro.test', 'department_id' => $engineering->id],
             ['name' => 'Bob Dev', 'email' => 'worker2@worktrackpro.test', 'department_id' => $engineering->id],

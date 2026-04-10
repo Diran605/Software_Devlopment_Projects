@@ -20,7 +20,14 @@ class DepartmentResource extends Resource
 {
     protected static ?string $model = Department::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBuildingOffice;
+
+    protected static \UnitEnum|string|null $navigationGroup = 'Management';
+
+    public static function canViewAny(): bool
+    {
+        return auth()->user()?->hasPermissionTo('manage_departments') ?? false;
+    }
 
     public static function form(Schema $schema): Schema
     {

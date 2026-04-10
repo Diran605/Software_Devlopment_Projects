@@ -22,6 +22,9 @@ class UserResource extends JsonResource
                     'id' => $this->organisation->id,
                     'name' => $this->organisation->name,
                     'slug' => $this->organisation->slug,
+                    'primary_color' => $this->organisation->primary_color,
+                    'secondary_color' => $this->organisation->secondary_color,
+                    'logo' => $this->organisation->logo ? asset('storage/' . $this->organisation->logo) : null,
                 ];
             }),
             'department' => $this->whenLoaded('department', function() {

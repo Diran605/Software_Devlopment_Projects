@@ -39,10 +39,21 @@
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Project / Client <span class="text-gray-400 font-normal">(Optional)</span></label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Project / Client</label>
+                    <select v-model="form.project_client_id"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500 shadow-sm">
+                        <option value="">Select a project/client...</option>
+                        <option v-for="pc in projectClients" :key="pc.id" :value="pc.id">
+                            {{ pc.name }}
+                        </option>
+                    </select>
+                </div>
+
+                <div v-if="form.project_client_id">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Details <span class="text-gray-400 font-normal">(Optional)</span></label>
                     <input type="text" v-model="form.project_client" 
                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500 shadow-sm"
-                           placeholder="e.g. Acme Corp Redesign">
+                           placeholder="Additional context for this task...">
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
@@ -107,11 +118,24 @@ const form = reactive({
     task_name: '',
     date: new Date().toISOString().split('T')[0],
     project_client: '',
+    project_client_id: '',
     priority: 'medium',
     expected_duration_minutes: 60,
     status: 'pending',
     notes: ''
 });
+
+const projectClients = ref([]);
+
+const fetchProjectClients = async () => {
+    try {
+        const resp = await api.get('/project-clients');
+        projectClients.value = resp.data;
+    } catch (e) {
+        console.error('Failed to load project clients', e);
+    }
+};
+fetchProjectClients();
 
 // Watch for edits and hydrate the form
 watch(() => props.planData, (newData) => {
@@ -119,15 +143,16 @@ watch(() => props.planData, (newData) => {
         form.task_name = newData.task_name;
         form.date = newData.date;
         form.project_client = newData.project_client || '';
-        form.priority = newData.priority.value;
+        form.project_client_id = newData.project_client_id || '';
+        form.priority = newData.priority?.value || newData.priority;
         form.expected_duration_minutes = newData.expected_duration_minutes;
-        form.status = newData.status.value;
+        form.status = newData.status?.value || newData.status;
         form.notes = newData.notes || '';
     } else {
-        // Reset
         form.task_name = '';
         form.date = new Date().toISOString().split('T')[0];
         form.project_client = '';
+        form.project_client_id = '';
         form.priority = 'medium';
         form.expected_duration_minutes = 60;
         form.status = 'pending';

@@ -75,15 +75,21 @@ class UsersTable
             ])
             ->headerActions([
                 \Filament\Actions\Action::make('export_pdf')
-                    ->label('Export Team (PDF)')
-                    ->icon('heroicon-o-document-arrow-down')
+                    ->label('Productivity Report (PDF)')
+                    ->icon('heroicon-o-document-chart-bar')
                     ->color('info')
-                    ->action(function ($livewire) {
-                        $users = $livewire->getFilteredTableQuery()->get();
+                    ->action(function () {
+                        $admin = auth()->user();
+                        $statsService = app(\App\Services\StatsService::class);
+                        $report = $statsService->getWorkerProductivityReport(
+                            $admin, 
+                            \Carbon\Carbon::now()->startOfWeek(), 
+                            \Carbon\Carbon::now()->endOfWeek()
+                        );
                         
-                        return response()->streamDownload(function () use ($users) {
-                            echo \Barryvdh\DomPDF\Facade\Pdf::loadView('exports.team', ['users' => $users])->output();
-                        }, 'team-directory.pdf');
+                        return app(\App\Services\ExportService::class)->exportToPdf('exports.team', [
+                            'report' => $report,
+                        ], 'productivity-report.pdf');
                     })
             ]);
     }

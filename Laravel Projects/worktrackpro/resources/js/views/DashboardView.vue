@@ -103,89 +103,13 @@
                 </div>
             </div>
 
-            <!-- ====== DEPARTMENT STATS (BLUE) ====== -->
-            <div v-if="stats.department" class="space-y-4 pt-6 mt-6 border-t border-gray-100">
-                <div class="flex items-center text-blue-600 mb-2">
-                    <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-                    <h3 class="font-bold uppercase tracking-wider text-sm">Department Overview</h3>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Metric Card -->
-                    <div class="bg-linear-to-br from-blue-50 to-white rounded-2xl p-6 shadow-sm border border-blue-100 flex items-center justify-between">
-                        <div class="flex flex-col">
-                            <div class="text-blue-500 text-xs font-bold uppercase tracking-widest mb-1">Department Total Volume</div>
-                            <div class="flex items-end gap-2 mt-2">
-                                <div class="text-5xl font-black text-blue-900">{{ Math.floor(stats.department.total_team_minutes / 60) }}<span class="text-xl text-blue-300 font-semibold ml-1">hrs</span></div>
-                            </div>
-                        </div>
-                        <div class="h-16 w-16 bg-blue-100/50 rounded-full flex justify-center items-center text-blue-500 shadow-inner">
-                            <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
-                        </div>
-                    </div>
-                    
-                    <!-- Metric Card -->
-                    <div class="bg-linear-to-br from-blue-50 to-white rounded-2xl p-6 shadow-sm border border-blue-100 flex items-center justify-between">
-                        <div class="flex flex-col">
-                            <div class="text-blue-500 text-xs font-bold uppercase tracking-widest mb-1">Active Personnel</div>
-                            <div class="flex items-end gap-2 mt-2">
-                                <div class="text-5xl font-black text-blue-900">{{ stats.department.active_members }}<span class="text-xl text-blue-300 font-semibold ml-1">users</span></div>
-                            </div>
-                        </div>
-                        <div class="h-16 w-16 bg-blue-100/50 rounded-full flex justify-center items-center text-blue-500 shadow-inner">
-                            <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ====== SYSTEM STATS (INDIGO) ====== -->
-            <div v-if="stats.organisation" class="space-y-4 pt-6 mt-6 border-t border-gray-100">
-                <div class="flex items-center text-indigo-600 mb-2">
-                    <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
-                    <h3 class="font-bold uppercase tracking-wider text-sm">Organisation-Wide Pulse</h3>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <!-- Global Volume -->
-                    <div class="bg-indigo-600 rounded-2xl p-6 shadow-indigo-200 shadow-lg text-white relative overflow-hidden group hover:scale-[1.02] transition-transform">
-                        <!-- Abstract background graphic -->
-                        <div class="absolute -right-8 -top-8 w-32 h-32 bg-white opacity-10 rounded-full blur-2xl"></div>
-                        
-                        <div class="text-indigo-200 text-xs font-bold uppercase tracking-widest mb-1 relative z-10">Global Volume</div>
-                        <div class="flex items-end gap-2 mt-4 relative z-10">
-                            <div class="text-5xl font-black text-white">{{ Math.floor(stats.organisation.total_org_minutes / 60) }}<span class="text-xl text-indigo-300 font-semibold ml-1">hrs</span></div>
-                        </div>
-                    </div>
-                    
-                    <!-- Global Headcount -->
-                    <div class="bg-indigo-600 rounded-2xl p-6 shadow-indigo-200 shadow-lg text-white relative overflow-hidden group hover:scale-[1.02] transition-transform">
-                        <div class="absolute -left-8 -bottom-8 w-32 h-32 bg-indigo-400 opacity-20 rounded-full blur-2xl"></div>
-                        
-                        <div class="text-indigo-200 text-xs font-bold uppercase tracking-widest mb-1 relative z-10">Total Enrolled Personnel</div>
-                        <div class="flex items-end gap-2 mt-4 relative z-10">
-                            <div class="text-5xl font-black text-white">{{ stats.organisation.total_active_personnel }}<span class="text-xl text-indigo-300 font-semibold ml-1">staff</span></div>
-                        </div>
-                    </div>
-
-                    <!-- Global Investment Ratio -->
-                    <div class="bg-indigo-600 rounded-2xl p-6 shadow-indigo-200 shadow-lg text-white relative overflow-hidden flex flex-col justify-between group hover:scale-[1.02] transition-transform">
-                        <div class="text-indigo-200 text-xs font-bold uppercase tracking-widest mb-4">Investment Output</div>
-                        <div class="space-y-4">
-                            <!-- Custom minimal stacked bar -->
-                            <div class="w-full flex h-4 rounded-full overflow-hidden shadow-inner bg-indigo-800">
-                                <div class="bg-white" :style="{ width: getPercentage(stats.organisation.work_breakdown.direct, stats.organisation.total_org_minutes) + '%' }"></div>
-                                <div class="bg-indigo-300" :style="{ width: getPercentage(stats.organisation.work_breakdown.growth, stats.organisation.total_org_minutes) + '%' }"></div>
-                                <div class="bg-indigo-500" :style="{ width: getPercentage(stats.organisation.work_breakdown.indirect, stats.organisation.total_org_minutes) + '%' }"></div>
-                            </div>
-                            <div class="flex justify-between text-xs font-medium text-indigo-200">
-                                <div class="flex items-center"><span class="w-2 h-2 rounded-full bg-white inline-block mr-1"></span> Direct</div>
-                                <div class="flex items-center"><span class="w-2 h-2 rounded-full bg-indigo-300 inline-block mr-1"></span> Growth</div>
-                                <div class="flex items-center"><span class="w-2 h-2 rounded-full bg-indigo-500 inline-block mr-1"></span> Indirect</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <!-- Admin/Super Admin: View detailed team stats in the Admin Panel -->
+            <div v-if="stats.department || stats.organisation" class="mt-8 p-4 bg-gray-50 rounded-xl border border-gray-200 text-center">
+                <p class="text-sm text-gray-500">
+                    <svg class="w-4 h-4 inline mr-1 -mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    Department and organisation-level stats are now available in the 
+                    <a href="/admin" class="text-teal-600 font-semibold hover:underline">Admin Panel Dashboard</a>.
+                </p>
             </div>
 
         </div>

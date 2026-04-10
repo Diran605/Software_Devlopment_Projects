@@ -22,6 +22,7 @@ class ActivityLog extends Model
         'task_name',
         'project_client',
         'work_type',
+        'work_type_id',
         'start_time',
         'end_time',
         'duration_minutes',
@@ -51,5 +52,10 @@ class ActivityLog extends Model
     public function dailyPlan(): BelongsTo
     {
         return $this->belongsTo(DailyPlan::class);
+    }
+
+    public function workTypeRecord(): BelongsTo
+    {
+        return $this->belongsTo(WorkType::class, 'work_type_id');
     }
 }

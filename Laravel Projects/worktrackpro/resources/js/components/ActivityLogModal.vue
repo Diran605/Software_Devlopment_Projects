@@ -59,11 +59,12 @@
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Work Type</label>
-                        <select v-model="form.work_type" required
+                        <select v-model="form.work_type_id" required
                                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500 shadow-sm">
-                            <option value="direct">Direct (Client Billable)</option>
-                            <option value="indirect">Indirect (Admin/Internal)</option>
-                            <option value="growth">Growth (Training/RnD)</option>
+                            <option value="" disabled>Select work type...</option>
+                            <option v-for="wt in workTypes" :key="wt.id" :value="wt.id">
+                                {{ wt.name }}
+                            </option>
                         </select>
                     </div>
                     <div>
@@ -78,21 +79,41 @@
                 </div>
 
                 <!-- Time tracking section -->
-                <div class="grid grid-cols-3 gap-4 bg-blue-50 p-4 rounded-xl border border-blue-100">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
-                        <input type="time" v-model="form.start_time"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500 shadow-sm">
+                <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                    <div class="flex items-center justify-between mb-3">
+                        <label class="text-sm font-medium text-gray-700">Time Tracking</label>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs text-gray-500">Duration only</span>
+                            <button type="button" @click="trackByRange = !trackByRange" 
+                                    :class="trackByRange ? 'bg-teal-600' : 'bg-gray-200'" 
+                                    class="relative inline-flex shrink-0 h-5 w-9 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200">
+                                <span :class="trackByRange ? 'translate-x-4' : 'translate-x-0'" 
+                                      class="pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow transform transition ease-in-out duration-200"></span>
+                            </button>
+                            <span class="text-xs text-gray-500">Time range</span>
+                        </div>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">End Time</label>
-                        <input type="time" v-model="form.end_time"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500 shadow-sm">
+                    <div v-if="trackByRange" class="grid grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Start Time</label>
+                            <input type="time" v-model="form.start_time"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500 shadow-sm text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">End Time</label>
+                            <input type="time" v-model="form.end_time"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500 shadow-sm text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Calculated</label>
+                            <div class="px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-600">{{ calcDuration || '—' }}</div>
+                        </div>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Duration (Mins)</label>
-                        <input type="number" min="1" v-model="form.duration_minutes" :placeholder="calcDuration"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500 shadow-sm">
+                    <div v-else>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Duration (minutes)</label>
+                        <input type="number" min="1" v-model="form.duration_minutes" required
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500 shadow-sm"
+                               placeholder="How many minutes did this take?">
                     </div>
                 </div>
 
@@ -142,6 +163,7 @@ const form = reactive({
     task_name: '',
     project_client: '',
     work_type: 'direct',
+    work_type_id: '',
     start_time: '',
     end_time: '',
     duration_minutes: '',
@@ -151,6 +173,24 @@ const form = reactive({
     daily_plan_id: '',
     notes: ''
 });
+
+const trackByRange = ref(false);
+const workTypes = ref([]);
+
+// Fetch work types on mount
+const fetchWorkTypes = async () => {
+    try {
+        const resp = await api.get('/work-types');
+        workTypes.value = resp.data;
+        // Auto-select first if none selected
+        if (workTypes.value.length > 0 && !form.work_type_id) {
+            form.work_type_id = workTypes.value[0].id;
+        }
+    } catch (e) {
+        console.error('Failed to load work types', e);
+    }
+};
+fetchWorkTypes();
 
 const calcDuration = computed(() => {
     if(form.start_time && form.end_time) {
@@ -231,6 +271,12 @@ const submitForm = async () => {
     if(!payload.end_time) delete payload.end_time;
     if(!payload.duration_minutes) delete payload.duration_minutes;
     if(!payload.daily_plan_id || !payload.is_planned) delete payload.daily_plan_id;
+    
+    // If not using time range, clear time fields
+    if (!trackByRange.value) {
+        delete payload.start_time;
+        delete payload.end_time;
+    }
 
     try {
         if (isEditing.value) {

@@ -58,9 +58,31 @@ class AuthController extends Controller
 
     public function me(Request $request): UserResource
     {
-        $user = $request->user()->loadMissing(['organisation', 'department', 'roles']);
+        $user = $request->user()->loadMissing(['organisation', 'department', 'roles', 'permissions']);
         
         return new UserResource($user);
+    }
+
+    public function updatePassword(Request $request): JsonResponse
+    {
+        $request->validate([
+            'current_password' => 'required|string',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $user = $request->user();
+
+        if (!Hash::check($request->current_password, $user->password)) {
+            throw ValidationException::withMessages([
+                'current_password' => 'The current password is incorrect.',
+            ]);
+        }
+
+        $user->update([
+            'password' => Hash::make($request->password),
+        ]);
+
+        return response()->json(['message' => 'Password updated successfully.']);
     }
 
     public function forgotPassword(ForgotPasswordRequest $request): JsonResponse

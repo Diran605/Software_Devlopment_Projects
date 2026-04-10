@@ -8,4 +8,6 @@ use Filament\Resources\Pages\CreateRecord;
 class CreateDepartment extends CreateRecord
 {
     protected static string $resource = DepartmentResource::class;
+
+    protected static bool $canCreateAnother = false;
 }

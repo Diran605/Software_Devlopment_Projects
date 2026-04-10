@@ -20,7 +20,9 @@ class OrganisationResource extends Resource
 {
     protected static ?string $model = Organisation::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedGlobeAlt;
+
+    protected static \UnitEnum|string|null $navigationGroup = 'Configuration';
 
     public static function canViewAny(): bool
     {
