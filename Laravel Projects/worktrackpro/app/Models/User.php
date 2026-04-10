@@ -11,10 +11,14 @@ use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Traits\Auditable;
 
-class User extends Authenticatable
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
+
+class User extends Authenticatable implements FilamentUser
 {
-    use HasFactory, Notifiable, HasApiTokens, HasRoles, SoftDeletes;
+    use HasFactory, Notifiable, HasApiTokens, HasRoles, SoftDeletes, Auditable;
 
     protected $fillable = [
         'organisation_id',
@@ -69,5 +73,11 @@ class User extends Authenticatable
     public function weeklyStats(): HasMany
     {
         return $this->hasMany(WeeklyStatsCache::class);
+    }
+
+    public function canAccessPanel(Panel $panel): bool
+    {
+        // Only allow Super Admins and Admins to access the admin panel
+        return $this->hasRole(['super_admin', 'admin']) && $this->is_active;
     }
 }

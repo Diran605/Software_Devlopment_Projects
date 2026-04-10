@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\DailyPlanController;
 use App\Http\Controllers\Api\V1\ActivityLogController;
 use App\Http\Controllers\Api\V1\DashboardController;
+use App\Http\Controllers\Api\V1\TeamController;
 
 Route::prefix('v1')->group(function () {
     Route::prefix('auth')->group(function () {
@@ -23,5 +24,10 @@ Route::prefix('v1')->group(function () {
         
         Route::apiResource('plans', DailyPlanController::class);
         Route::apiResource('logs', ActivityLogController::class);
+
+        // Team directory
+        Route::get('team', [TeamController::class, 'index']);
+        Route::get('team/departments', [TeamController::class, 'departments']);
+        Route::patch('team/{user}/toggle-status', [TeamController::class, 'toggleStatus']);
     });
 });

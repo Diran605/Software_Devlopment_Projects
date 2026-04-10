@@ -25,6 +25,12 @@ const routes = [
         name: 'ActivityLogs',
         component: () => import('./views/logs/ActivityLogsView.vue'),
         meta: { requiresAuth: true }
+    },
+    {
+        path: '/team',
+        name: 'Team',
+        component: () => import('./views/team/TeamView.vue'),
+        meta: { requiresAuth: true }
     }
 ];
 
