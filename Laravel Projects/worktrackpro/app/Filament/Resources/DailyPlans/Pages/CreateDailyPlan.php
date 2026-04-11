@@ -7,7 +7,21 @@ use Filament\Resources\Pages\CreateRecord;
 
 class CreateDailyPlan extends CreateRecord
 {
-    protected static string $resource = DailyPlanResource::class;
+        
+    protected function mutateFormDataBeforeCreate(array $data): array
+    {
+        $user = auth()->user();
+        if ($user && $user->organisation_id && !isset($data['organisation_id'])) {
+            $data['organisation_id'] = $user->organisation_id;
+        }
+        return $data;
+    }
+protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
+    }
+
+protected static string $resource = DailyPlanResource::class;
 
     protected static bool $canCreateAnother = false;
 
@@ -20,3 +34,5 @@ class CreateDailyPlan extends CreateRecord
         }
     }
 }
+
+

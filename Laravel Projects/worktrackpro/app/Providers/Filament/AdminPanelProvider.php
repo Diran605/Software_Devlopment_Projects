@@ -33,6 +33,7 @@ class AdminPanelProvider extends PanelProvider
                 'success' => Color::Emerald,
                 'warning' => Color::Amber,
             ])
+            ->brandLogo(fn () => view('filament.logo'))
             ->brandName('WorkTrack Pro')
             ->darkMode(true)
             ->sidebarCollapsibleOnDesktop()

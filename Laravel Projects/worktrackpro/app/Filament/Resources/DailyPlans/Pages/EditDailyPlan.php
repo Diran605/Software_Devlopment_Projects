@@ -10,14 +10,16 @@ use Filament\Resources\Pages\EditRecord;
 
 class EditDailyPlan extends EditRecord
 {
-    protected static string $resource = DailyPlanResource::class;
+        protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
+    }
+
+protected static string $resource = DailyPlanResource::class;
 
     protected function getHeaderActions(): array
     {
-        return [
-            DeleteAction::make(),
-            ForceDeleteAction::make(),
-            RestoreAction::make(),
-        ];
+        return [];
     }
 }
+

@@ -10,6 +10,7 @@ use Filament\Actions\RestoreBulkAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
+use Filament\Actions\DeleteAction;
 
 class DepartmentsTable
 {
@@ -44,7 +45,8 @@ class DepartmentsTable
             ])
             ->recordActions([
                 EditAction::make(),
-            ])
+                DeleteAction::make(),
+])
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
@@ -54,3 +56,5 @@ class DepartmentsTable
             ]);
     }
 }
+
+

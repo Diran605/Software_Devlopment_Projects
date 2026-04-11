@@ -65,7 +65,7 @@ class UserResource extends Resource
         $user = auth()->user();
         
         if ($user->hasRole('super_admin')) {
-            return $query->where('organisation_id', $user->organisation_id);
+            return $query; // Super_Admin can see all users globally
         }
         
         if ($user->hasPermissionTo('manage_users') && !$user->hasRole('super_admin')) {

@@ -10,14 +10,16 @@ use Filament\Resources\Pages\EditRecord;
 
 class EditProjectClient extends EditRecord
 {
-    protected static string $resource = ProjectClientResource::class;
+        protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
+    }
+
+protected static string $resource = ProjectClientResource::class;
 
     protected function getHeaderActions(): array
     {
-        return [
-            DeleteAction::make(),
-            ForceDeleteAction::make(),
-            RestoreAction::make(),
-        ];
+        return [];
     }
 }
+

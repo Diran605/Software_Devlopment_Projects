@@ -45,9 +45,9 @@ class RoleAndPermissionSeeder extends Seeder
         $superAdminRole = Role::firstOrCreate(['name' => 'super_admin']);
         $superAdminRole->syncPermissions($permissions);
 
-        // Default Admin — gets management permissions (but not manage_roles)
         $adminRole = Role::firstOrCreate(['name' => 'admin']);
         $adminRole->syncPermissions([
+            'manage_roles',
             'manage_users',
             'manage_departments',
             'manage_work_types',

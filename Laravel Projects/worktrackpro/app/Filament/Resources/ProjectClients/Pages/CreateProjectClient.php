@@ -7,7 +7,23 @@ use Filament\Resources\Pages\CreateRecord;
 
 class CreateProjectClient extends CreateRecord
 {
-    protected static string $resource = ProjectClientResource::class;
+        
+    protected function mutateFormDataBeforeCreate(array $data): array
+    {
+        $user = auth()->user();
+        if ($user && $user->organisation_id && !isset($data['organisation_id'])) {
+            $data['organisation_id'] = $user->organisation_id;
+        }
+        return $data;
+    }
+protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
+    }
+
+protected static string $resource = ProjectClientResource::class;
 
     protected static bool $canCreateAnother = false;
 }
+
+

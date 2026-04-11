@@ -11,6 +11,7 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
+use Filament\Actions\DeleteAction;
 use Illuminate\Support\Str;
 
 class UsersTable
@@ -65,6 +66,7 @@ class UsersTable
             ])
             ->recordActions([
                 EditAction::make(),
+                DeleteAction::make(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
@@ -72,25 +74,7 @@ class UsersTable
                     ForceDeleteBulkAction::make(),
                     RestoreBulkAction::make(),
                 ]),
-            ])
-            ->headerActions([
-                \Filament\Actions\Action::make('export_pdf')
-                    ->label('Productivity Report (PDF)')
-                    ->icon('heroicon-o-document-chart-bar')
-                    ->color('info')
-                    ->action(function () {
-                        $admin = auth()->user();
-                        $statsService = app(\App\Services\StatsService::class);
-                        $report = $statsService->getWorkerProductivityReport(
-                            $admin, 
-                            \Carbon\Carbon::now()->startOfWeek(), 
-                            \Carbon\Carbon::now()->endOfWeek()
-                        );
-                        
-                        return app(\App\Services\ExportService::class)->exportToPdf('exports.team', [
-                            'report' => $report,
-                        ], 'productivity-report.pdf');
-                    })
             ]);
     }
 }
+

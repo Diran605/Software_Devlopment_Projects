@@ -6,6 +6,7 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Tables\Table;
+use Filament\Actions\DeleteAction;
 
 class AuditLogsTable
 {
@@ -46,3 +47,4 @@ class AuditLogsTable
             ]);
     }
 }
+

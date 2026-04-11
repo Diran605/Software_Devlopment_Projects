@@ -7,13 +7,14 @@ use App\Filament\Resources\Roles\Pages\EditRole;
 use App\Filament\Resources\Roles\Pages\ListRoles;
 use BackedEnum;
 use Filament\Forms\Components\CheckboxList;
-use Filament\Forms\Components\Section;
+use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Permission\Models\Permission;
@@ -115,6 +116,7 @@ class RoleResource extends Resource
             ])
             ->recordActions([
                 EditAction::make(),
+                DeleteAction::make(),
             ]);
     }
 
@@ -127,3 +129,4 @@ class RoleResource extends Resource
         ];
     }
 }
+

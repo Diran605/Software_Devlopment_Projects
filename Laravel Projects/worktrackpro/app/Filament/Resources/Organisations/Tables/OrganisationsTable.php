@@ -11,6 +11,7 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
+use Filament\Actions\DeleteAction;
 
 class OrganisationsTable
 {
@@ -42,7 +43,8 @@ class OrganisationsTable
             ])
             ->recordActions([
                 EditAction::make(),
-            ])
+                DeleteAction::make(),
+])
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
@@ -52,3 +54,5 @@ class OrganisationsTable
             ]);
     }
 }
+
+

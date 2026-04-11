@@ -6,25 +6,31 @@
 <head>
     <title>Worker Productivity Report</title>
     <style>
-        body { font-family: 'Helvetica', sans-serif; color: #333; }
-        .header { text-align: center; margin-bottom: 30px; }
-        .header img { max-height: 80px; }
-        .header h1 { color: {{ $orgColor }}; margin: 10px 0 5px 0; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; }
-        th, td { border-bottom: 1px solid #ddd; padding: 10px 8px; text-align: left; }
-        th { background-color: {{ $orgColor }}20; color: {{ $orgColor }}; }
-        .pct { font-weight: bold; }
+        body { font-family: 'Helvetica', sans-serif; color: #333; line-height: 1.6; }
+        .header { text-align: center; margin-bottom: 40px; }
+        .header img { max-height: 100px; margin-bottom: 15px; }
+        .header h1 { color: {{ $orgColor }}; margin: 15px 0 10px 0; font-size: 24px; text-transform: uppercase; letter-spacing: 1px; }
+        .header p { color: #666; font-size: 14px; margin-top: 0; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 30px; font-size: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        th, td { padding: 16px 12px; text-align: left; }
+        th { background-color: {{ $orgColor }}; color: #fff; font-weight: 600; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px; }
+        th:first-child { border-top-left-radius: 6px; }
+        th:last-child { border-top-right-radius: 6px; }
+        td { border-bottom: 1px solid #edf2f7; color: #4a5568; }
+        tr:last-child td { border-bottom: none; }
+        tr:nth-child(even) { background-color: #f8fafc; }
+        .pct { font-weight: bold; color: {{ $orgColor }}; }
     </style>
 </head>
 <body>
     <div class="header">
-        @if(isset($organisation) && $organisation->letterhead)
-            <img src="{{ storage_path('app/public/' . $organisation->letterhead) }}" alt="Letterhead" style="width: 100%; max-height: 150px; object-fit: cover;">
-        @elseif(isset($organisation) && $organisation->logo)
-            <img src="{{ storage_path('app/public/' . $organisation->logo) }}" alt="Logo">
+        @if(isset($letterhead_base64))
+            <img src="{{ $letterhead_base64 }}" alt="Letterhead" style="width: 100%; max-height: 150px; object-fit: cover;">
+        @elseif(isset($logo_base64))
+            <img src="{{ $logo_base64 }}" alt="Logo">
         @endif
         <h1>{{ optional($organisation ?? null)->name ?? 'Organisation' }} Productivity Report</h1>
-        <p>Generated on: {{ date('F j, Y') }} | Period: This Week</p>
+        <p>Generated on: {{ date('F j, Y') }} | Period: {{ $periodTitle ?? 'This Week' }}</p>
     </div>
     
     <table>

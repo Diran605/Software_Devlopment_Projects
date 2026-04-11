@@ -64,7 +64,10 @@ class DepartmentResource extends Resource
             
         $user = auth()->user();
         
-        // Both Super Admins and Admins should only see departments within their organisation
+        if ($user->hasRole('super_admin')) {
+            return $query; // Super Admins see all departments across all organisations
+        }
+        
         return $query->where('organisation_id', $user->organisation_id);
     }
 }

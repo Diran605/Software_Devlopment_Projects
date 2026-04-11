@@ -22,6 +22,12 @@ class ProjectClientResource extends Resource
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBriefcase;
 
     protected static \UnitEnum|string|null $navigationGroup = 'Configuration';
+    
+    protected static ?string $modelLabel = 'Client or Project';
+    
+    protected static ?string $pluralModelLabel = 'Clients & Projects';
+    
+    protected static ?string $navigationLabel = 'Clients & Projects';
 
     public static function canViewAny(): bool
     {

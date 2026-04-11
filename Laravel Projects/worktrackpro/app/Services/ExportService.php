@@ -40,7 +40,22 @@ class ExportService
         if ($user && $user->organisation_id) {
             $user->loadMissing('organisation');
             if (!isset($data['organisation'])) {
-                $data['organisation'] = $user->organisation;
+                $org = $user->organisation;
+                
+                // Convert to Base64 so DOMPDF handles it perfectly without path resolution issues
+                if ($org->logo && \Illuminate\Support\Facades\Storage::disk('public')->exists($org->logo)) {
+                    $mime = \Illuminate\Support\Facades\Storage::disk('public')->mimeType($org->logo);
+                    $content = base64_encode(\Illuminate\Support\Facades\Storage::disk('public')->get($org->logo));
+                    $data['logo_base64'] = "data:$mime;base64,$content";
+                }
+                
+                if ($org->letterhead && \Illuminate\Support\Facades\Storage::disk('public')->exists($org->letterhead)) {
+                    $mime = \Illuminate\Support\Facades\Storage::disk('public')->mimeType($org->letterhead);
+                    $content = base64_encode(\Illuminate\Support\Facades\Storage::disk('public')->get($org->letterhead));
+                    $data['letterhead_base64'] = "data:$mime;base64,$content";
+                }
+
+                $data['organisation'] = $org;
             }
         }
     }

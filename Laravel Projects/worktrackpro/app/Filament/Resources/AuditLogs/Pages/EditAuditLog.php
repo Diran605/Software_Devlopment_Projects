@@ -8,12 +8,16 @@ use Filament\Resources\Pages\EditRecord;
 
 class EditAuditLog extends EditRecord
 {
-    protected static string $resource = AuditLogResource::class;
+        protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
+    }
+
+protected static string $resource = AuditLogResource::class;
 
     protected function getHeaderActions(): array
     {
-        return [
-            DeleteAction::make(),
-        ];
+        return [];
     }
 }
+

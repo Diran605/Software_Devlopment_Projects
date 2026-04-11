@@ -9,6 +9,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Filament\Actions\DeleteAction;
 
 class DailyPlansTable
 {
@@ -56,7 +57,19 @@ class DailyPlansTable
                     ->placeholder('Self'),
             ])
             ->defaultSort('date', 'desc')
+            ->defaultGroup('user.name')
             ->filters([
+                \Filament\Tables\Filters\Filter::make('date')
+                    ->form([
+                        \Filament\Forms\Components\DatePicker::make('date'),
+                    ])
+                    ->query(function (\Illuminate\Database\Eloquent\Builder $query, array $data): \Illuminate\Database\Eloquent\Builder {
+                        return $query
+                            ->when(
+                                $data['date'],
+                                fn (\Illuminate\Database\Eloquent\Builder $query, $date): \Illuminate\Database\Eloquent\Builder => $query->whereDate('date', '=', $date),
+                            );
+                    }),
                 SelectFilter::make('status')
                     ->options([
                         'pending' => 'Pending',
@@ -73,7 +86,8 @@ class DailyPlansTable
             ])
             ->recordActions([
                 EditAction::make(),
-            ])
+                DeleteAction::make(),
+])
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
@@ -81,3 +95,5 @@ class DailyPlansTable
             ]);
     }
 }
+
+

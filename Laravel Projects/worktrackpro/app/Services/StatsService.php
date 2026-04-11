@@ -10,14 +10,14 @@ use Illuminate\Support\Facades\DB;
 class StatsService
 {
     /**
-     * Get aggregate statistics for a specific user for a given week.
+     * Get aggregate statistics for a specific user for a given period.
      * Uses raw DB queries to avoid Eloquent enum casting silently dropping rows.
      */
-    public function getPersonalWeeklyStats(User $user, Carbon $weekStart): array
+    public function getPersonalWeeklyStats(User $user, Carbon $startDateObj, ?Carbon $endDateObj = null): array
     {
-        $weekEnd = $weekStart->copy()->endOfWeek();
-        $startDate = $weekStart->format('Y-m-d');
-        $endDate = $weekEnd->format('Y-m-d');
+        $endDateObj = $endDateObj ?? $startDateObj->copy()->endOfWeek();
+        $startDate = $startDateObj->format('Y-m-d');
+        $endDate = $endDateObj->format('Y-m-d');
 
         // Time spent by work_type — RAW query to bypass enum casts
         $timeByWorkType = DB::table('activity_logs')
@@ -62,15 +62,15 @@ class StatsService
     /**
      * Get aggregate statistics for a department (Admins).
      */
-    public function getDepartmentWeeklyStats(User $admin, Carbon $weekStart): array
+    public function getDepartmentWeeklyStats(User $admin, Carbon $startDateObj, ?Carbon $endDateObj = null): array
     {
         if (!$admin->department_id) {
             return [];
         }
 
-        $weekEnd = $weekStart->copy()->endOfWeek();
-        $startDate = $weekStart->format('Y-m-d');
-        $endDate = $weekEnd->format('Y-m-d');
+        $endDateObj = $endDateObj ?? $startDateObj->copy()->endOfWeek();
+        $startDate = $startDateObj->format('Y-m-d');
+        $endDate = $endDateObj->format('Y-m-d');
 
         $userIds = User::where('department_id', $admin->department_id)
                        ->where('is_active', true)
@@ -99,11 +99,11 @@ class StatsService
     /**
      * Get full organisation statistics (Super Admins).
      */
-    public function getOrganisationWeeklyStats(User $superAdmin, Carbon $weekStart): array
+    public function getOrganisationWeeklyStats(User $superAdmin, Carbon $startDateObj, ?Carbon $endDateObj = null): array
     {
-        $weekEnd = $weekStart->copy()->endOfWeek();
-        $startDate = $weekStart->format('Y-m-d');
-        $endDate = $weekEnd->format('Y-m-d');
+        $endDateObj = $endDateObj ?? $startDateObj->copy()->endOfWeek();
+        $startDate = $startDateObj->format('Y-m-d');
+        $endDate = $endDateObj->format('Y-m-d');
 
         $totalUsers = User::where('organisation_id', $superAdmin->organisation_id)
                           ->where('is_active', true)

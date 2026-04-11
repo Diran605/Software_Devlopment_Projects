@@ -55,8 +55,8 @@ class DailyPlanResource extends Resource
         $user = auth()->user();
 
         if ($user && $user->hasRole('super_admin')) {
-            // Super admin sees all plans in their org
-            $query->where('organisation_id', $user->organisation_id);
+            // Super admin sees all plans across all orgs
+            return $query;
         } elseif ($user) {
             // Admin sees plans for their department's workers
             $query->whereHas('user', function ($q) use ($user) {

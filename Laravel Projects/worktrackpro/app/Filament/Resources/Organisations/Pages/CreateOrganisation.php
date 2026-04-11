@@ -7,7 +7,13 @@ use Filament\Resources\Pages\CreateRecord;
 
 class CreateOrganisation extends CreateRecord
 {
-    protected static string $resource = OrganisationResource::class;
+        protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
+    }
+
+protected static string $resource = OrganisationResource::class;
 
     protected static bool $canCreateAnother = false;
 }
+

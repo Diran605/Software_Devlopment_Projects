@@ -8,6 +8,7 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Table;
+use Filament\Actions\DeleteAction;
 
 class WorkTypesTable
 {
@@ -31,7 +32,8 @@ class WorkTypesTable
             ->filters([])
             ->recordActions([
                 EditAction::make(),
-            ])
+                DeleteAction::make(),
+])
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
@@ -39,3 +41,5 @@ class WorkTypesTable
             ]);
     }
 }
+
+
