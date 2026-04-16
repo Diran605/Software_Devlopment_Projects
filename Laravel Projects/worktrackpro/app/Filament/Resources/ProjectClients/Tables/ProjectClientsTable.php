@@ -29,7 +29,12 @@ class ProjectClientsTable
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
-            ->filters([])
+            ->filters([
+                \Filament\Tables\Filters\SelectFilter::make('organisation_id')
+                    ->relationship('organisation', 'name')
+                    ->label('Organisation')
+                    ->hidden(fn () => !auth()->user()->hasRole('super_admin')),
+            ])
             ->recordActions([
                 EditAction::make(),
                 DeleteAction::make(),

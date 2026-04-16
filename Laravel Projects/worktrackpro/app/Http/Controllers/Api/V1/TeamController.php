@@ -29,11 +29,11 @@ class TeamController extends Controller
         if ($user->hasRole('super_admin')) {
             // Super admins see everyone in the org
         } elseif ($user->hasRole('admin')) {
-            // Admins see their department only
+            // Admins see users in their department only
             $query->where('department_id', $user->department_id);
         } else {
-            // Workers see only themselves
-            $query->where('id', $user->id);
+            // Workers see all users in their organisation for messaging
+            // (scoped to same org already by line 25)
         }
 
         // Optional filters

@@ -40,6 +40,8 @@ class AdminPanelProvider extends PanelProvider
             ->navigationGroups([
                 'Management',
                 'Configuration',
+                'Communication',
+                'Letters',
                 'Security',
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
@@ -62,6 +64,13 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
+            ])
+            ->userMenuItems([
+                'portal' => \Filament\Navigation\MenuItem::make()
+                    ->label('Back to Portal')
+                    ->icon('heroicon-o-arrow-left')
+                    ->url('/')
+                    ->openUrlInNewTab(false),
             ]);
     }
 }

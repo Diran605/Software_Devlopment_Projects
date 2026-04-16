@@ -39,6 +39,23 @@
                     Activity Logs
                 </router-link>
 
+                <router-link :to="{ name: 'Inbox' }" active-class="bg-teal-50 text-teal-700 font-semibold" class="text-gray-600 hover:bg-gray-50 hover:text-gray-900 group flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-all">
+                    <svg class="w-5 h-5 mr-3 shrink-0 transition-colors" :class="$route.name === 'Inbox' ? 'text-teal-600' : 'text-gray-400 group-hover:text-gray-500'" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0l-2 6H8l-2-6m16 0H4" />
+                    </svg>
+                    <span class="flex-1">Inbox</span>
+                    <span v-if="inboxStore.unreadCount > 0" class="ml-2 text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-700">
+                        {{ inboxStore.unreadCount }}
+                    </span>
+                </router-link>
+
+                <router-link :to="{ name: 'RecurringTasks' }" active-class="bg-teal-50 text-teal-700 font-semibold" class="text-gray-600 hover:bg-gray-50 hover:text-gray-900 group flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-all">
+                    <svg class="w-5 h-5 mr-3 shrink-0 transition-colors" :class="$route.name === 'RecurringTasks' ? 'text-teal-600' : 'text-gray-400 group-hover:text-gray-500'" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3M3 11h18M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    Recurring Tasks
+                </router-link>
+
                 <div v-if="isAdmin">
                     <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mt-6 mb-4 px-3">Management</div>
 
@@ -106,6 +123,7 @@
                 <router-link :to="{ name: 'Dashboard' }" class="text-gray-500 hover:text-teal-600 font-medium">Dash</router-link>
                 <router-link :to="{ name: 'DailyPlans' }" class="text-gray-500 hover:text-teal-600 font-medium">Plans</router-link>
                 <router-link :to="{ name: 'ActivityLogs' }" class="text-gray-500 hover:text-teal-600 font-medium">Logs</router-link>
+                <router-link :to="{ name: 'RecurringTasks' }" class="text-gray-500 hover:text-teal-600 font-medium">Recurring</router-link>
                 <router-link v-if="isAdmin" :to="{ name: 'Team' }" class="text-gray-500 hover:text-blue-600 font-medium">Team</router-link>
                 <router-link :to="{ name: 'Settings' }" class="text-gray-400 hover:text-gray-600">
                     <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
@@ -133,12 +151,14 @@ import { computed, ref, onMounted } from 'vue';
 import { useAuthStore } from './stores/auth';
 import { useRoute, useRouter } from 'vue-router';
 import api from './lib/axios';
+import { useInboxStore } from './stores/inbox';
 
 const authStore = useAuthStore();
 const router = useRouter();
 const route = useRoute();
 
 const unreadCount = ref(0);
+const inboxStore = useInboxStore();
 
 const isAdmin = computed(() => {
     const roles = authStore.user?.roles || [];
@@ -168,6 +188,9 @@ const fetchNotifications = async () => {
 onMounted(() => {
     fetchNotifications();
     setInterval(fetchNotifications, 60000); // Check every minute
+
+    inboxStore.fetchUnreadCount();
+    setInterval(() => inboxStore.fetchUnreadCount(), 60000);
 });
 
 const handleLogout = async () => {

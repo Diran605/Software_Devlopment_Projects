@@ -10,6 +10,7 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Filament\Actions\DeleteAction;
+use App\Services\OrganisationSettingsService;
 
 class DailyPlansTable
 {
@@ -48,6 +49,16 @@ class DailyPlansTable
                         'cancelled' => 'danger',
                         default => 'gray',
                     }),
+                TextColumn::make('carry_over_count')
+                    ->label('Carry #')
+                    ->badge()
+                    ->color(function ($state, $record): string {
+                        $user = auth()->user();
+                        $orgId = (int) ($user?->organisation_id ?? $record->organisation_id);
+                        $threshold = (int) app(OrganisationSettingsService::class)->forOrganisation($orgId)->carry_over_flag_threshold;
+                        return ((int) $state) >= max($threshold, 1) ? 'danger' : 'gray';
+                    })
+                    ->toggleable(),
                 TextColumn::make('expected_duration_minutes')
                     ->label('Est. Time')
                     ->suffix(' mins')
@@ -59,6 +70,10 @@ class DailyPlansTable
             ->defaultSort('date', 'desc')
             ->defaultGroup('user.name')
             ->filters([
+                SelectFilter::make('organisation_id')
+                    ->relationship('organisation', 'name')
+                    ->label('Organisation')
+                    ->hidden(fn () => !auth()->user()->hasRole('super_admin')),
                 \Filament\Tables\Filters\Filter::make('date')
                     ->form([
                         \Filament\Forms\Components\DatePicker::make('date'),

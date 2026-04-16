@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\CompletionType;
+use App\Enums\StopReason;
 use App\Enums\WorkType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -18,6 +19,7 @@ class ActivityLog extends Model
         'user_id',
         'organisation_id',
         'daily_plan_id',
+        'work_session_id',
         'date',
         'task_name',
         'project_client',
@@ -26,6 +28,8 @@ class ActivityLog extends Model
         'start_time',
         'end_time',
         'duration_minutes',
+        'stop_reason',
+        'is_verified',
         'output',
         'completion_type',
         'is_planned',
@@ -37,6 +41,8 @@ class ActivityLog extends Model
         'work_type' => WorkType::class,
         'completion_type' => CompletionType::class,
         'is_planned' => 'boolean',
+        'stop_reason' => StopReason::class,
+        'is_verified' => 'boolean',
     ];
 
     public function user(): BelongsTo
@@ -52,6 +58,11 @@ class ActivityLog extends Model
     public function dailyPlan(): BelongsTo
     {
         return $this->belongsTo(DailyPlan::class);
+    }
+
+    public function workSession(): BelongsTo
+    {
+        return $this->belongsTo(WorkSession::class);
     }
 
     public function workTypeRecord(): BelongsTo

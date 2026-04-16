@@ -37,7 +37,10 @@ class AuditLogsTable
                     ->sortable(),
             ])
             ->filters([
-                //
+                \Filament\Tables\Filters\SelectFilter::make('organisation_id')
+                    ->relationship('organisation', 'name')
+                    ->label('Organisation')
+                    ->hidden(fn () => !auth()->user()->hasRole('super_admin')),
             ])
             ->recordActions([
                 \Filament\Actions\ViewAction::make(),

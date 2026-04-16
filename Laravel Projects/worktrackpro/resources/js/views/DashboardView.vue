@@ -1,5 +1,53 @@
 <template>
     <div>
+        <CarryOverModal
+            v-if="sessionStore.carryOvers?.length"
+            :plans="sessionStore.carryOvers"
+            @close="sessionStore.carryOvers = []"
+            @resolve="handleResolveCarryOver"
+        />
+
+        <!-- Attendance banner -->
+        <div class="mb-4 p-4 rounded-2xl border shadow-sm"
+             :class="sessionStore.isClockedIn ? 'bg-emerald-50 border-emerald-200' : (sessionStore.isSystemClosed ? 'bg-amber-50 border-amber-200' : 'bg-white border-gray-100')">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                <div>
+                    <div class="text-sm font-semibold text-gray-900">
+                        <span v-if="sessionStore.isClockedIn">You are clocked in.</span>
+                        <span v-else-if="sessionStore.isSystemClosed">Your session was auto-closed.</span>
+                        <span v-else>Clock in to unlock plans and timers.</span>
+                    </div>
+                    <div class="text-xs text-gray-600 mt-0.5" v-if="sessionStore.currentSession?.clock_in">
+                        Started at {{ new Date(sessionStore.currentSession.clock_in).toLocaleTimeString() }}
+                    </div>
+                    <div v-if="sessionStore.error" class="text-xs text-red-600 mt-1">
+                        {{ sessionStore.error }}
+                    </div>
+                </div>
+
+                <div class="flex gap-2">
+                    <button v-if="sessionStore.isSystemClosed"
+                            @click="handleRequestReopen"
+                            :disabled="sessionStore.loading"
+                            class="inline-flex items-center justify-center rounded-xl px-4 py-2 bg-amber-600 text-sm font-semibold text-white hover:bg-amber-700 shadow-md shadow-amber-200 transition-all disabled:opacity-60">
+                        Request Reopen
+                    </button>
+                    <button v-else-if="!sessionStore.isClockedIn"
+                            @click="handleClockIn"
+                            :disabled="sessionStore.loading"
+                            class="inline-flex items-center justify-center rounded-xl px-4 py-2 bg-teal-600 text-sm font-semibold text-white hover:bg-teal-700 shadow-md shadow-teal-200 transition-all disabled:opacity-60">
+                        Clock In
+                    </button>
+                    <button v-else
+                            @click="handleClockOut"
+                            :disabled="sessionStore.loading"
+                            class="inline-flex items-center justify-center rounded-xl px-4 py-2 bg-gray-900 text-sm font-semibold text-white hover:bg-black transition-all disabled:opacity-60">
+                        Clock Out
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- Dashboard Header -->
         <div class="mb-8 p-6 bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row md:items-center justify-between">
             <div>
@@ -9,13 +57,15 @@
             
             <!-- Quick Actions (Worker Level Action) -->
             <div class="mt-4 md:mt-0 flex gap-3">
-                <router-link to="/plans" class="inline-flex items-center justify-center rounded-xl border-2 border-teal-50 px-4 py-2 bg-white text-sm font-semibold text-teal-600 hover:bg-teal-50 hover:border-teal-100 transition-all shadow-sm">
+                <router-link to="/plans"
+                             :class="sessionStore.isClockedIn ? 'inline-flex items-center justify-center rounded-xl border-2 border-teal-50 px-4 py-2 bg-white text-sm font-semibold text-teal-600 hover:bg-teal-50 hover:border-teal-100 transition-all shadow-sm' : 'inline-flex items-center justify-center rounded-xl border-2 border-gray-100 px-4 py-2 bg-gray-50 text-sm font-semibold text-gray-400 cursor-not-allowed'">
                     <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5v2m6-2v2"/>
                     </svg>
                     Daily Plans
                 </router-link>
-                <router-link to="/logs" class="inline-flex items-center justify-center rounded-xl px-4 py-2 bg-teal-600 text-sm font-semibold text-white hover:bg-teal-700 shadow-md shadow-teal-200 transition-all">
+                <router-link to="/logs"
+                             :class="sessionStore.isClockedIn ? 'inline-flex items-center justify-center rounded-xl px-4 py-2 bg-teal-600 text-sm font-semibold text-white hover:bg-teal-700 shadow-md shadow-teal-200 transition-all' : 'inline-flex items-center justify-center rounded-xl px-4 py-2 bg-gray-200 text-sm font-semibold text-gray-500 cursor-not-allowed'">
                     <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
@@ -119,9 +169,12 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import { useAuthStore } from '../stores/auth';
+import { useSessionStore } from '../stores/session';
 import api from '../lib/axios';
+import CarryOverModal from '../components/CarryOverModal.vue';
 
 const authStore = useAuthStore();
+const sessionStore = useSessionStore();
 const stats = ref({});
 const weekLabel = ref('');
 const loading = ref(true);
@@ -178,6 +231,39 @@ const getPercentage = (value, total) => {
 };
 
 onMounted(() => {
+    sessionStore.fetchCurrentSession();
+    sessionStore.fetchPendingCarryOvers();
     fetchDashboardStats();
 });
+
+const handleClockIn = async () => {
+    await sessionStore.clockIn();
+};
+
+const handleClockOut = async () => {
+    await sessionStore.clockOut();
+};
+
+const handleRequestReopen = async () => {
+    const reason = window.prompt('Please enter the reason for requesting a session reopen:');
+    if (!reason || reason.trim().length < 5) {
+        alert('A valid reason (at least 5 characters) is required.');
+        return;
+    }
+
+    const success = await sessionStore.requestReopen(reason);
+    if (success) {
+        alert('Your request has been submitted to the admin.');
+    }
+};
+
+const handleResolveCarryOver = async ({ plan, decision, priority }) => {
+    try {
+        await sessionStore.resolveCarryOver(plan.id, decision, decision === 'carry_over' ? priority : null);
+        sessionStore.carryOvers = sessionStore.carryOvers.filter(p => p.id !== plan.id);
+    } catch (e) {
+        // keep modal open; error surfaces in console for now
+        console.error('Failed to resolve carry over', e);
+    }
+};
 </script>

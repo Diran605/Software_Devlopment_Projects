@@ -81,6 +81,53 @@
                             
                             <!-- Actions -->
                             <div class="flex items-center ml-4 gap-2">
+                                <!-- Timer Controls -->
+                                <div class="flex items-center gap-2 mr-2">
+                                    <div class="text-xs font-mono text-gray-600 w-[64px] text-right">
+                                        {{ formatElapsed(plan.id) }}
+                                    </div>
+
+                                    <button v-if="plan.timer?.status === 'idle' || plan.timer?.status === 'stopped'"
+                                            @click="startTimer(plan)"
+                                            class="p-1.5 text-gray-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors"
+                                            title="Start timer">
+                                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </button>
+
+                                    <button v-if="plan.timer?.status === 'running'"
+                                            @click="pauseTimer(plan)"
+                                            class="p-1.5 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
+                                            title="Pause timer">
+                                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </button>
+
+                                    <button v-if="plan.timer?.status === 'paused'"
+                                            @click="resumeTimer(plan)"
+                                            class="p-1.5 text-gray-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors"
+                                            title="Resume timer">
+                                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </button>
+
+                                    <button v-if="plan.timer?.status === 'running' || plan.timer?.status === 'paused'"
+                                            @click="stopTimer(plan)"
+                                            class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                            title="Stop timer">
+                                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 6h12v12H6z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </button>
+                                </div>
+
                                 <button v-if="plan.status?.value !== 'done'" @click="markAsDone(plan.id)" class="p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors" title="Mark as Done">
                                     <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                                 </button>
@@ -114,7 +161,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue';
+import { ref, reactive, onMounted, onUnmounted } from 'vue';
 import api from '../../lib/axios';
 import DailyPlanModal from '../../components/DailyPlanModal.vue';
 
@@ -122,6 +169,8 @@ const plans = ref([]);
 const loading = ref(true);
 const isModalOpen = ref(false);
 const editingPlan = ref(null);
+const activeIntervals = new Map();
+const elapsedMap = reactive({}); // planId -> elapsed seconds
 
 const filters = reactive({
     date: new Date().toISOString().split('T')[0] // Default to today
@@ -152,10 +201,15 @@ const fetchPlans = async (page = 1) => {
             pagination.next = response.data.links?.next;
             pagination.prev = response.data.links?.prev;
         } else {
-            // Fallback if pagination wrapping is lost
             pagination.current = 1;
             pagination.last_page = 1;
         }
+
+        // Initialize elapsed map for all plans and start ticking
+        for (const plan of plans.value) {
+            elapsedMap[plan.id] = totalElapsedSeconds(plan);
+        }
+        syncIntervals();
     } catch (err) {
         console.error("Failed to fetch plans", err);
     } finally {
@@ -199,6 +253,91 @@ const handlePlanSaved = () => {
     fetchPlans(pagination.current);
 };
 
+const syncIntervals = () => {
+    // Clear intervals for plans no longer running
+    for (const [planId, intervalId] of activeIntervals) {
+        const plan = plans.value.find(p => p.id === planId);
+        if (!plan || plan?.timer?.status !== 'running') {
+            clearInterval(intervalId);
+            activeIntervals.delete(planId);
+        }
+    }
+
+    // Start intervals for running plans
+    for (const plan of plans.value) {
+        if (plan?.timer?.status === 'running' && !activeIntervals.has(plan.id)) {
+            const id = setInterval(() => {
+                elapsedMap[plan.id] = totalElapsedSeconds(plan);
+            }, 1000);
+            activeIntervals.set(plan.id, id);
+        }
+    }
+};
+
+const totalElapsedSeconds = (plan) => {
+    const base = (plan?.timer?.accumulated_seconds || 0);
+    if (plan?.timer?.status === 'running' && plan?.timer?.started_at) {
+        const started = new Date(plan.timer.started_at).getTime();
+        const nowMs = Date.now();
+        const seg = Math.max(0, Math.floor((nowMs - started) / 1000));
+        return base + seg;
+    }
+    return base;
+};
+
+const formatElapsed = (planId) => {
+    const secs = elapsedMap[planId] || 0;
+    const h = Math.floor(secs / 3600);
+    const m = Math.floor((secs % 3600) / 60);
+    const s = secs % 60;
+    if (h > 0) {
+        return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    }
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+};
+
+const startTimer = async (plan) => {
+    try {
+        const res = await api.post(`/timers/${plan.id}/start`);
+        await replacePlan(res.data.data);
+    } catch (e) {
+        alert(e.response?.data?.message || e.response?.data?.errors?.timer?.[0] || 'Failed to start timer');
+    }
+};
+
+const pauseTimer = async (plan) => {
+    try {
+        const res = await api.post(`/timers/${plan.id}/pause`);
+        await replacePlan(res.data.data);
+    } catch (e) {
+        alert(e.response?.data?.message || 'Failed to pause timer');
+    }
+};
+
+const resumeTimer = async (plan) => {
+    try {
+        const res = await api.post(`/timers/${plan.id}/resume`);
+        await replacePlan(res.data.data);
+    } catch (e) {
+        alert(e.response?.data?.message || e.response?.data?.errors?.timer?.[0] || 'Failed to resume timer');
+    }
+};
+
+const stopTimer = async (plan) => {
+    try {
+        const res = await api.post(`/timers/${plan.id}/stop`);
+        await replacePlan(res.data.data);
+    } catch (e) {
+        alert(e.response?.data?.message || 'Failed to stop timer');
+    }
+};
+
+const replacePlan = async (updated) => {
+    plans.value = plans.value.map(p => (p.id === updated.id ? updated : p));
+    elapsedMap[updated.id] = totalElapsedSeconds(updated);
+    syncIntervals();
+};
+
 // Styling helpers that map our PHP enum colors to Tailwind classes
 const getStatusBadgeClass = (color) => {
     const map = {
@@ -221,6 +360,14 @@ const getPriorityBadgeClass = (color) => {
 
 onMounted(() => {
     fetchPlans();
+});
+
+onUnmounted(() => {
+    // Clean up all intervals to prevent memory leaks
+    for (const [, intervalId] of activeIntervals) {
+        clearInterval(intervalId);
+    }
+    activeIntervals.clear();
 });
 </script>
 

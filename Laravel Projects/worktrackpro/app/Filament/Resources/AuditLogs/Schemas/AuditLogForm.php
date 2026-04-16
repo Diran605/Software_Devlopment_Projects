@@ -17,8 +17,12 @@ class AuditLogForm
                 \Filament\Forms\Components\TextInput::make('auditable_type')
                     ->disabled(),
                 \Filament\Forms\Components\KeyValue::make('old_values')
+                    ->keyLabel('Field')
+                    ->valueLabel('Data')
                     ->disabled(),
                 \Filament\Forms\Components\KeyValue::make('new_values')
+                    ->keyLabel('Field')
+                    ->valueLabel('Data')
                     ->disabled(),
             ]);
     }

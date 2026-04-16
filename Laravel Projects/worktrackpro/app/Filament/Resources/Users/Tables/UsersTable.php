@@ -62,6 +62,10 @@ class UsersTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
+                \Filament\Tables\Filters\SelectFilter::make('organisation_id')
+                    ->relationship('organisation', 'name')
+                    ->label('Organisation')
+                    ->hidden(fn () => !auth()->user()->hasRole('super_admin')),
                 TrashedFilter::make(),
             ])
             ->recordActions([

@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { useAuthStore } from './stores/auth';
+import { useSessionStore } from './stores/session';
 
 const routes = [
     {
@@ -37,6 +38,18 @@ const routes = [
         name: 'Settings',
         component: () => import('./views/settings/SettingsView.vue'),
         meta: { requiresAuth: true }
+    },
+    {
+        path: '/inbox',
+        name: 'Inbox',
+        component: () => import('./views/inbox/InboxView.vue'),
+        meta: { requiresAuth: true }
+    },
+    {
+        path: '/recurring-tasks',
+        name: 'RecurringTasks',
+        component: () => import('./views/recurring/RecurringTasksView.vue'),
+        meta: { requiresAuth: true }
     }
 ];
 
@@ -48,6 +61,7 @@ const router = createRouter({
 // Global authentication navigation guard
 router.beforeEach(async (to, from, next) => {
     const authStore = useAuthStore();
+    const sessionStore = useSessionStore();
     
     // If we have a token but no user object, fetch it
     if (authStore.token && !authStore.user) {
@@ -64,8 +78,17 @@ router.beforeEach(async (to, from, next) => {
     else if (to.meta.guestOnly && isAuthenticated) {
         next({ name: 'Dashboard' });
     } 
-    // Otherwise allow navigation
     else {
+        // Attendance gate: block plans/logs until clocked in
+        if (isAuthenticated && (to.name === 'DailyPlans' || to.name === 'ActivityLogs')) {
+            if (!sessionStore.currentSession && !sessionStore.loading) {
+                await sessionStore.fetchCurrentSession();
+            }
+            if (!sessionStore.isClockedIn) {
+                return next({ name: 'Dashboard' });
+            }
+        }
+
         next();
     }
 });

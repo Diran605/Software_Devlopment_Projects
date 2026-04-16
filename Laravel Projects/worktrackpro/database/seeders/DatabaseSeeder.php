@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
     {
         // 1. Seed Roles and Permissions
         $this->call(RoleAndPermissionSeeder::class);
+        $this->call(LetterTemplateSeeder::class);
 
         // 2. Default Organisation with branding
         $org = Organisation::create([

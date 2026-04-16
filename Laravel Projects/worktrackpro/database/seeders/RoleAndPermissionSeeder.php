@@ -23,6 +23,7 @@ class RoleAndPermissionSeeder extends Seeder
             'manage_work_types',
             'manage_project_clients',
             'manage_roles',
+            'manage_system_settings',
             
             // Task management
             'assign_plans',
@@ -31,6 +32,21 @@ class RoleAndPermissionSeeder extends Seeder
             'view_team_stats',
             'export_reports',
             'view_audit_logs',
+
+            // Attendance
+            'manage_attendance',
+            'reopen_sessions',
+
+            // Recurring tasks
+            'manage_task_templates',
+
+            // Inbox
+            'view_inbox',
+            'send_broadcast',
+
+            // Letters
+            'manage_letters',
+            'manage_letterheads',
             
             // Base (all users)
             'view_own_data',
@@ -56,6 +72,12 @@ class RoleAndPermissionSeeder extends Seeder
             'view_team_stats',
             'export_reports',
             'view_audit_logs',
+            'manage_attendance',
+            'reopen_sessions',
+            'manage_task_templates',
+            'view_inbox',
+            'send_broadcast',
+            'manage_letters',
             'view_own_data',
             'manage_own_work',
         ]);
