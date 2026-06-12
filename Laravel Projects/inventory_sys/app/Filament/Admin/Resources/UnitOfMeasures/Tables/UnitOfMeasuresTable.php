@@ -1,0 +1,42 @@
+<?php
+
+namespace App\Filament\Admin\Resources\UnitOfMeasures\Tables;
+
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Actions\ViewAction;
+use Filament\Actions\EditAction;
+use Filament\Tables\Table;
+
+class UnitOfMeasuresTable
+{
+    public static function configure(Table $table): Table
+    {
+        return $table
+            ->columns([
+                TextColumn::make('name')
+                    ->searchable()
+                    ->sortable(),
+                TextColumn::make('abbreviation')
+                    ->searchable()
+                    ->sortable(),
+                TextColumn::make('branch.name')
+                    ->label('Branch')
+                    ->sortable(),
+            ])
+            ->filters([
+                SelectFilter::make('branch_id')
+                    ->relationship('branch', 'name')
+                    ->searchable()
+                    ->preload()
+                    ->label('Branch'),
+            ])
+            ->actions([
+                ViewAction::make(),
+                EditAction::make(),
+            ])
+            ->bulkActions([])
+            ->emptyStateHeading('No units of measure yet')
+            ->emptyStateDescription('Create your first UoM.');
+    }
+}
