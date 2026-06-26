@@ -3,118 +3,85 @@
 namespace App\Filament\App\Resources\ClearanceItems\Pages;
 
 use App\Filament\App\Resources\ClearanceItems\ClearanceItemResource;
-use App\Models\ClearanceStock;
-use App\Models\ClearanceAction;
+use App\Services\ClearanceItemApprovalService;
 use Filament\Actions\Action;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\Select;
 use Filament\Resources\Pages\ViewRecord;
-use Illuminate\Support\Facades\DB;
+use Filament\Schemas\Schema;
 
 class ViewClearanceItem extends ViewRecord
 {
     protected static string $resource = ClearanceItemResource::class;
 
+    public function mount(int | string $record): void
+    {
+        parent::mount($record);
+        $this->record->load(['item.category', 'item.uom', 'batchInventory', 'rule']);
+    }
+
+    public function content(Schema $schema): Schema
+    {
+        return $schema
+            ->components([
+                $this->getInfolistContentComponent(),
+            ]);
+    }
+
     protected function getHeaderActions(): array
     {
+        $defaultDiscount = fn (): float => (float) ($this->record->rule?->discount ?? 0);
+        $defaultClearancePrice = fn (): float => (float) $this->record->original_price * (1 - $defaultDiscount() / 100);
+
         return [
             Action::make('approve')
-                ->label('Approve')
+                ->label('Approve & Set Action')
                 ->color('success')
-                ->visible(fn() => $this->record->approval_status === 'pending')
-                ->requiresConfirmation()
+                ->visible(fn () => $this->record->approval_status === 'pending' && auth()->user()->can('approve', $this->record))
                 ->form([
                     TextInput::make('qty_to_move')
-                        ->label('Qty to Move')
+                        ->label('Qty to Move to Clearance')
                         ->numeric()
-                        ->default(fn() => $this->record->qty_flagged)
+                        ->default(fn () => $this->record->qty_flagged)
+                        ->required(),
+                    TextInput::make('discount_percent')
+                        ->label('Discount %')
+                        ->numeric()
+                        ->minValue(0)
+                        ->maxValue(100)
+                        ->default($defaultDiscount)
+                        ->live()
+                        ->afterStateUpdated(function ($state, callable $set) {
+                            $original = (float) $this->record->original_price;
+                            $set('clearance_price', round($original * (1 - ((float) $state / 100)), 2));
+                        }),
+                    TextInput::make('clearance_price')
+                        ->label('Clearance Price')
+                        ->numeric()
+                        ->minValue(0)
+                        ->default($defaultClearancePrice)
                         ->required(),
                     Select::make('action_type')
+                        ->label('Action Type')
                         ->options([
-                            'sell' => 'Sell as Clearance',
+                            'sell' => 'Discount & Sell',
                             'donate' => 'Donate',
                             'dispose' => 'Dispose',
                         ])
+                        ->default('sell')
                         ->required(),
                     Textarea::make('notes')
                         ->label('Notes'),
                 ])
-                ->action(function (array $data) {
-                    DB::transaction(function () use ($data) {
-                        $batch = $this->record->batch_inventory;
-                        if ($batch) {
-                            if ($batch->qty_remaining < $data['qty_to_move']) {
-                                throw new \Exception("Insufficient stock in normal batch: remaining {$batch->qty_remaining}, requested {$data['qty_to_move']}.");
-                            }
-                            $batch->qty_remaining -= $data['qty_to_move'];
-                            $batch->save();
-                        }
-
-                        // Deduct normal stock level
-                        $inventoryService = app(\App\Services\InventoryService::class);
-                        $inventoryService->updateStockLevel(
-                            $this->record->branch_id,
-                            $this->record->item->department_id,
-                            $this->record->item_id,
-                            -$data['qty_to_move']
-                        );
-
-                        // Create Stock Movement
-                        $stockMovementService = app(\App\Services\StockMovementService::class);
-                        $stockMovementService->record(
-                            branchId: $this->record->branch_id,
-                            departmentId: $this->record->item->department_id,
-                            itemId: $this->record->item_id,
-                            batchInventoryId: $this->record->batch_inventory_id,
-                            recordedBy: auth()->id(),
-                            movementType: 'clearance_out',
-                            qtyIn: 0,
-                            qtyOut: $data['qty_to_move'],
-                            qtyBefore: null,
-                            qtyAfter: null,
-                            unitCost: $batch?->unit_cost,
-                            referenceType: get_class($this->record),
-                            referenceId: $this->record->id,
-                            batchNumber: $batch?->batch_number,
-                            expiryDate: $batch?->expiry_date,
-                            notes: $data['notes']
-                        );
-
-                        // Update Clearance Item
-                        $this->record->update([
-                            'approval_status' => 'approved',
-                            'action_type' => $data['action_type'],
-                            'qty_to_move' => $data['qty_to_move'],
-                            'notes' => $data['notes'],
-                        ]);
-
-                        // Create Clearance Stock record
-                        $originalPrice = $this->record->original_price;
-                        $discountPercent = $this->record->rule?->discount ?? 0;
-                        $clearancePrice = $originalPrice * (1 - $discountPercent / 100);
-
-                        ClearanceStock::create([
-                            'branch_id' => $this->record->branch_id,
-                            'department_id' => $this->record->item->department_id,
-                            'clearance_item_id' => $this->record->id,
-                            'item_id' => $this->record->item_id,
-                            'batch_inventory_id' => $this->record->batch_inventory_id,
-                            'batch_number' => $batch?->batch_number,
-                            'expiry_date' => $batch?->expiry_date,
-                            'qty_on_clearance' => $data['qty_to_move'],
-                            'qty_remaining' => $data['qty_to_move'],
-                            'original_price' => $originalPrice,
-                            'clearance_price' => $clearancePrice,
-                            'unit_cost' => $batch?->unit_cost,
-                        ]);
-                    });
+                ->action(function (array $data, ClearanceItemApprovalService $approvalService) {
+                    $approvalService->approve($this->record, $data);
+                    $this->record->refresh();
                 }),
             Action::make('decline')
                 ->label('Decline')
                 ->color('danger')
-                ->visible(fn() => $this->record->approval_status === 'pending')
-                ->requiresConfirmation()
+                ->visible(fn () => $this->record->approval_status === 'pending' && auth()->user()->can('edit', $this->record))
                 ->form([
                     Textarea::make('notes')
                         ->label('Reason for Decline')
@@ -126,7 +93,8 @@ class ViewClearanceItem extends ViewRecord
                         'notes' => $data['notes'],
                     ]);
                 }),
-            \Filament\Actions\EditAction::make(),
+            \Filament\Actions\EditAction::make()
+                ->visible(fn () => $this->record->approval_status === 'pending'),
         ];
     }
 }

@@ -10,6 +10,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Repeater;
 use Filament\Schemas\Schema;
+use App\Support\FormatsDates;
 use Filament\Facades\Filament;
 
 class DonationForm
@@ -21,15 +22,25 @@ class DonationForm
                 Grid::make(2)
                     ->schema([
                         TextInput::make('donation_number')
-                            ->required()
-                            ->default(fn () => 'DON-' . strtoupper(uniqid())),
+                            ->disabled()
+                            ->dehydrated(false)
+                            ->placeholder('Auto-generated on save'),
                         Select::make('department_id')
                             ->relationship('department', 'name')
                             ->searchable()
                             ->preload()
                             ->nullable(),
                         TextInput::make('recipient')
+                            ->label('Recipient Name')
                             ->required(),
+                        TextInput::make('recipient_contact')
+                            ->label('Recipient Contact')
+                            ->tel()
+                            ->maxLength(255),
+                        Textarea::make('recipient_address')
+                            ->label('Recipient Address')
+                            ->rows(2)
+                            ->columnSpanFull(),
                         DatePicker::make('donated_at')
                             ->required()
                             ->default(now()),
@@ -49,7 +60,7 @@ class DonationForm
                                             ->with('item')
                                             ->get()
                                             ->mapWithKeys(function ($stock) {
-                                                $expiryStr = $stock->expiry_date ? $stock->expiry_date->format('Y-m-d') : 'No Expiry';
+                                                $expiryStr = FormatsDates::formatDate($stock->expiry_date);
                                                 return [$stock->id => "{$stock->item->name} | Batch: {$stock->batch_number} | Expiry: {$expiryStr} | Qty Left: {$stock->qty_remaining}"];
                                             });
                                     })

@@ -26,6 +26,10 @@ class ClearanceStock extends Model
 
     protected $table = 'clearance_stocks';
 
+    protected $casts = [
+        'expiry_date' => 'date',
+    ];
+
     public function branch()
     {
         return $this->belongsTo(Branch::class);

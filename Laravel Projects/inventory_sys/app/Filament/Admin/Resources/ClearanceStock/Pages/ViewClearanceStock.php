@@ -3,117 +3,78 @@
 namespace App\Filament\Admin\Resources\ClearanceStock\Pages;
 
 use App\Filament\Admin\Resources\ClearanceStock\ClearanceStockResource;
-use App\Models\ClearanceAction;
-use App\Models\Disposal;
-use App\Models\Donation;
+use App\Filament\Concerns\HasClearanceStockReversalAction;
+use App\Services\ClearanceStockActionService;
 use Filament\Actions\Action;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\Select;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
-use Illuminate\Support\Facades\DB;
+use Filament\Schemas\Schema;
 
 class ViewClearanceStock extends ViewRecord
 {
+    use HasClearanceStockReversalAction;
+
     protected static string $resource = ClearanceStockResource::class;
+
+    public function mount(int | string $record): void
+    {
+        parent::mount($record);
+        $this->record->load(['item', 'department']);
+    }
+
+    public function content(Schema $schema): Schema
+    {
+        return $schema
+            ->components([
+                $this->getInfolistContentComponent(),
+            ]);
+    }
 
     protected function getHeaderActions(): array
     {
         return [
-            Action::make('sell')
-                ->label('Sell (Clearance)')
-                ->color('success')
-                ->visible(fn() => $this->record->qty_remaining > 0)
-                ->form([
-                    TextInput::make('qty')
-                        ->label('Qty to Sell')
-                        ->numeric()
-                        ->default(fn() => $this->record->qty_remaining)
-                        ->required()
-                        ->minValue(1)
-                        ->maxValue(fn() => $this->record->qty_remaining),
-                    Textarea::make('notes')
-                        ->label('Notes'),
-                ])
-                ->action(function (array $data) {
-                    DB::transaction(function () use ($data) {
-                        $lossValue = ($this->record->original_price - $this->record->clearance_price) * $data['qty'];
-
-                        ClearanceAction::create([
-                            'branch_id' => $this->record->branch_id,
-                            'clearance_stocks_id' => $this->record->id,
-                            'item_id' => $this->record->item_id,
-                            'batch_inventory_id' => $this->record->batch_inventory_id,
-                            'action_type' => 'sell',
-                            'qty' => $data['qty'],
-                            'loss_value' => $lossValue,
-                            'notes' => $data['notes'],
-                        ]);
-
-                        $this->record->decrement('qty_remaining', $data['qty']);
-                    });
-                }),
+            static::makeClearanceStockReversalAction()
+                ->successRedirectUrl(ClearanceStockResource::getUrl('index')),
             Action::make('donate')
                 ->label('Donate')
                 ->color('info')
-                ->visible(fn() => $this->record->qty_remaining > 0)
+                ->visible(fn () => $this->record->qty_remaining > 0 && auth()->user()->can('donate', $this->record))
                 ->form([
                     TextInput::make('qty')
                         ->label('Qty to Donate')
                         ->numeric()
-                        ->default(fn() => $this->record->qty_remaining)
+                        ->default(fn () => $this->record->qty_remaining)
                         ->required()
                         ->minValue(1)
-                        ->maxValue(fn() => $this->record->qty_remaining),
+                        ->maxValue(fn () => $this->record->qty_remaining),
                     TextInput::make('recipient')
                         ->label('Recipient')
                         ->required(),
                     Textarea::make('notes')
                         ->label('Notes'),
                 ])
-                ->action(function (array $data) {
-                    DB::transaction(function () use ($data) {
-                        $lossValue = $this->record->unit_cost * $data['qty'];
-
-                        $donation = Donation::create([
-                            'branch_id' => $this->record->branch_id,
-                            'department_id' => $this->record->department_id,
-                            'item_id' => $this->record->item_id,
-                            'quantity' => $data['qty'],
-                            'donation_date' => now(),
-                            'recipient' => $data['recipient'],
-                            'notes' => $data['notes'],
-                            'created_by' => auth()->id(),
-                        ]);
-
-                        ClearanceAction::create([
-                            'branch_id' => $this->record->branch_id,
-                            'clearance_stocks_id' => $this->record->id,
-                            'item_id' => $this->record->item_id,
-                            'batch_inventory_id' => $this->record->batch_inventory_id,
-                            'action_type' => 'donate',
-                            'qty' => $data['qty'],
-                            'loss_value' => $lossValue,
-                            'donation_id' => $donation->id,
-                            'notes' => $data['notes'],
-                        ]);
-
-                        $this->record->decrement('qty_remaining', $data['qty']);
-                    });
+                ->action(function (array $data, ClearanceStockActionService $service): void {
+                    $service->donate($this->record, $data);
+                    $this->record->refresh();
+                    Notification::make()->title('Donation recorded')->success()->send();
                 }),
             Action::make('dispose')
                 ->label('Dispose')
                 ->color('danger')
-                ->visible(fn() => $this->record->qty_remaining > 0)
+                ->visible(fn () => $this->record->qty_remaining > 0 && auth()->user()->can('dispose', $this->record))
                 ->form([
                     TextInput::make('qty')
                         ->label('Qty to Dispose')
                         ->numeric()
-                        ->default(fn() => $this->record->qty_remaining)
+                        ->default(fn () => $this->record->qty_remaining)
                         ->required()
                         ->minValue(1)
-                        ->maxValue(fn() => $this->record->qty_remaining),
+                        ->maxValue(fn () => $this->record->qty_remaining),
                     Select::make('reason')
+                        ->label('Disposal Reason')
                         ->options([
                             'expired' => 'Expired',
                             'damaged' => 'Damaged',
@@ -124,35 +85,10 @@ class ViewClearanceStock extends ViewRecord
                     Textarea::make('notes')
                         ->label('Notes'),
                 ])
-                ->action(function (array $data) {
-                    DB::transaction(function () use ($data) {
-                        $lossValue = $this->record->unit_cost * $data['qty'];
-
-                        $disposal = Disposal::create([
-                            'branch_id' => $this->record->branch_id,
-                            'department_id' => $this->record->department_id,
-                            'item_id' => $this->record->item_id,
-                            'quantity' => $data['qty'],
-                            'disposal_date' => now(),
-                            'reason' => $data['reason'],
-                            'notes' => $data['notes'],
-                            'created_by' => auth()->id(),
-                        ]);
-
-                        ClearanceAction::create([
-                            'branch_id' => $this->record->branch_id,
-                            'clearance_stocks_id' => $this->record->id,
-                            'item_id' => $this->record->item_id,
-                            'batch_inventory_id' => $this->record->batch_inventory_id,
-                            'action_type' => 'dispose',
-                            'qty' => $data['qty'],
-                            'loss_value' => $lossValue,
-                            'disposal_id' => $disposal->id,
-                            'notes' => $data['notes'],
-                        ]);
-
-                        $this->record->decrement('qty_remaining', $data['qty']);
-                    });
+                ->action(function (array $data, ClearanceStockActionService $service): void {
+                    $service->dispose($this->record, $data);
+                    $this->record->refresh();
+                    Notification::make()->title('Disposal recorded')->success()->send();
                 }),
         ];
     }

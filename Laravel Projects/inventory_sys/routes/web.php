@@ -23,9 +23,14 @@ Route::prefix('import-templates')->middleware(['auth'])->group(function () {
 Route::prefix('reports')->middleware(['auth'])->group(function () {
     Route::get('/sales/pdf', [\App\Http\Controllers\ReportPdfController::class, 'sales'])->name('reports.sales.pdf');
     Route::get('/stock-valuation/pdf', [\App\Http\Controllers\ReportPdfController::class, 'stockValuation'])->name('reports.stock-valuation.pdf');
+    Route::get('/items-list/pdf', [\App\Http\Controllers\ReportPdfController::class, 'itemsList'])->name('reports.items-list.pdf');
     Route::get('/purchases/pdf', [\App\Http\Controllers\ReportPdfController::class, 'purchases'])->name('reports.purchases.pdf');
     Route::get('/profit-loss/pdf', [\App\Http\Controllers\ReportPdfController::class, 'profitLoss'])->name('reports.profit-loss.pdf');
     Route::get('/expiry/pdf', [\App\Http\Controllers\ReportPdfController::class, 'expiry'])->name('reports.expiry.pdf');
+    Route::get('/low-stock/pdf', [\App\Http\Controllers\ReportPdfController::class, 'lowStock'])->name('reports.low-stock.pdf');
+    Route::get('/inventory-count/{inventoryCount}/pdf', [\App\Http\Controllers\ReportPdfController::class, 'inventoryCount'])->name('reports.inventory-count.pdf');
+    Route::get('/clearance-activity/pdf', [\App\Http\Controllers\ReportPdfController::class, 'clearanceActivity'])->name('reports.clearance-activity.pdf');
+    Route::get('/expenses/pdf', [\App\Http\Controllers\ReportPdfController::class, 'expenses'])->name('reports.expenses.pdf');
 });
 
 // Simple GET route to clear session/logout

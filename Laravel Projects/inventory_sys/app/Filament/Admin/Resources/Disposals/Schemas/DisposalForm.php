@@ -26,12 +26,14 @@ class DisposalForm
                     ->required(),
                 Select::make('reason')
                     ->options([
-            'damage' => 'Damage',
-            'expired' => 'Expired',
-            'obsolescence' => 'Obsolescence',
-            'other' => 'Other',
-        ])
+                        'damage' => 'Damaged',
+                        'expired' => 'Expired',
+                        'obsolescence' => 'Quality Issue / Obsolescence',
+                        'other' => 'Other',
+                    ])
                     ->required(),
+                TextInput::make('disposal_method')
+                    ->label('Disposal Method'),
                 Textarea::make('notes')
                     ->columnSpanFull(),
                 DateTimePicker::make('disposed_at')

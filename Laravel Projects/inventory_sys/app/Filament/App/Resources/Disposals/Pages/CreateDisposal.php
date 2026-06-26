@@ -10,6 +10,16 @@ class CreateDisposal extends CreateRecord
 {
     protected static string $resource = DisposalResource::class;
 
+    protected function mutateFormDataBeforeCreate(array $data): array
+    {
+        $data['disposal_number'] = app(\App\Services\NumberGeneratorService::class)
+            ->generateDisposalNumber($data['branch_id']);
+        $data['disposed_at'] ??= now();
+        $data['created_by'] ??= auth()->id();
+
+        return $data;
+    }
+
     protected function handleRecordCreation(array $data): \Illuminate\Database\Eloquent\Model
     {
         return DB::transaction(function () use ($data) {

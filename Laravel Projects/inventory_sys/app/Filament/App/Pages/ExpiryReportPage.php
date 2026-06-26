@@ -11,12 +11,14 @@ use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Grid;
 use Filament\Facades\Filament;
 use Illuminate\Support\Facades\DB;
+use App\Filament\Concerns\ProvidesReportPdfParams;
 use App\Models\BatchInventory;
 use App\Models\ItemCategory;
 
 class ExpiryReportPage extends Page implements HasForms
 {
     use InteractsWithForms;
+    use ProvidesReportPdfParams;
 
     protected string $view = 'filament.app.pages.reports.expiry-report';
 
@@ -50,7 +52,7 @@ class ExpiryReportPage extends Page implements HasForms
     public function mount(): void
     {
         $this->form->fill([
-            'branch_id' => null,
+            'branch_id' => Filament::getTenant()?->id,
             'days_threshold' => 90,
             'category_id' => null,
             'urgency_band' => 'all',
@@ -176,6 +178,7 @@ class ExpiryReportPage extends Page implements HasForms
     {
         return [
             'reportData' => $this->getData(),
+            'pdfParams' => $this->getPdfParams(),
         ];
     }
 }

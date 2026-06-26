@@ -10,6 +10,16 @@ class CreateDonation extends CreateRecord
 {
     protected static string $resource = DonationResource::class;
 
+    protected function mutateFormDataBeforeCreate(array $data): array
+    {
+        $data['donation_number'] = app(\App\Services\NumberGeneratorService::class)
+            ->generateDonationNumber($data['branch_id']);
+        $data['donated_at'] ??= now();
+        $data['created_by'] ??= auth()->id();
+
+        return $data;
+    }
+
     protected function handleRecordCreation(array $data): \Illuminate\Database\Eloquent\Model
     {
         return DB::transaction(function () use ($data) {

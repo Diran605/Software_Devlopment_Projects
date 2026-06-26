@@ -24,6 +24,15 @@ class User extends Authenticatable implements FilamentUser, HasTenants
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, SoftDeletes, HasRoles;
 
+    protected static function booted()
+    {
+        static::saved(function ($user) {
+            if ($user->branch_id && !$user->branches()->where('branch_id', $user->branch_id)->exists()) {
+                $user->branches()->syncWithoutDetaching([$user->branch_id]);
+            }
+        });
+    }
+
     /**
      * Get the attributes that should be cast.
      *

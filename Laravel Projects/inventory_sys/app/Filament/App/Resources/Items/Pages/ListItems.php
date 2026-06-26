@@ -18,6 +18,12 @@ class ListItems extends ListRecords
         return [
             CreateAction::make(),
 
+            Action::make('export_items_pdf')
+                ->label('Export Items List (PDF)')
+                ->icon('heroicon-o-document-arrow-down')
+                ->color('info')
+                ->url(fn () => route('reports.items-list.pdf')),
+
             XlsxAndCsvImportAction::make()
                 ->importer(ItemImporter::class)
                 ->label('Import Items'),

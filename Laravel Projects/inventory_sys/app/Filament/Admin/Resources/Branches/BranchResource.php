@@ -5,6 +5,7 @@ namespace App\Filament\Admin\Resources\Branches;
 use App\Filament\Admin\Resources\Branches\Pages\CreateBranch;
 use App\Filament\Admin\Resources\Branches\Pages\EditBranch;
 use App\Filament\Admin\Resources\Branches\Pages\ListBranches;
+use App\Filament\Admin\Resources\Branches\Pages\ViewBranch;
 use App\Filament\Admin\Resources\Branches\Schemas\BranchForm;
 use App\Filament\Admin\Resources\Branches\Tables\BranchesTable;
 use App\Models\Branch;
@@ -73,6 +74,7 @@ protected static ?string $model = Branch::class;
         return [
             'index' => ListBranches::route('/'),
             'create' => CreateBranch::route('/create'),
+            'view' => ViewBranch::route('/{record}'),
             'edit' => EditBranch::route('/{record}/edit'),
         ];
     }

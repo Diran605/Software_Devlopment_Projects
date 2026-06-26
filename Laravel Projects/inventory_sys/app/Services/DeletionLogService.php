@@ -4,7 +4,11 @@ namespace App\Services;
 
 use App\Models\DeletionLog;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\DB;
+use ReflectionClass;
+use ReflectionMethod;
+use ReflectionNamedType;
 
 class DeletionLogService
 {
@@ -15,7 +19,7 @@ class DeletionLogService
         array $stockReversal = [],
         ?string $recordNumber = null
     ): DeletionLog {
-        $branchId = $record->branch_id ?? null;
+        $branchId = $this->resolveBranchId($record);
         $snapshot = $this->buildSnapshot($record);
 
         return DB::transaction(function () use (
@@ -27,12 +31,12 @@ class DeletionLogService
             $recordNumber,
             $snapshot
         ) {
-            return DeletionLog::create([
+            return DeletionLog::query()->create([
                 'branch_id' => $branchId,
                 'deleted_by' => $deletedBy,
-                'record_type' => get_class($record),
-                'record_id' => $record->id,
-                'record_number' => $recordNumber,
+                'record_type' => $record::class,
+                'record_id' => $record->getKey(),
+                'record_number' => $recordNumber ?? (string) $record->getKey(),
                 'reason' => $reason,
                 'snapshot' => $snapshot,
                 'stock_reversal' => $stockReversal,
@@ -41,25 +45,86 @@ class DeletionLogService
         });
     }
 
+    private function resolveBranchId(Model $record): int
+    {
+        if ($record->getAttribute('branch_id')) {
+            return (int) $record->branch_id;
+        }
+
+        foreach (['branch', 'inventoryCount', 'purchaseOrder', 'salesOrder', 'openingStockEntry', 'goodsReceivedNote', 'stockTransfer'] as $relation) {
+            if (! method_exists($record, $relation)) {
+                continue;
+            }
+
+            $related = $record->{$relation};
+
+            if ($related?->getAttribute('branch_id')) {
+                return (int) $related->branch_id;
+            }
+
+            if ($relation === 'branch' && $related) {
+                return (int) $related->getKey();
+            }
+        }
+
+        $branchId = auth()->user()?->branch_id
+            ?? auth()->user()?->branches()->value('branches.id');
+
+        if ($branchId) {
+            return (int) $branchId;
+        }
+
+        throw new \RuntimeException('Cannot record deletion log: no branch could be resolved for this record.');
+    }
+
     private function buildSnapshot(Model $record): array
     {
-        $snapshot = $record->toArray();
+        $relationNames = $this->detectRelationMethods($record);
 
-        // Load common relations to snapshot
-        $relationMethods = collect(get_class_methods($record))
-            ->filter(fn($method) => !in_array($method, ['__construct', 'boot', 'get', 'toArray']));
+        if ($relationNames !== []) {
+            $record->loadMissing($relationNames);
+        }
 
-        foreach ($relationMethods as $method) {
+        return $record->toArray();
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function detectRelationMethods(Model $record): array
+    {
+        $names = [];
+        $reflection = new ReflectionClass($record);
+
+        foreach ($reflection->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
+            if ($method->getNumberOfRequiredParameters() > 0) {
+                continue;
+            }
+
+            if ($method->getDeclaringClass()->getName() !== $record::class) {
+                continue;
+            }
+
+            $returnType = $method->getReturnType();
+
+            if ($returnType instanceof ReflectionNamedType && ! $returnType->isBuiltin()) {
+                if (is_subclass_of($returnType->getName(), Relation::class)) {
+                    $names[] = $method->getName();
+                    continue;
+                }
+            }
+
             try {
-                if (method_exists($record, $method) && is_callable([$record, $method])) {
-                    $relation = $record->$method();
-                    $snapshot[$method] = $relation->get()->toArray();
+                $result = $method->invoke($record);
+
+                if ($result instanceof Relation) {
+                    $names[] = $method->getName();
                 }
             } catch (\Throwable) {
                 continue;
             }
         }
 
-        return $snapshot;
+        return array_values(array_unique($names));
     }
 }

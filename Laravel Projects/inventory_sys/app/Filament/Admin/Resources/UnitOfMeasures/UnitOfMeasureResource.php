@@ -5,6 +5,7 @@ namespace App\Filament\Admin\Resources\UnitOfMeasures;
 use App\Filament\Admin\Resources\UnitOfMeasures\Pages\CreateUnitOfMeasure;
 use App\Filament\Admin\Resources\UnitOfMeasures\Pages\EditUnitOfMeasure;
 use App\Filament\Admin\Resources\UnitOfMeasures\Pages\ListUnitOfMeasures;
+use App\Filament\Admin\Resources\UnitOfMeasures\Pages\ViewUnitOfMeasure;
 use App\Filament\Admin\Resources\UnitOfMeasures\Schemas\UnitOfMeasureForm;
 use App\Filament\Admin\Resources\UnitOfMeasures\Tables\UnitOfMeasuresTable;
 use App\Models\UnitOfMeasure;
@@ -73,6 +74,7 @@ protected static ?string $model = UnitOfMeasure::class;
         return [
             'index' => ListUnitOfMeasures::route('/'),
             'create' => CreateUnitOfMeasure::route('/create'),
+            'view' => ViewUnitOfMeasure::route('/{record}'),
             'edit' => EditUnitOfMeasure::route('/{record}/edit'),
         ];
     }

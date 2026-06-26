@@ -72,4 +72,14 @@ class NumberGeneratorService
     {
         return $this->generate('CNT', $branchId, 'inventory_counts');
     }
+
+    public function generateDisposalNumber(int $branchId): string
+    {
+        return $this->generate('DSP', $branchId, 'disposals');
+    }
+
+    public function generateDonationNumber(int $branchId): string
+    {
+        return $this->generate('DON', $branchId, 'donations');
+    }
 }

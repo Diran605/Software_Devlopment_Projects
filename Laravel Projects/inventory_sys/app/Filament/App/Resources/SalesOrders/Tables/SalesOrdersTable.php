@@ -42,10 +42,6 @@ class SalesOrdersTable
                     ->money('XAF')
                     ->sortable()
                     ->label('Gross Profit'),
-                TextColumn::make('amount_tendered')
-                    ->money('XAF')
-                    ->sortable()
-                    ->label('Amount Tendered'),
                 TextColumn::make('servedBy.name')
                     ->sortable()
                     ->label('Served By'),

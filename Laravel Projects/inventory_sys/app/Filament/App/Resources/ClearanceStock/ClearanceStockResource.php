@@ -4,6 +4,7 @@ namespace App\Filament\App\Resources\ClearanceStock;
 
 use App\Filament\App\Resources\ClearanceStock\Pages\ListClearanceStock;
 use App\Filament\App\Resources\ClearanceStock\Pages\ViewClearanceStock;
+use App\Filament\App\Resources\ClearanceStock\Schemas\ClearanceStockInfolist;
 use App\Filament\App\Resources\ClearanceStock\Tables\ClearanceStockTable;
 use App\Models\ClearanceStock;
 use Filament\Resources\Resource;
@@ -50,6 +51,11 @@ class ClearanceStockResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema->components([]);
+    }
+
+    public static function infolist(Schema $schema): Schema
+    {
+        return ClearanceStockInfolist::configure($schema);
     }
 
     public static function table(Table $table): Table

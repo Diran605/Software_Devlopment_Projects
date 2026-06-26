@@ -4,62 +4,29 @@ namespace App\Policies;
 
 use App\Models\StockTransfer;
 use App\Models\User;
+use App\Policies\Concerns\ChecksModulePermissions;
 
 class StockTransferPolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
-    public function viewAny(User $user): bool
+    use ChecksModulePermissions;
+
+    protected function permissionModule(): string
     {
-        return true;
+        return 'stock-transfers';
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
-    public function view(User $user, StockTransfer $stockTransfer): bool
-    {
-        return true;
-    }
-
-    /**
-     * Determine whether the user can create models.
-     */
-    public function create(User $user): bool
-    {
-        return $user->hasAnyRole(['super-admin', 'branch-manager', 'inventory-manager', 'cashier']);
-    }
-
-    /**
-     * Determine whether the user can update the model.
-     */
     public function update(User $user, StockTransfer $stockTransfer): bool
     {
-        return $user->hasAnyRole(['super-admin', 'branch-manager', 'inventory-manager']);
+        return false;
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
-    public function delete(User $user, StockTransfer $stockTransfer): bool
+    public function approve(User $user, StockTransfer $stockTransfer): bool
     {
-        return $user->hasAnyRole(['super-admin', 'branch-manager']);
+        return $user->can('approve.stock-transfers');
     }
 
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(User $user, StockTransfer $stockTransfer): bool
+    public function receive(User $user, StockTransfer $stockTransfer): bool
     {
-        return $user->hasAnyRole(['super-admin', 'branch-manager']);
-    }
-
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(User $user, StockTransfer $stockTransfer): bool
-    {
-        return $user->hasRole('super-admin');
+        return $user->can('receive.stock-transfers');
     }
 }

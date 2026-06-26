@@ -59,4 +59,96 @@ class InventoryCount extends Model
     {
         return $this->hasMany(InventoryCountLine::class);
     }
+
+    /**
+     * @return array{total: int, counted: int, remaining: int, progress_percent: int, net_variance_value: float}
+     */
+    public function countSummary(): array
+    {
+        $lines = $this->relationLoaded('lines')
+            ? $this->lines
+            : $this->lines()->get(['qty_counted', 'variance_value']);
+
+        $total = $lines->count();
+        $counted = $lines->whereNotNull('qty_counted')->count();
+        $remaining = $total - $counted;
+
+        return [
+            'total' => $total,
+            'counted' => $counted,
+            'remaining' => $remaining,
+            'progress_percent' => $total > 0 ? (int) round(($counted / $total) * 100) : 0,
+            'net_variance_value' => (float) $lines->sum('variance_value'),
+        ];
+    }
+
+    /**
+     * @return array{match_count: int, match_percent: int, shortage_count: int, shortage_value: float, surplus_count: int, surplus_value: float, net_value: float}
+     */
+    public function varianceSummary(): array
+    {
+        $lines = $this->relationLoaded('lines')
+            ? $this->lines
+            : $this->lines()->get(['qty_counted', 'qty_variance', 'variance_value']);
+
+        $countedLines = $lines->whereNotNull('qty_counted');
+        $matchCount = $countedLines->where('qty_variance', 0)->count();
+        $shortageLines = $countedLines->where('qty_variance', '<', 0);
+        $surplusLines = $countedLines->where('qty_variance', '>', 0);
+        $countedTotal = $countedLines->count();
+
+        return [
+            'match_count' => $matchCount,
+            'match_percent' => $countedTotal > 0 ? (int) round(($matchCount / $countedTotal) * 100) : 0,
+            'shortage_count' => $shortageLines->count(),
+            'shortage_value' => (float) $shortageLines->sum('variance_value'),
+            'surplus_count' => $surplusLines->count(),
+            'surplus_value' => (float) $surplusLines->sum('variance_value'),
+            'net_value' => (float) $countedLines->sum('variance_value'),
+        ];
+    }
+
+    /**
+     * @return \Illuminate\Support\Collection<int, object{
+     *     item_id: int,
+     *     title: string,
+     *     batch_count: int,
+     *     has_variance: bool,
+     *     has_pending: bool,
+     *     description: string,
+     * }>
+     */
+    public function itemGroupMeta(): \Illuminate\Support\Collection
+    {
+        $lines = $this->relationLoaded('lines')
+            ? $this->lines->loadMissing('item')
+            : $this->lines()->with('item')->get();
+
+        return $lines
+            ->groupBy('item_id')
+            ->map(function ($lines, $itemId) {
+                $first = $lines->first();
+                $name = $first->item?->name ?? 'Unknown Item';
+                $batchCount = $lines->count();
+                $hasVariance = $lines->contains(fn ($line) => ($line->qty_variance ?? 0) !== 0);
+                $hasPending = $lines->contains(fn ($line) => $line->qty_counted === null);
+
+                $description = match (true) {
+                    $hasVariance && $hasPending => 'Variances and uncounted batches',
+                    $hasVariance => 'Has variances — review required',
+                    $hasPending => 'Uncounted batches remaining',
+                    default => 'All batches matched',
+                };
+
+                return (object) [
+                    'item_id' => (int) $itemId,
+                    'title' => "{$name} — {$batchCount} ".str('batch')->plural($batchCount),
+                    'batch_count' => $batchCount,
+                    'has_variance' => $hasVariance,
+                    'has_pending' => $hasPending,
+                    'description' => $description,
+                ];
+            })
+            ->values();
+    }
 }

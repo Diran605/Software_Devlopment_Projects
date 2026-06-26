@@ -19,13 +19,18 @@ class LowStockAlert extends BaseWidget
         $branchId = $tenant ? $tenant->id : null;
 
         return $table
+            ->heading('📉 Low Stock Alert')
             ->query(
                 ItemStockLevel::query()
-                    ->where('branch_id', $branchId)
-                    ->whereColumn('qty_on_hand', '<=', 'reorder_level')
+                    ->join('items', 'items.id', '=', 'item_stock_levels.item_id')
+                    ->when($branchId, fn ($query) => $query->where('item_stock_levels.branch_id', $branchId))
+                    ->whereNotNull('item_stock_levels.department_id')
+                    ->where('items.reorder_level', '>', 0)
+                    ->whereColumn('item_stock_levels.qty_on_hand', '<=', 'items.reorder_level')
+                    ->select('item_stock_levels.*')
                     ->with(['item', 'item.category'])
-                    ->orderBy('qty_on_hand', 'asc')
-                    ->limit(5)
+                    ->orderBy('item_stock_levels.qty_on_hand', 'asc')
+                    ->limit(10)
             )
             ->columns([
                 Tables\Columns\TextColumn::make('item.name')
@@ -38,7 +43,7 @@ class LowStockAlert extends BaseWidget
                 Tables\Columns\TextColumn::make('qty_on_hand')
                     ->label('Qty On Hand')
                     ->numeric(),
-                Tables\Columns\TextColumn::make('reorder_level')
+                Tables\Columns\TextColumn::make('item.reorder_level')
                     ->label('Reorder Level')
                     ->numeric(),
                 Tables\Columns\TextColumn::make('status')

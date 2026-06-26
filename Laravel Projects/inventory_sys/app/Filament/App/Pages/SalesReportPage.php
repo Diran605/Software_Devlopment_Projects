@@ -2,6 +2,7 @@
 
 namespace App\Filament\App\Pages;
 
+use App\Filament\Concerns\ProvidesReportPdfParams;
 use Filament\Pages\Page;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
@@ -15,6 +16,7 @@ use Illuminate\Support\Facades\DB;
 class SalesReportPage extends Page implements HasForms
 {
     use InteractsWithForms;
+    use ProvidesReportPdfParams;
 
     protected string $view = 'filament.app.pages.reports.sales-report';
 
@@ -48,7 +50,7 @@ class SalesReportPage extends Page implements HasForms
     public function mount(): void
     {
         $this->form->fill([
-            'branch_id' => null,
+            'branch_id' => Filament::getTenant()?->id,
             'date_from' => now()->startOfMonth()->format('Y-m-d'),
             'date_to' => now()->endOfMonth()->format('Y-m-d'),
             'group_by' => 'date',
@@ -170,6 +172,7 @@ class SalesReportPage extends Page implements HasForms
     {
         return [
             'reportData' => $this->getData(),
+            'pdfParams' => $this->getPdfParams(),
         ];
     }
 }

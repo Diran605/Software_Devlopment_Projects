@@ -5,6 +5,7 @@ namespace App\Filament\Admin\Resources\Suppliers;
 use App\Filament\Admin\Resources\Suppliers\Pages\CreateSupplier;
 use App\Filament\Admin\Resources\Suppliers\Pages\EditSupplier;
 use App\Filament\Admin\Resources\Suppliers\Pages\ListSuppliers;
+use App\Filament\Admin\Resources\Suppliers\Pages\ViewSupplier;
 use App\Filament\Admin\Resources\Suppliers\Schemas\SupplierForm;
 use App\Filament\Admin\Resources\Suppliers\Tables\SuppliersTable;
 use App\Models\Supplier;
@@ -73,6 +74,7 @@ protected static ?string $model = Supplier::class;
         return [
             'index' => ListSuppliers::route('/'),
             'create' => CreateSupplier::route('/create'),
+            'view' => ViewSupplier::route('/{record}'),
             'edit' => EditSupplier::route('/{record}/edit'),
         ];
     }

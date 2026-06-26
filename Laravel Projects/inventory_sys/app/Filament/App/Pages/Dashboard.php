@@ -58,6 +58,7 @@ class Dashboard extends BaseDashboard
             \App\Filament\App\Widgets\StockSummaryWidget::class,
             \App\Filament\App\Widgets\SalesTrendWidget::class,
             \App\Filament\App\Widgets\LowStockAlert::class,
+            \App\Filament\App\Widgets\NearExpiryAlert::class,
             \App\Filament\App\Widgets\TopSellingItemsWidget::class,
             \App\Filament\App\Widgets\RecentSalesTable::class,
         ];

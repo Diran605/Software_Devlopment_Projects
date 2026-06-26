@@ -3,6 +3,7 @@
 namespace App\Filament\App\Resources\Items\Tables;
 
 use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -73,6 +74,7 @@ class ItemsTable
             ])
             ->defaultSort('name')
             ->actions([
+                ViewAction::make(),
                 EditAction::make(),
                 DeleteAction::make(),
             ])

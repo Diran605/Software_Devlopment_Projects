@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[Fillable([
     'branch_id', 'department_id', 'created_by', 'donation_number',
-    'recipient', 'notes', 'donated_at'
+    'recipient', 'recipient_contact', 'recipient_address', 'notes', 'donated_at'
 ])]
 class Donation extends Model
 {

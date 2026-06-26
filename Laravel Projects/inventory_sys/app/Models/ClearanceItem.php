@@ -32,7 +32,7 @@ class ClearanceItem extends Model
 
     public function rule()
     {
-        return $this->belongsTo(ClearanceRule::class);
+        return $this->belongsTo(ClearanceRule::class, 'rule_id');
     }
 
     public function clearanceStock()

@@ -5,6 +5,7 @@ namespace App\Filament\App\Resources\Disposals;
 use App\Filament\App\Resources\Disposals\Pages\CreateDisposal;
 use App\Filament\App\Resources\Disposals\Pages\EditDisposal;
 use App\Filament\App\Resources\Disposals\Pages\ListDisposals;
+use App\Filament\App\Resources\Disposals\Pages\ViewDisposal;
 use App\Filament\App\Resources\Disposals\Schemas\DisposalForm;
 use App\Filament\App\Resources\Disposals\Tables\DisposalsTable;
 use App\Models\Disposal;
@@ -73,6 +74,7 @@ protected static ?string $model = Disposal::class;
         return [
             'index' => ListDisposals::route('/'),
             'create' => CreateDisposal::route('/create'),
+            'view' => ViewDisposal::route('/{record}'),
             'edit' => EditDisposal::route('/{record}/edit'),
         ];
     }

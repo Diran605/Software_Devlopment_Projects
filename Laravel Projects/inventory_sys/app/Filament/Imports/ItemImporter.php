@@ -22,13 +22,16 @@ class ItemImporter extends Importer
             ImportColumn::make('description'),
             ImportColumn::make('category')
                 ->label('Category Name')
-                ->rules(['nullable', 'string']),
+                ->rules(['nullable', 'string'])
+                ->fillRecordUsing(fn () => null),
             ImportColumn::make('uom')
                 ->label('UOM (Name or Abbreviation)')
-                ->rules(['nullable', 'string']),
+                ->rules(['nullable', 'string'])
+                ->fillRecordUsing(fn () => null),
             ImportColumn::make('packaging_type')
                 ->label('Packaging Type')
-                ->rules(['nullable', 'string']),
+                ->rules(['nullable', 'string'])
+                ->fillRecordUsing(fn () => null),
             ImportColumn::make('unit_cost')
                 ->requiredMapping()
                 ->numeric()
@@ -55,7 +58,8 @@ class ItemImporter extends Importer
                 ->rules(['nullable', 'boolean']),
             ImportColumn::make('branch')
                 ->label('Branch')
-                ->rules(['nullable', 'string']),
+                ->rules(['nullable', 'string'])
+                ->fillRecordUsing(fn () => null),
         ];
     }
 

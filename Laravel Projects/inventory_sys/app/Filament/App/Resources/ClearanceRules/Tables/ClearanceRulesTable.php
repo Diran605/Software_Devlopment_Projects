@@ -41,6 +41,7 @@ class ClearanceRulesTable
                 TernaryFilter::make('is_active'),
             ])
             ->actions([
+                ViewAction::make(),
                 EditAction::make(),
                 DeleteAction::make(),
             ])

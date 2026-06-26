@@ -53,4 +53,15 @@ class InventoryService
             $stockLevel->save();
         });
     }
+
+    public function moveStockBetweenDepartments(int $branchId, int $itemId, ?int $oldDepartmentId, ?int $newDepartmentId, int $qty, float $unitCost): void
+    {
+        DB::transaction(function () use ($branchId, $itemId, $oldDepartmentId, $newDepartmentId, $qty, $unitCost) {
+            // Remove from old department
+            $this->updateStockLevel($branchId, $oldDepartmentId, $itemId, -$qty, $unitCost);
+            
+            // Add to new department
+            $this->updateStockLevel($branchId, $newDepartmentId, $itemId, $qty, $unitCost);
+        });
+    }
 }

@@ -50,6 +50,58 @@ class SalesOrderForm
                         Grid::make(6)
                             ->schema([
                                 Hidden::make('id'),
+                                Select::make('clearance_stock_id')
+                                    ->label('Clearance Stock')
+                                    ->options(function () {
+                                        $tenantId = \Filament\Facades\Filament::getTenant()?->id;
+
+                                        return \App\Models\ClearanceStock::query()
+                                            ->where('branch_id', $tenantId)
+                                            ->where('qty_remaining', '>', 0)
+                                            ->with('item')
+                                            ->get()
+                                            ->mapWithKeys(function ($stock) {
+                                                $expiry = \App\Support\FormatsDates::formatDate($stock->expiry_date);
+
+                                                return [$stock->id => "{$stock->item->name} | Batch: {$stock->batch_number} | Exp: {$expiry} | Price: FCFA ".number_format($stock->clearance_price, 0)." | Qty: {$stock->qty_remaining}"];
+                                            });
+                                    })
+                                    ->searchable()
+                                    ->nullable()
+                                    ->live()
+                                    ->columnSpan(2)
+                                    ->disabled(fn (callable $get) => filled($get('id')))
+                                    ->helperText('Select clearance stock to sell at the discounted clearance price')
+                                    ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                                        if ($state) {
+                                            $stock = \App\Models\ClearanceStock::find($state);
+                                            if ($stock) {
+                                                $set('item_id', $stock->item_id);
+                                                $set('batch_inventory_id', $stock->batch_inventory_id);
+                                                $set('unit_price', $stock->clearance_price);
+                                                $set('qty_sold', min((int) ($get('qty_sold') ?: 1), $stock->qty_remaining));
+
+                                                $qty = min((int) ($get('qty_sold') ?: 1), $stock->qty_remaining);
+                                                $set('line_total', $qty * $stock->clearance_price);
+                                            }
+                                        } else {
+                                            $set('batch_inventory_id', null);
+                                        }
+                                    }),
+                                Placeholder::make('clearance_batch_display')
+                                    ->label('Clearance Batch')
+                                    ->visible(fn (callable $get) => filled($get('clearance_stock_id')))
+                                    ->content(function (callable $get) {
+                                        $stock = \App\Models\ClearanceStock::find($get('clearance_stock_id'));
+
+                                        if (! $stock) {
+                                            return '—';
+                                        }
+
+                                        $expiry = \App\Support\FormatsDates::formatDate($stock->expiry_date);
+
+                                        return "Batch: {$stock->batch_number} | Exp: {$expiry} | Available: {$stock->qty_remaining}";
+                                    }),
                                 Select::make('item_id')
                                     ->options(function () {
                                         $tenantId = \Filament\Facades\Filament::getTenant()?->id;
@@ -62,7 +114,7 @@ class SalesOrderForm
                                     ->required()
                                     ->searchable()
                                     ->label('Item')
-                                    ->disabled(fn (callable $get) => filled($get('id')))
+                                    ->disabled(fn (callable $get) => filled($get('id')) || filled($get('clearance_stock_id')))
                                     ->helperText(function (callable $get) {
                                         $itemId = $get('item_id');
                                         if ($itemId) {
@@ -77,12 +129,17 @@ class SalesOrderForm
                                     ->live()
                                     ->afterStateUpdated(function ($state, callable $set) {
                                         if ($state) {
-                                             $item = \App\Models\Item::find($state);
+                                             $item = \App\Models\Item::with('packagingType')->find($state);
                                              if ($item) {
                                                  $set('unit_price', $item->selling_price);
+                                                 if ($item->packaging_type_id) {
+                                                     $set('packaging_type_id', $item->packaging_type_id);
+                                                     $set('units_per_pack', $item->packagingType?->units_per_pack ?? 1);
+                                                 }
                                              }
                                          }
                                          $set('batch_inventory_id', null);
+                                         $set('clearance_stock_id', null);
                                      }),
                                 Select::make('batch_inventory_id')
                                     ->label('Batch (Optional)')
@@ -91,19 +148,34 @@ class SalesOrderForm
                                         if (!$itemId) return [];
                                         
                                         $tenantId = \Filament\Facades\Filament::getTenant()?->id;
-                                        return \App\Models\BatchInventory::where('item_id', $itemId)
+                                        $selectedBatchId = $get('batch_inventory_id');
+
+                                        $batches = \App\Models\BatchInventory::query()
+                                            ->where('item_id', $itemId)
                                             ->when($tenantId, fn ($q) => $q->where('branch_id', $tenantId))
-                                            ->where('qty_remaining', '>', 0)
-                                            ->get()
-                                            ->mapWithKeys(function ($batch) {
+                                            ->where(function ($query) use ($selectedBatchId) {
+                                                $query->where('qty_remaining', '>', 0);
+
+                                                if ($selectedBatchId) {
+                                                    $query->orWhere('id', $selectedBatchId);
+                                                }
+                                            })
+                                            ->get();
+
+                                        return $batches->mapWithKeys(function ($batch) {
                                                 $expiry = $batch->expiry_date ? " | Exp: " . $batch->expiry_date->format('Y-m-d') : '';
-                                                return [$batch->id => "Batch: {$batch->batch_number}{$expiry} (Qty: {$batch->qty_remaining})"];
+                                                $qtyLabel = $batch->qty_remaining > 0
+                                                    ? "Qty: {$batch->qty_remaining}"
+                                                    : 'Clearance batch';
+
+                                                return [$batch->id => "Batch: {$batch->batch_number}{$expiry} ({$qtyLabel})"];
                                             });
                                     })
                                     ->searchable()
                                     ->preload()
                                     ->nullable()
                                     ->live()
+                                    ->visible(fn (callable $get) => ! filled($get('clearance_stock_id')))
                                     ->disabled(fn (callable $get) => filled($get('id'))),
                                 Toggle::make('entry_mode')
                                     ->label('Pack Mode')
@@ -112,11 +184,31 @@ class SalesOrderForm
                                     ->default(false)
                                     ->live(),
                                 Select::make('packaging_type_id')
-                                    ->options(\App\Models\PackagingType::orderBy('name')->pluck('name', 'id'))
+                                    ->options(function (callable $get) {
+                                        $tenantId = \Filament\Facades\Filament::getTenant()?->id;
+
+                                        return \App\Models\PackagingType::query()
+                                            ->when($tenantId, fn ($q) => $q->where(fn ($inner) => $inner->where('branch_id', $tenantId)->orWhereNull('branch_id')))
+                                            ->orderBy('name')
+                                            ->pluck('name', 'id');
+                                    })
                                     ->nullable()
                                     ->searchable()
+                                    ->live()
                                     ->label('Packaging Type')
-                                    ->visible(fn (callable $get) => $get('entry_mode')),
+                                    ->visible(fn (callable $get) => $get('entry_mode'))
+                                    ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                                        if ($state) {
+                                            $pack = \App\Models\PackagingType::find($state);
+                                            if ($pack) {
+                                                $set('units_per_pack', $pack->units_per_pack);
+                                                $packQty = floatval($get('pack_quantity') ?? 0);
+                                                if ($packQty > 0) {
+                                                    $set('qty_sold', $packQty * $pack->units_per_pack);
+                                                }
+                                            }
+                                        }
+                                    }),
                                 TextInput::make('pack_quantity')
                                     ->numeric()
                                     ->default(0)
@@ -167,6 +259,13 @@ class SalesOrderForm
                                     ->required()
                                     ->numeric()
                                     ->minValue(1)
+                                    ->maxValue(function (callable $get) {
+                                        if ($clearanceStockId = $get('clearance_stock_id')) {
+                                            return \App\Models\ClearanceStock::find($clearanceStockId)?->qty_remaining;
+                                        }
+
+                                        return null;
+                                    })
                                     ->live()
                                     ->label('Qty Sold')
                                     ->readOnly(fn (callable $get) => $get('entry_mode'))

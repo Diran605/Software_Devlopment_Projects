@@ -5,6 +5,7 @@ namespace App\Filament\App\Resources\ItemCategories;
 use App\Filament\App\Resources\ItemCategories\Pages\CreateItemCategory;
 use App\Filament\App\Resources\ItemCategories\Pages\EditItemCategory;
 use App\Filament\App\Resources\ItemCategories\Pages\ListItemCategories;
+use App\Filament\App\Resources\ItemCategories\Pages\ViewItemCategory;
 use App\Filament\App\Resources\ItemCategories\Schemas\ItemCategoryForm;
 use App\Filament\App\Resources\ItemCategories\Tables\ItemCategoriesTable;
 use App\Models\ItemCategory;
@@ -73,6 +74,7 @@ protected static ?string $model = ItemCategory::class;
         return [
             'index' => ListItemCategories::route('/'),
             'create' => CreateItemCategory::route('/create'),
+            'view' => ViewItemCategory::route('/{record}'),
             'edit' => EditItemCategory::route('/{record}/edit'),
         ];
     }

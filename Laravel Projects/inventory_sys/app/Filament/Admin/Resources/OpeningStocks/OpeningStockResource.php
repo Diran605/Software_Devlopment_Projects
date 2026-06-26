@@ -5,7 +5,9 @@ namespace App\Filament\Admin\Resources\OpeningStocks;
 use App\Filament\Admin\Resources\OpeningStocks\Pages\CreateOpeningStock;
 use App\Filament\Admin\Resources\OpeningStocks\Pages\EditOpeningStock;
 use App\Filament\Admin\Resources\OpeningStocks\Pages\ListOpeningStocks;
+use App\Filament\Admin\Resources\OpeningStocks\Pages\ViewOpeningStock;
 use App\Filament\Admin\Resources\OpeningStocks\Schemas\OpeningStockForm;
+use App\Filament\Admin\Resources\OpeningStocks\Schemas\OpeningStockInfolist;
 use App\Filament\Admin\Resources\OpeningStocks\Tables\OpeningStocksTable;
 use App\Models\OpeningStockEntry;
 use BackedEnum;
@@ -56,6 +58,11 @@ protected static ?string $model = OpeningStockEntry::class;
         return OpeningStockForm::configure($schema);
     }
 
+    public static function infolist(Schema $schema): Schema
+    {
+        return OpeningStockInfolist::configure($schema);
+    }
+
     public static function table(Table $table): Table
     {
         return OpeningStocksTable::configure($table);
@@ -73,6 +80,7 @@ protected static ?string $model = OpeningStockEntry::class;
         return [
             'index' => ListOpeningStocks::route('/'),
             'create' => CreateOpeningStock::route('/create'),
+            'view' => ViewOpeningStock::route('/{record}'),
             'edit' => EditOpeningStock::route('/{record}/edit'),
         ];
     }

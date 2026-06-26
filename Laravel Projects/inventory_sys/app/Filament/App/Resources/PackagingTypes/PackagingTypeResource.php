@@ -5,6 +5,7 @@ namespace App\Filament\App\Resources\PackagingTypes;
 use App\Filament\App\Resources\PackagingTypes\Pages\CreatePackagingType;
 use App\Filament\App\Resources\PackagingTypes\Pages\EditPackagingType;
 use App\Filament\App\Resources\PackagingTypes\Pages\ListPackagingTypes;
+use App\Filament\App\Resources\PackagingTypes\Pages\ViewPackagingType;
 use App\Filament\App\Resources\PackagingTypes\Schemas\PackagingTypeForm;
 use App\Filament\App\Resources\PackagingTypes\Tables\PackagingTypesTable;
 use App\Models\PackagingType;
@@ -73,6 +74,7 @@ protected static ?string $model = PackagingType::class;
         return [
             'index' => ListPackagingTypes::route('/'),
             'create' => CreatePackagingType::route('/create'),
+            'view' => ViewPackagingType::route('/{record}'),
             'edit' => EditPackagingType::route('/{record}/edit'),
         ];
     }

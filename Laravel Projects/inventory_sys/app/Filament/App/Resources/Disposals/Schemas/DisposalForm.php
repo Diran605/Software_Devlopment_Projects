@@ -10,6 +10,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Repeater;
 use Filament\Schemas\Schema;
+use App\Support\FormatsDates;
 use Filament\Facades\Filament;
 
 class DisposalForm
@@ -21,8 +22,9 @@ class DisposalForm
                 Grid::make(2)
                     ->schema([
                         TextInput::make('disposal_number')
-                            ->required()
-                            ->default(fn () => 'DSP-' . strtoupper(uniqid())),
+                            ->disabled()
+                            ->dehydrated(false)
+                            ->placeholder('Auto-generated on save'),
                         Select::make('department_id')
                             ->relationship('department', 'name')
                             ->searchable()
@@ -31,10 +33,19 @@ class DisposalForm
                         DatePicker::make('disposed_at')
                             ->required()
                             ->default(now()),
-                        Textarea::make('reason')
-                            ->required()
-                            ->rows(3)
-                            ->columnSpanFull(),
+                        Select::make('reason')
+                            ->label('Disposal Reason')
+                            ->options([
+                                'expired' => 'Expired',
+                                'damage' => 'Damaged',
+                                'obsolescence' => 'Quality Issue / Obsolescence',
+                                'other' => 'Other',
+                            ])
+                            ->required(),
+                        TextInput::make('disposal_method')
+                            ->label('Disposal Method')
+                            ->placeholder('e.g. bin, incinerate')
+                            ->maxLength(255),
                         Textarea::make('notes')
                             ->rows(3)
                             ->columnSpanFull(),
@@ -51,7 +62,7 @@ class DisposalForm
                                             ->with('item')
                                             ->get()
                                             ->mapWithKeys(function ($stock) {
-                                                $expiryStr = $stock->expiry_date ? $stock->expiry_date->format('Y-m-d') : 'No Expiry';
+                                                $expiryStr = FormatsDates::formatDate($stock->expiry_date);
                                                 return [$stock->id => "{$stock->item->name} | Batch: {$stock->batch_number} | Expiry: {$expiryStr} | Qty Left: {$stock->qty_remaining}"];
                                             });
                                     })

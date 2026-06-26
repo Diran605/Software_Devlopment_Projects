@@ -3,12 +3,7 @@
 namespace App\Providers;
 
 use App\Listeners\ModelEventAuditListener;
-use Filament\Facades\Filament;
-use Illuminate\Database\Eloquent\Events\Created;
-use Illuminate\Database\Eloquent\Events\Updated;
-use Illuminate\Database\Eloquent\Events\Deleted;
-use Illuminate\Database\Eloquent\Events\Restored;
-use Illuminate\Database\Eloquent\Events\ForceDeleted;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
@@ -28,12 +23,19 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Register event listeners for audit/deletion logging
-        Event::listen(Created::class, ModelEventAuditListener::class);
-        Event::listen(Updated::class, ModelEventAuditListener::class);
-        Event::listen(Deleted::class, ModelEventAuditListener::class);
-        Event::listen(ForceDeleted::class, ModelEventAuditListener::class);
-        Event::listen(Restored::class, ModelEventAuditListener::class);
+        $auditListener = app(ModelEventAuditListener::class);
+
+        foreach (['created', 'updated', 'deleted', 'restored'] as $event) {
+            Event::listen("eloquent.{$event}: *", function (string $eventName, array $payload) use ($auditListener, $event): void {
+                $model = $payload[0] ?? null;
+
+                if (! $model instanceof Model) {
+                    return;
+                }
+
+                $auditListener->{'handle'.ucfirst($event)}($model);
+            });
+        }
 
         // Implicitly grant "super-admin" role all permissions
         Gate::before(function ($user, $ability) {

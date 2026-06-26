@@ -5,6 +5,7 @@ namespace App\Filament\App\Resources\Expenses;
 use App\Filament\App\Resources\Expenses\Pages\CreateExpense;
 use App\Filament\App\Resources\Expenses\Pages\EditExpense;
 use App\Filament\App\Resources\Expenses\Pages\ListExpenses;
+use App\Filament\App\Resources\Expenses\Pages\ViewExpense;
 use App\Filament\App\Resources\Expenses\Schemas\ExpenseForm;
 use App\Filament\App\Resources\Expenses\Tables\ExpensesTable;
 use App\Models\Expense;
@@ -73,6 +74,7 @@ protected static ?string $model = Expense::class;
         return [
             'index' => ListExpenses::route('/'),
             'create' => CreateExpense::route('/create'),
+            'view' => ViewExpense::route('/{record}'),
             'edit' => EditExpense::route('/{record}/edit'),
         ];
     }

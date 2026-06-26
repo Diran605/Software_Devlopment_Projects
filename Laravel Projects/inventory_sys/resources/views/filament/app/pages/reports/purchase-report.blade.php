@@ -70,7 +70,7 @@
                         Filter Report
                     </x-filament::button>
                     
-                    <x-filament::button tag="a" href="{{ route('reports.purchases.pdf', $data) }}" target="_blank" color="success" icon="heroicon-o-document-arrow-down">
+                    <x-filament::button wire:click="exportPdf('reports.purchases.pdf')" color="success" icon="heroicon-o-document-arrow-down">
                         Export PDF
                     </x-filament::button>
                 </div>

@@ -5,7 +5,9 @@ namespace App\Filament\Admin\Resources\ClearanceRules;
 use App\Filament\Admin\Resources\ClearanceRules\Pages\CreateClearanceRule;
 use App\Filament\Admin\Resources\ClearanceRules\Pages\EditClearanceRule;
 use App\Filament\Admin\Resources\ClearanceRules\Pages\ListClearanceRules;
+use App\Filament\Admin\Resources\ClearanceRules\Pages\ViewClearanceRule;
 use App\Filament\Admin\Resources\ClearanceRules\Schemas\ClearanceRuleForm;
+use App\Filament\Admin\Resources\ClearanceRules\Schemas\ClearanceRuleInfolist;
 use App\Filament\Admin\Resources\ClearanceRules\Tables\ClearanceRulesTable;
 use App\Models\ClearanceRule;
 use BackedEnum;
@@ -56,6 +58,11 @@ protected static ?string $model = ClearanceRule::class;
         return ClearanceRuleForm::configure($schema);
     }
 
+    public static function infolist(Schema $schema): Schema
+    {
+        return ClearanceRuleInfolist::configure($schema);
+    }
+
     public static function table(Table $table): Table
     {
         return ClearanceRulesTable::configure($table);
@@ -73,6 +80,7 @@ protected static ?string $model = ClearanceRule::class;
         return [
             'index' => ListClearanceRules::route('/'),
             'create' => CreateClearanceRule::route('/create'),
+            'view' => ViewClearanceRule::route('/{record}'),
             'edit' => EditClearanceRule::route('/{record}/edit'),
         ];
     }

@@ -3,6 +3,8 @@
 namespace App\Filament\App\Resources\StockMovements;
 
 use App\Filament\App\Resources\StockMovements\Pages\ListStockMovements;
+use App\Filament\App\Resources\StockMovements\Pages\ViewStockMovement;
+use App\Filament\App\Resources\StockMovements\Schemas\StockMovementInfolist;
 use App\Filament\App\Resources\StockMovements\Tables\StockMovementsTable;
 use App\Models\StockMovement;
 use BackedEnum;
@@ -49,6 +51,11 @@ protected static ?string $model = StockMovement::class;
         return $schema;
     }
 
+    public static function infolist(Schema $schema): Schema
+    {
+        return StockMovementInfolist::configure($schema);
+    }
+
     public static function table(Table $table): Table
     {
         return StockMovementsTable::configure($table);
@@ -58,6 +65,7 @@ protected static ?string $model = StockMovement::class;
     {
         return [
             'index' => ListStockMovements::route('/'),
+            'view' => ViewStockMovement::route('/{record}'),
         ];
     }
 

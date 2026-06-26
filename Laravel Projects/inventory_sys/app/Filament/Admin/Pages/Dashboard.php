@@ -11,6 +11,8 @@ class Dashboard extends BaseDashboard
         return [
             \App\Filament\Admin\Widgets\SystemStatsOverview::class,
             \App\Filament\Admin\Widgets\BranchPerformanceTable::class,
+            \App\Filament\Admin\Widgets\LowStockAlert::class,
+            \App\Filament\Admin\Widgets\NearExpiryAlert::class,
             \App\Filament\Admin\Widgets\RecentAuditActivityTable::class,
         ];
     }

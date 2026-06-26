@@ -5,6 +5,7 @@ namespace App\Filament\Admin\Resources\ClearanceItems;
 use App\Filament\Admin\Resources\ClearanceItems\Pages\ListClearanceItems;
 use App\Filament\Admin\Resources\ClearanceItems\Pages\ViewClearanceItem;
 use App\Filament\Admin\Resources\ClearanceItems\Pages\EditClearanceItem;
+use App\Filament\Admin\Resources\ClearanceItems\Schemas\ClearanceItemInfolist;
 use App\Models\ClearanceItem;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -50,6 +51,11 @@ class ClearanceItemResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return \App\Filament\Admin\Resources\ClearanceItems\Schemas\ClearanceItemForm::configure($schema);
+    }
+
+    public static function infolist(Schema $schema): Schema
+    {
+        return ClearanceItemInfolist::configure($schema);
     }
 
     public static function table(Table $table): Table

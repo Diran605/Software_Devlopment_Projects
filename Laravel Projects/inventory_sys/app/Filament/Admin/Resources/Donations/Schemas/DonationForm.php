@@ -25,6 +25,11 @@ class DonationForm
                     ->required(),
                 TextInput::make('recipient')
                     ->required(),
+                TextInput::make('recipient_contact')
+                    ->label('Recipient Contact'),
+                Textarea::make('recipient_address')
+                    ->label('Recipient Address')
+                    ->columnSpanFull(),
                 Textarea::make('notes')
                     ->columnSpanFull(),
                 DateTimePicker::make('donated_at')

@@ -7,10 +7,37 @@ use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Pages\ViewRecord;
+use Filament\Schemas\Components\EmbeddedTable;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Concerns\InteractsWithTable;
+use Filament\Tables\Contracts\HasTable;
+use Filament\Tables\Table;
 
-class ViewStockTransfer extends ViewRecord
+class ViewStockTransfer extends ViewRecord implements HasTable
 {
+    use InteractsWithTable;
+
     protected static string $resource = StockTransferResource::class;
+
+    public function mount(int | string $record): void
+    {
+        parent::mount($record);
+        $this->record->load(['stockTransferLines.item', 'stockTransferLines.batchInventory']);
+    }
+
+    public function content(Schema $schema): Schema
+    {
+        return $schema
+            ->components([
+                $this->getFormContentComponent(),
+                Section::make('Transfer Lines')
+                    ->schema([
+                        EmbeddedTable::make(),
+                    ]),
+            ]);
+    }
 
     protected function getHeaderActions(): array
     {
@@ -49,7 +76,7 @@ class ViewStockTransfer extends ViewRecord
                 ->requiresConfirmation()
                 ->modalHeading('Approve Transfer')
                 ->modalDescription('Approve this stock transfer request? The transfer can then be dispatched.')
-                ->visible(fn ($record) => $record->status === 'pending_approval')
+                ->visible(fn ($record) => $record->status === 'pending_approval' && auth()->user()->can('approve', $record))
                 ->action(function ($record) {
                     try {
                         app(\App\Services\StockTransferService::class)->approve($record);
@@ -103,7 +130,7 @@ class ViewStockTransfer extends ViewRecord
                 ->requiresConfirmation()
                 ->modalHeading('Receive Transfer')
                 ->modalDescription('Confirm receipt of all items. Stock will be added to the destination branch/department.')
-                ->visible(fn ($record) => $record->status === 'in_transit')
+                ->visible(fn ($record) => $record->status === 'in_transit' && auth()->user()->can('receive', $record))
                 ->action(function ($record) {
                     try {
                         app(\App\Services\StockTransferService::class)->receive($record, []);
@@ -186,5 +213,36 @@ class ViewStockTransfer extends ViewRecord
                     }
                 }),
         ];
+    }
+
+    public function table(Table $table): Table
+    {
+        return $table
+            ->query(fn () => $this->record->stockTransferLines()->with('item', 'batchInventory'))
+            ->columns([
+                TextColumn::make('item.name')
+                    ->label('Item')
+                    ->sortable()
+                    ->searchable(),
+                TextColumn::make('batch_number')
+                    ->label('Batch #')
+                    ->placeholder('—')
+                    ->searchable(),
+                TextColumn::make('qty_requested')
+                    ->label('Qty Requested')
+                    ->sortable(),
+                TextColumn::make('qty_transferred')
+                    ->label('Qty Transferred')
+                    ->sortable(),
+                TextColumn::make('qty_received')
+                    ->label('Qty Received')
+                    ->sortable(),
+                TextColumn::make('unit_cost')
+                    ->label('Unit Cost')
+                    ->money('xaf')
+                    ->sortable(),
+            ])
+            ->emptyStateHeading('No transfer lines')
+            ->emptyStateDescription('This stock transfer has no line items.');
     }
 }

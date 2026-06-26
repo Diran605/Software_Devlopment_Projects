@@ -54,9 +54,6 @@ class SalesOrdersTable
                 TextColumn::make('gross_profit')
                     ->money('XAF')
                     ->sortable(),
-                TextColumn::make('amount_tendered')
-                    ->money('XAF')
-                    ->sortable(),
                 TextColumn::make('deleted_at')
                     ->dateTime()
                     ->sortable()

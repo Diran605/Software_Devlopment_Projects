@@ -2,6 +2,7 @@
 
 namespace App\Filament\App\Pages;
 
+use App\Filament\Concerns\ProvidesReportPdfParams;
 use Filament\Pages\Page;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
@@ -14,6 +15,7 @@ use Filament\Facades\Filament;
 class StockValuationReportPage extends Page implements HasForms
 {
     use InteractsWithForms;
+    use ProvidesReportPdfParams;
 
     protected string $view = 'filament.app.pages.reports.stock-valuation-report';
 
@@ -47,7 +49,7 @@ class StockValuationReportPage extends Page implements HasForms
     public function mount(): void
     {
         $this->form->fill([
-            'branch_id'          => null,
+            'branch_id'          => Filament::getTenant()?->id,
             'category_id'        => null,
             'department_id'      => null,
             'include_zero_stock' => false,
@@ -126,7 +128,7 @@ class StockValuationReportPage extends Page implements HasForms
             ->when($tenantId,    fn ($q) => $q->where('item_stock_levels.branch_id', $tenantId))
             ->when($categoryId,  fn ($q) => $q->where('items.category_id', $categoryId))
             ->when($deptId,      fn ($q) => $q->where('item_stock_levels.department_id', $deptId))
-            ->when(! $deptId,    fn ($q) => $q->whereNull('item_stock_levels.department_id'))
+            ->when(! $deptId,    fn ($q) => $q->whereNotNull('item_stock_levels.department_id'))
             ->when(! $includeZero, fn ($q) => $q->where('item_stock_levels.qty_on_hand', '>', 0))
             ->with(['item', 'item.category', 'item.uom']);
 
@@ -138,7 +140,7 @@ class StockValuationReportPage extends Page implements HasForms
                 ->when($tenantId, fn ($q) => $q->where('branch_id', $tenantId))
                 ->where('qty_remaining', '>', 0)
                 ->when($deptId,   fn ($q) => $q->where('department_id', $deptId))
-                ->when(! $deptId, fn ($q) => $q->whereNull('department_id'))
+                ->when(! $deptId, fn ($q) => $q->whereNotNull('department_id'))
                 ->get();
         }
 
@@ -149,6 +151,7 @@ class StockValuationReportPage extends Page implements HasForms
     {
         return [
             'reportData' => $this->getData(),
+            'pdfParams' => $this->getPdfParams(),
         ];
     }
 }

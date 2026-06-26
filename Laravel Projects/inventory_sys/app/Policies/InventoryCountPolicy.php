@@ -4,62 +4,24 @@ namespace App\Policies;
 
 use App\Models\InventoryCount;
 use App\Models\User;
+use App\Policies\Concerns\ChecksModulePermissions;
 
 class InventoryCountPolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
-    public function viewAny(User $user): bool
+    use ChecksModulePermissions;
+
+    protected function permissionModule(): string
     {
-        return true;
+        return 'inventory-counts';
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
-    public function view(User $user, InventoryCount $inventoryCount): bool
+    public function approve(User $user, InventoryCount $inventoryCount): bool
     {
-        return true;
+        return $user->can('approve.inventory-counts');
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
-    public function create(User $user): bool
+    public function post(User $user, InventoryCount $inventoryCount): bool
     {
-        return $user->hasAnyRole(['super-admin', 'branch-manager', 'inventory-manager', 'cashier']);
-    }
-
-    /**
-     * Determine whether the user can update the model.
-     */
-    public function update(User $user, InventoryCount $inventoryCount): bool
-    {
-        return $user->hasAnyRole(['super-admin', 'branch-manager', 'inventory-manager']);
-    }
-
-    /**
-     * Determine whether the user can delete the model.
-     */
-    public function delete(User $user, InventoryCount $inventoryCount): bool
-    {
-        return $user->hasAnyRole(['super-admin', 'branch-manager']);
-    }
-
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(User $user, InventoryCount $inventoryCount): bool
-    {
-        return $user->hasAnyRole(['super-admin', 'branch-manager']);
-    }
-
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(User $user, InventoryCount $inventoryCount): bool
-    {
-        return $user->hasRole('super-admin');
+        return $user->can('post.inventory-counts');
     }
 }

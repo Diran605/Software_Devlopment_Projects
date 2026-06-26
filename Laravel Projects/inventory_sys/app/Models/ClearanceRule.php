@@ -20,6 +20,6 @@ class ClearanceRule extends Model
 
     public function clearanceItems()
     {
-        return $this->hasMany(ClearanceItem::class);
+        return $this->hasMany(ClearanceItem::class, 'rule_id');
     }
 }

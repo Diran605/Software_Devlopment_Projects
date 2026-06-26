@@ -2,105 +2,104 @@
 
 namespace App\Listeners;
 
+use App\Jobs\RecordModelAuditLogJob;
 use App\Models\AuditLog;
+use App\Models\Branch;
 use App\Models\DeletionLog;
-use App\Services\AuditLogService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Request;
 
 class ModelEventAuditListener
 {
-    public function __construct(protected AuditLogService $auditLogService) {}
+    /** @var list<class-string<Model>> */
+    protected array $excludedModels = [
+        AuditLog::class,
+        DeletionLog::class,
+    ];
 
-    public function handle(object $event): void
+    public function handleCreated(Model $model): void
     {
-        \Log::info('LISTENER CALLED: ' . get_class($event));
+        $this->record('created', $model);
+    }
+
+    public function handleUpdated(Model $model): void
+    {
+        $this->record('updated', $model, $model->getOriginal());
+    }
+
+    public function handleDeleted(Model $model): void
+    {
+        $this->record('deleted', $model, $model->getOriginal());
+    }
+
+    public function handleRestored(Model $model): void
+    {
+        $this->record('restored', $model);
+    }
+
+    protected function record(string $event, Model $model, ?array $oldValues = null): void
+    {
+        if (in_array($model::class, $this->excludedModels, true)) {
+            return;
+        }
 
         try {
-            if (!property_exists($event, 'model')) {
-                \Log::info('LISTENER: No model property found');
-                return;
+            $userId = auth()->id();
+        } catch (\Throwable) {
+            $userId = null;
+        }
+
+        RecordModelAuditLogJob::dispatchSync(
+            event: $event,
+            auditableType: $model::class,
+            auditableId: $model->getKey(),
+            userId: $userId,
+            branchId: $this->resolveBranchId($model),
+            oldValues: $oldValues,
+            newValues: $model->toArray(),
+            ipAddress: Request::ip(),
+            userAgent: Request::userAgent(),
+            recordNumber: $this->resolveRecordNumber($model),
+        );
+    }
+
+    protected function resolveBranchId(Model $model): ?int
+    {
+        if ($model instanceof Branch) {
+            return (int) $model->getKey();
+        }
+
+        if ($model->getAttribute('branch_id')) {
+            return (int) $model->branch_id;
+        }
+
+        foreach (['inventoryCount', 'purchaseOrder', 'salesOrder', 'openingStockEntry', 'goodsReceivedNote', 'stockTransfer', 'disposal', 'donation', 'expense'] as $relation) {
+            if (! method_exists($model, $relation)) {
+                continue;
             }
 
-            /** @var Model $model */
-            $model = $event->model;
-            $eventName = $this->getEventName($event);
+            $parent = $model->{$relation};
 
-            \Log::info('LISTENER: Event name: ' . $eventName . ', Model: ' . get_class($model));
-
-            if (!$eventName) {
-                \Log::info('LISTENER: No event name matched');
-                return;
+            if ($parent?->branch_id) {
+                return (int) $parent->branch_id;
             }
+        }
 
-            try {
-                $userId = auth()->id();
-            } catch (\Throwable $e) {
-                $userId = null;
-            }
-
-            $branchId = $model->branch_id ?? null;
-            $oldValues = method_exists($model, 'getOriginal') ? $model->getOriginal() : null;
-            $newValues = $model->toArray();
-
-            \Log::info('LISTENER: Saving to AuditLog', [
-                'event' => $eventName,
-                'model' => get_class($model),
-                'user_id' => $userId,
-                'branch_id' => $branchId,
-            ]);
-
-            // Record to AuditLog
-            AuditLog::create([
-                'branch_id' => $branchId,
-                'user_id' => $userId,
-                'event' => $eventName,
-                'auditable_type' => get_class($model),
-                'auditable_id' => $model->id,
-                'old_values' => $oldValues,
-                'new_values' => $newValues,
-                'ip_address' => Request::ip(),
-                'user_agent' => Request::userAgent(),
-            ]);
-
-            \Log::info('LISTENER: AuditLog saved successfully');
-
-            // Record to DeletionLog if this is a deletion
-            if ($eventName === 'deleted') {
-                $recordNumber = $model->record_number ?? $model->name ?? $model->title ?? $model->count_number ?? null;
-
-                DeletionLog::create([
-                    'branch_id' => $branchId,
-                    'deleted_by' => $userId,
-                    'record_type' => get_class($model),
-                    'record_id' => $model->id,
-                    'record_number' => $recordNumber,
-                    'reason' => null,
-                    'snapshot' => $newValues,
-                    'deleted_at' => now(),
-                ]);
-
-                \Log::info('LISTENER: DeletionLog saved successfully');
-            }
-        } catch (\Throwable $e) {
-            \Log::error('ModelEventAuditListener error: ' . $e->getMessage(), [
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-                'trace' => $e->getTraceAsString(),
-            ]);
+        try {
+            return auth()->user()?->branch_id;
+        } catch (\Throwable) {
+            return null;
         }
     }
 
-    private function getEventName(object $event): ?string
+    protected function resolveRecordNumber(Model $model): ?string
     {
-        $class = get_class($event);
+        foreach (['count_number', 'order_number', 'po_number', 'grn_number', 'transfer_number', 'record_number', 'name', 'title'] as $attribute) {
+            if ($value = $model->getAttribute($attribute)) {
+                return (string) $value;
+            }
+        }
 
-        return match (true) {
-            str_contains($class, 'Created') => 'created',
-            str_contains($class, 'Updated') => 'updated',
-            str_contains($class, 'Deleted') => 'deleted',
-            str_contains($class, 'Restored') => 'restored',
-            default => null
-        };
+        return null;
     }
 }

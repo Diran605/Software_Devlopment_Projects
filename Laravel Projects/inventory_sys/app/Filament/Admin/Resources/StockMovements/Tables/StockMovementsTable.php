@@ -4,6 +4,7 @@ namespace App\Filament\Admin\Resources\StockMovements\Tables;
 
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Actions\ViewAction;
 use Filament\Tables\Table;
 
 class StockMovementsTable
@@ -94,7 +95,9 @@ class StockMovementsTable
                     ->label('Department'),
             ])
             ->defaultSort('moved_at', 'desc')
-            ->actions([])
+            ->actions([
+                ViewAction::make(),
+            ])
             ->toolbarActions([])
             ->emptyStateHeading('No stock movements yet')
             ->emptyStateDescription('Stock movements will appear here.');

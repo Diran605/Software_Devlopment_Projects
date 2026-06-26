@@ -19,6 +19,14 @@ class OpeningStockService
     {
         DB::transaction(function () use ($entry, $lines) {
             foreach ($lines as $lineData) {
+                if (($lineData['entry_mode'] ?? 'unit') === 'pack') {
+                    $packQty = (float) ($lineData['pack_quantity'] ?? 0);
+                    $unitsPerPack = (float) ($lineData['units_per_pack'] ?? 1);
+                    $lineData['qty_on_hand'] = (int) ($packQty * $unitsPerPack);
+                }
+
+                unset($lineData['entry_mode'], $lineData['pack_quantity'], $lineData['units_per_pack'], $lineData['packaging_type_id']);
+
                 $line = new OpeningStockLine($lineData);
                 $entry->openingStockLines()->save($line);
 

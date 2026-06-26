@@ -2,14 +2,16 @@
 
 namespace App\Filament\App\Resources\ClearanceStock\Tables;
 
-use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Columns\BadgeColumn;
+use App\Filament\Concerns\HasClearanceStockReversalAction;
 use Filament\Actions\ViewAction;
-use Filament\Actions\EditAction;
+use Filament\Tables\Columns\BadgeColumn;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
 class ClearanceStockTable
 {
+    use HasClearanceStockReversalAction;
+
     public static function configure(Table $table): Table
     {
         return $table
@@ -27,11 +29,11 @@ class ClearanceStockTable
                 TextColumn::make('qty_on_clearance'),
                 TextColumn::make('qty_remaining'),
                 TextColumn::make('original_price')
-                    ->money('usd'),
+                    ->money('xaf'),
                 TextColumn::make('clearance_price')
-                    ->money('usd'),
+                    ->money('xaf'),
                 TextColumn::make('unit_cost')
-                    ->money('usd'),
+                    ->money('xaf'),
                 BadgeColumn::make('status')
                     ->getStateUsing(fn ($record) => $record->qty_remaining > 0 ? 'Active' : 'Depleted')
                     ->colors([
@@ -41,6 +43,7 @@ class ClearanceStockTable
             ])
             ->actions([
                 ViewAction::make(),
+                static::makeClearanceStockReversalAction(),
             ])
             ->emptyStateHeading('No clearance stock yet');
     }

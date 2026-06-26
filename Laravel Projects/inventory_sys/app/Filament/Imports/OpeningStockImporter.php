@@ -19,7 +19,8 @@ class OpeningStockImporter extends Importer
         return [
             ImportColumn::make('item')
                 ->requiredMapping()
-                ->rules(['required', 'string']),
+                ->rules(['required', 'string'])
+                ->fillRecordUsing(fn () => null),
             ImportColumn::make('batch_number')
                 ->requiredMapping()
                 ->rules(['required', 'string']),
@@ -34,11 +35,14 @@ class OpeningStockImporter extends Importer
                 ->numeric()
                 ->rules(['required', 'numeric']),
             ImportColumn::make('branch')
-                ->rules(['nullable', 'string']),
+                ->rules(['nullable', 'string'])
+                ->fillRecordUsing(fn () => null),
             ImportColumn::make('department')
-                ->rules(['nullable', 'string']),
+                ->rules(['nullable', 'string'])
+                ->fillRecordUsing(fn () => null),
             ImportColumn::make('notes')
-                ->rules(['nullable', 'string']),
+                ->rules(['nullable', 'string'])
+                ->fillRecordUsing(fn () => null),
         ];
     }
 

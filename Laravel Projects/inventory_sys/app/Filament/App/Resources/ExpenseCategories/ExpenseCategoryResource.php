@@ -5,6 +5,7 @@ namespace App\Filament\App\Resources\ExpenseCategories;
 use App\Filament\App\Resources\ExpenseCategories\Pages\CreateExpenseCategory;
 use App\Filament\App\Resources\ExpenseCategories\Pages\EditExpenseCategory;
 use App\Filament\App\Resources\ExpenseCategories\Pages\ListExpenseCategories;
+use App\Filament\App\Resources\ExpenseCategories\Pages\ViewExpenseCategory;
 use App\Filament\App\Resources\ExpenseCategories\Schemas\ExpenseCategoryForm;
 use App\Filament\App\Resources\ExpenseCategories\Tables\ExpenseCategoriesTable;
 use App\Models\ExpenseCategory;
@@ -73,6 +74,7 @@ protected static ?string $model = ExpenseCategory::class;
         return [
             'index' => ListExpenseCategories::route('/'),
             'create' => CreateExpenseCategory::route('/create'),
+            'view' => ViewExpenseCategory::route('/{record}'),
             'edit' => EditExpenseCategory::route('/{record}/edit'),
         ];
     }

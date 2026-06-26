@@ -2,9 +2,10 @@
 
 namespace App\Filament\Admin\Resources\Roles\Schemas;
 
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\CheckboxList;
-use Filament\Forms\Components\Tabs;
+use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Tabs;
+use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Schema;
 
 class RoleForm
@@ -20,7 +21,7 @@ class RoleForm
                     ->readOnly(),
                 Tabs::make('Permissions By Module')
                     ->tabs([
-                        Tabs\Tab::make('System')
+                        Tab::make('System')
                             ->schema([
                                 CheckboxList::make('permissions')
                                     ->relationship('permissions', 'name', modifyQueryUsing: fn ($query) => $query->whereIn('name', [
@@ -32,7 +33,7 @@ class RoleForm
                                     ->columns(2)
                                     ->label(''),
                             ]),
-                        Tabs\Tab::make('Catalogue')
+                        Tab::make('Catalogue')
                             ->schema([
                                 CheckboxList::make('permissions')
                                     ->relationship('permissions', 'name', modifyQueryUsing: fn ($query) => $query->where(fn ($q) => 
@@ -44,7 +45,7 @@ class RoleForm
                                     ->columns(2)
                                     ->label(''),
                             ]),
-                        Tabs\Tab::make('Parties')
+                        Tab::make('Parties')
                             ->schema([
                                 CheckboxList::make('permissions')
                                     ->relationship('permissions', 'name', modifyQueryUsing: fn ($query) => $query->where(fn ($q) => 
@@ -54,14 +55,14 @@ class RoleForm
                                     ->columns(2)
                                     ->label(''),
                             ]),
-                        Tabs\Tab::make('Procurement')
+                        Tab::make('Procurement')
                             ->schema([
                                 CheckboxList::make('permissions')
                                     ->relationship('permissions', 'name', modifyQueryUsing: fn ($query) => $query->where('name', 'like', '%.purchase-orders'))
                                     ->columns(2)
                                     ->label(''),
                             ]),
-                        Tabs\Tab::make('Stock In')
+                        Tab::make('Stock In')
                             ->schema([
                                 CheckboxList::make('permissions')
                                     ->relationship('permissions', 'name', modifyQueryUsing: fn ($query) => $query->where(fn ($q) => 
@@ -71,14 +72,14 @@ class RoleForm
                                     ->columns(2)
                                     ->label(''),
                             ]),
-                        Tabs\Tab::make('Sales')
+                        Tab::make('Sales')
                             ->schema([
                                 CheckboxList::make('permissions')
                                     ->relationship('permissions', 'name', modifyQueryUsing: fn ($query) => $query->where('name', 'like', '%.sales-orders'))
                                     ->columns(2)
                                     ->label(''),
                             ]),
-                        Tabs\Tab::make('Stock Control')
+                        Tab::make('Stock Control')
                             ->schema([
                                 CheckboxList::make('permissions')
                                     ->relationship('permissions', 'name', modifyQueryUsing: fn ($query) => $query->where(fn ($q) => 
@@ -89,7 +90,7 @@ class RoleForm
                                     ->columns(2)
                                     ->label(''),
                             ]),
-                        Tabs\Tab::make('Expiry')
+                        Tab::make('Expiry')
                             ->schema([
                                 CheckboxList::make('permissions')
                                     ->relationship('permissions', 'name', modifyQueryUsing: fn ($query) => $query->where(fn ($q) => 
@@ -99,7 +100,7 @@ class RoleForm
                                     ->columns(2)
                                     ->label(''),
                             ]),
-                        Tabs\Tab::make('Write-Offs')
+                        Tab::make('Write-Offs')
                             ->schema([
                                 CheckboxList::make('permissions')
                                     ->relationship('permissions', 'name', modifyQueryUsing: fn ($query) => $query->where(fn ($q) => 
@@ -109,7 +110,7 @@ class RoleForm
                                     ->columns(2)
                                     ->label(''),
                             ]),
-                        Tabs\Tab::make('Expenses')
+                        Tab::make('Expenses')
                             ->schema([
                                 CheckboxList::make('permissions')
                                     ->relationship('permissions', 'name', modifyQueryUsing: fn ($query) => $query->where(fn ($q) => 
@@ -119,7 +120,7 @@ class RoleForm
                                     ->columns(2)
                                     ->label(''),
                             ]),
-                        Tabs\Tab::make('Logs & Reports')
+                        Tab::make('Logs & Reports')
                             ->schema([
                                 CheckboxList::make('permissions')
                                     ->relationship('permissions', 'name', modifyQueryUsing: fn ($query) => $query->where(fn ($q) => 

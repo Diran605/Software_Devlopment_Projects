@@ -3,6 +3,7 @@
 namespace App\Filament\App\Resources\Suppliers\Tables;
 
 use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -46,6 +47,7 @@ class SuppliersTable
             ])
             ->defaultSort('name')
             ->actions([
+                ViewAction::make(),
                 EditAction::make(),
                 DeleteAction::make(),
             ])

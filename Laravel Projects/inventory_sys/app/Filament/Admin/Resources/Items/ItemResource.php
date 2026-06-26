@@ -5,6 +5,7 @@ namespace App\Filament\Admin\Resources\Items;
 use App\Filament\Admin\Resources\Items\Pages\CreateItem;
 use App\Filament\Admin\Resources\Items\Pages\EditItem;
 use App\Filament\Admin\Resources\Items\Pages\ListItems;
+use App\Filament\Admin\Resources\Items\Pages\ViewItem;
 use App\Filament\Admin\Resources\Items\Schemas\ItemForm;
 use App\Filament\Admin\Resources\Items\Tables\ItemsTable;
 use App\Models\Item;
@@ -73,6 +74,7 @@ protected static ?string $model = Item::class;
         return [
             'index' => ListItems::route('/'),
             'create' => CreateItem::route('/create'),
+            'view' => ViewItem::route('/{record}'),
             'edit' => EditItem::route('/{record}/edit'),
         ];
     }

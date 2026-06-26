@@ -4,7 +4,6 @@ namespace App\Filament\Admin\Resources\InventoryCounts\Pages;
 
 use App\Filament\Admin\Resources\InventoryCounts\InventoryCountResource;
 use App\Models\BatchInventory;
-use App\Models\ItemStockLevel;
 use App\Services\NumberGeneratorService;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Support\Facades\DB;
@@ -25,34 +24,24 @@ class CreateInventoryCount extends CreateRecord
         $departmentId = $this->record->department_id;
 
         DB::transaction(function () use ($branchId, $departmentId) {
-            // First, get all items with stock levels in this branch/department
-            $stockLevels = ItemStockLevel::where('branch_id', $branchId)
-                ->where('qty_on_hand', '>', 0);
+            $batches = BatchInventory::query()
+                ->where('branch_id', $branchId)
+                ->where('qty_remaining', '>', 0);
 
             if ($departmentId) {
-                $stockLevels = $stockLevels->where('department_id', $departmentId);
+                $batches->where('department_id', $departmentId);
             }
 
-            $stockLevels = $stockLevels->with('item')->get();
+            $batches = $batches->with('item')->orderBy('expiry_date')->get();
 
-            // Create count lines for each stock level
-            $createdItemIds = collect();
-            foreach ($stockLevels as $stockLevel) {
-                // Try to find a batch for this item
-                $batch = BatchInventory::where('branch_id', $branchId)
-                    ->where('item_id', $stockLevel->item_id)
-                    ->where('qty_remaining', '>', 0)
-                    ->first();
-
+            foreach ($batches as $batch) {
                 $this->record->lines()->create([
-                    'item_id' => $stockLevel->item_id,
-                    'batch_inventory_id' => $batch?->id,
-                    'qty_system' => $stockLevel->qty_on_hand,
-                    'unit_cost' => $stockLevel->unit_cost,
-                    'selling_price' => $stockLevel->item->selling_price,
+                    'item_id' => $batch->item_id,
+                    'batch_inventory_id' => $batch->id,
+                    'qty_system' => $batch->qty_remaining,
+                    'unit_cost' => $batch->unit_cost,
+                    'selling_price' => $batch->item->selling_price,
                 ]);
-
-                $createdItemIds->push($stockLevel->item_id);
             }
 
             $this->record->update(['status' => 'in_progress']);

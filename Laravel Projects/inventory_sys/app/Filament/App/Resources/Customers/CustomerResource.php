@@ -5,6 +5,7 @@ namespace App\Filament\App\Resources\Customers;
 use App\Filament\App\Resources\Customers\Pages\CreateCustomer;
 use App\Filament\App\Resources\Customers\Pages\EditCustomer;
 use App\Filament\App\Resources\Customers\Pages\ListCustomers;
+use App\Filament\App\Resources\Customers\Pages\ViewCustomer;
 use App\Filament\App\Resources\Customers\Schemas\CustomerForm;
 use App\Filament\App\Resources\Customers\Tables\CustomersTable;
 use App\Models\Customer;
@@ -73,6 +74,7 @@ protected static ?string $model = Customer::class;
         return [
             'index' => ListCustomers::route('/'),
             'create' => CreateCustomer::route('/create'),
+            'view' => ViewCustomer::route('/{record}'),
             'edit' => EditCustomer::route('/{record}/edit'),
         ];
     }

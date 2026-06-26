@@ -31,7 +31,7 @@ class StockTransferForm
                             ->label('Transfer Type'),
                         Select::make('from_branch_id')
                             ->relationship('fromBranch', 'name')
-                            ->default(fn () => \Filament\Filament::getTenant()->id)
+                            ->default(fn () => \Filament\Facades\Filament::getTenant()->id)
                             ->required()
                             ->disabled()
                             ->dehydrated()
@@ -81,7 +81,7 @@ class StockTransferForm
                                 Select::make('batch_inventory_id')
                                     ->options(function (callable $get) {
                                         $itemId = $get('item_id');
-                                        $fromBranchId = $get('../../from_branch_id') ?? \Filament\Filament::getTenant()->id;
+                                        $fromBranchId = $get('../../from_branch_id') ?? \Filament\Facades\Filament::getTenant()->id;
                                         $fromDeptId = $get('../../from_department_id');
 
                                         if (!$itemId) {
@@ -146,7 +146,7 @@ class StockTransferForm
                         Hidden::make('requested_by')
                             ->default(fn () => auth()->id()),
                         Hidden::make('branch_id')
-                            ->default(fn () => \Filament\Filament::getTenant()->id),
+                            ->default(fn () => \Filament\Facades\Filament::getTenant()->id),
                     ]),
             ]);
     }

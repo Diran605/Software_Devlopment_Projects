@@ -3,6 +3,7 @@
 namespace App\Filament\App\Resources\Customers\Tables;
 
 use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -36,6 +37,7 @@ class CustomersTable
             ])
             ->defaultSort('name')
             ->actions([
+                ViewAction::make(),
                 EditAction::make(),
                 DeleteAction::make(),
             ])

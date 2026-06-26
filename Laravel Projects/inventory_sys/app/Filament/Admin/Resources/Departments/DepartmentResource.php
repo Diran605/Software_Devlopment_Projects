@@ -5,6 +5,7 @@ namespace App\Filament\Admin\Resources\Departments;
 use App\Filament\Admin\Resources\Departments\Pages\CreateDepartment;
 use App\Filament\Admin\Resources\Departments\Pages\EditDepartment;
 use App\Filament\Admin\Resources\Departments\Pages\ListDepartments;
+use App\Filament\Admin\Resources\Departments\Pages\ViewDepartment;
 use App\Filament\Admin\Resources\Departments\Schemas\DepartmentForm;
 use App\Filament\Admin\Resources\Departments\Tables\DepartmentsTable;
 use App\Models\Department;
@@ -73,6 +74,7 @@ protected static ?string $model = Department::class;
         return [
             'index' => ListDepartments::route('/'),
             'create' => CreateDepartment::route('/create'),
+            'view' => ViewDepartment::route('/{record}'),
             'edit' => EditDepartment::route('/{record}/edit'),
         ];
     }

@@ -22,10 +22,20 @@ class ClearanceRuleForm
                             ->required(),
                         TextInput::make('days_min')
                             ->label('Days to Expiry Min')
-                            ->numeric(),
+                            ->numeric()
+                            ->helperText('Lower bound (e.g. 15 for Approaching band)'),
                         TextInput::make('days_max')
                             ->label('Days to Expiry Max')
-                            ->numeric(),
+                            ->numeric()
+                            ->helperText('Upper bound (e.g. 30 for Approaching band)')
+                            ->rules([
+                                fn (callable $get): \Closure => function (string $attribute, mixed $value, \Closure $fail) use ($get): void {
+                                    $min = $get('days_min');
+                                    if ($min !== null && $value !== null && (float) $min > (float) $value) {
+                                        $fail('Days min cannot be greater than days max.');
+                                    }
+                                },
+                            ]),
                         TextInput::make('discount')
                             ->numeric()
                             ->suffix('%')

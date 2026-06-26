@@ -2,6 +2,9 @@
 
 namespace App\Services;
 
+use App\Exceptions\InsufficientStockException;
+use App\Models\ClearanceAction;
+use App\Models\ClearanceStock;
 use App\Models\SalesOrder;
 use App\Models\SalesOrderLine;
 use Illuminate\Support\Facades\DB;
@@ -20,60 +23,18 @@ class SalesOrderService
             $subtotal = 0;
             $discountTotal = 0;
             $cogsTotal = 0;
+            $hasClearance = false;
 
             foreach ($lines as $lineData) {
-                $qtySold = $lineData['qty_sold'];
-                $unitPrice = $lineData['unit_price'];
-
-                $line = new SalesOrderLine($lineData);
-                $line->line_total = $qtySold * $unitPrice;
-                $order->salesOrderLines()->save($line);
-
-                $allocations = $this->batchInventoryService->allocateStock($line);
-
-                $lineCost = 0;
-                foreach ($allocations as $alloc) {
-                    $lineCost += $alloc['qty_allocated'] * $alloc['unit_cost'];
-                    $line->salesStockAllocations()->create([
-                        'batch_inventory_id' => $alloc['batch_inventory_id'],
-                        'qty_allocated' => $alloc['qty_allocated'],
-                        'unit_cost' => $alloc['unit_cost'],
-                    ]);
+                if (! empty($lineData['clearance_stock_id'])) {
+                    $hasClearance = true;
+                    $line = $this->createClearanceLine($order, $lineData);
+                } else {
+                    $line = $this->createRegularLine($order, $lineData);
                 }
 
-                $line->unit_cost = $allocations[0]['unit_cost'] ?? 0;
-                $line->line_cost = $lineCost;
-                $line->gross_profit = $line->line_total - $lineCost;
-                $line->is_low_margin = $line->gross_profit < ($line->line_total * 0.2);
-                $line->is_negative_margin = $line->gross_profit < 0;
-                $line->save();
-
-                $this->inventoryService->updateStockLevel(
-                    branchId: $order->branch_id,
-                    departmentId: $order->department_id,
-                    itemId: $line->item_id,
-                    qtyChange: -$qtySold,
-                );
-
-                $this->stockMovementService->record(
-                    branchId: $order->branch_id,
-                    departmentId: $order->department_id,
-                    itemId: $line->item_id,
-                    batchInventoryId: $allocations[0]['batch_inventory_id'],
-                    recordedBy: $order->served_by,
-                    movementType: 'sale',
-                    qtyIn: 0,
-                    qtyOut: $qtySold,
-                    qtyBefore: null,
-                    qtyAfter: null,
-                    unitCost: $line->unit_cost,
-                    unitPrice: $unitPrice,
-                    referenceType: SalesOrder::class,
-                    referenceId: $order->id,
-                );
-
                 $subtotal += $line->line_total;
-                $cogsTotal += $lineCost;
+                $cogsTotal += $line->line_cost;
             }
 
             $order->subtotal = $subtotal;
@@ -81,8 +42,136 @@ class SalesOrderService
             $order->grand_total = $subtotal - $discountTotal;
             $order->cogs_total = $cogsTotal;
             $order->gross_profit = $order->grand_total - $cogsTotal;
+            $order->is_clearance = $hasClearance;
             $order->save();
         });
+    }
+
+    protected function createRegularLine(SalesOrder $order, array $lineData): SalesOrderLine
+    {
+        $qtySold = $lineData['qty_sold'];
+        $unitPrice = $lineData['unit_price'];
+
+        $line = new SalesOrderLine($lineData);
+        $line->line_total = $qtySold * $unitPrice;
+        $order->salesOrderLines()->save($line);
+
+        $allocations = $this->batchInventoryService->allocateStock($line);
+
+        $lineCost = 0;
+        foreach ($allocations as $alloc) {
+            $lineCost += $alloc['qty_allocated'] * $alloc['unit_cost'];
+            $line->salesStockAllocations()->create([
+                'batch_inventory_id' => $alloc['batch_inventory_id'],
+                'qty_allocated' => $alloc['qty_allocated'],
+                'unit_cost' => $alloc['unit_cost'],
+            ]);
+        }
+
+        $line->unit_cost = $allocations[0]['unit_cost'] ?? 0;
+        $line->line_cost = $lineCost;
+        $line->gross_profit = $line->line_total - $lineCost;
+        $line->is_low_margin = $line->gross_profit < ($line->line_total * 0.2);
+        $line->is_negative_margin = $line->gross_profit < 0;
+        $line->save();
+
+        $this->inventoryService->updateStockLevel(
+            branchId: $order->branch_id,
+            departmentId: $order->department_id,
+            itemId: $line->item_id,
+            qtyChange: -$qtySold,
+        );
+
+        $this->stockMovementService->record(
+            branchId: $order->branch_id,
+            departmentId: $order->department_id,
+            itemId: $line->item_id,
+            batchInventoryId: $allocations[0]['batch_inventory_id'],
+            recordedBy: $order->served_by,
+            movementType: 'sale',
+            qtyIn: 0,
+            qtyOut: $qtySold,
+            qtyBefore: null,
+            qtyAfter: null,
+            unitCost: $line->unit_cost,
+            unitPrice: $unitPrice,
+            referenceType: SalesOrder::class,
+            referenceId: $order->id,
+        );
+
+        return $line;
+    }
+
+    protected function createClearanceLine(SalesOrder $order, array $lineData): SalesOrderLine
+    {
+        $clearanceStock = ClearanceStock::query()
+            ->whereKey($lineData['clearance_stock_id'])
+            ->lockForUpdate()
+            ->firstOrFail();
+
+        $qtySold = (int) $lineData['qty_sold'];
+        $unitPrice = (float) $lineData['unit_price'];
+
+        if ($clearanceStock->qty_remaining < $qtySold) {
+            throw new InsufficientStockException(
+                $clearanceStock->item_id,
+                $qtySold,
+                $clearanceStock->qty_remaining
+            );
+        }
+
+        $lineData['item_id'] = $clearanceStock->item_id;
+        $lineData['batch_inventory_id'] = $clearanceStock->batch_inventory_id;
+
+        $line = new SalesOrderLine($lineData);
+        $line->line_total = $qtySold * $unitPrice;
+        $line->unit_cost = $clearanceStock->unit_cost;
+        $line->line_cost = $qtySold * $clearanceStock->unit_cost;
+        $line->gross_profit = $line->line_total - $line->line_cost;
+        $line->is_low_margin = $line->gross_profit < ($line->line_total * 0.2);
+        $line->is_negative_margin = $line->gross_profit < 0;
+        $order->salesOrderLines()->save($line);
+
+        $lossValue = ($clearanceStock->original_price - $clearanceStock->clearance_price) * $qtySold;
+
+        ClearanceAction::create([
+            'branch_id' => $order->branch_id,
+            'clearance_stocks_id' => $clearanceStock->id,
+            'item_id' => $clearanceStock->item_id,
+            'batch_inventory_id' => $clearanceStock->batch_inventory_id,
+            'action_type' => 'sell',
+            'qty' => $qtySold,
+            'loss_value' => $lossValue,
+            'sales_order_id' => $order->id,
+        ]);
+
+        $clearanceStock->decrement('qty_remaining', $qtySold);
+
+        if ($clearanceStock->fresh()->qty_remaining === 0) {
+            $clearanceStock->clearanceItem?->update(['approval_status' => 'actioned']);
+        }
+
+        $this->stockMovementService->record(
+            branchId: $order->branch_id,
+            departmentId: $order->department_id,
+            itemId: $line->item_id,
+            batchInventoryId: $clearanceStock->batch_inventory_id,
+            recordedBy: $order->served_by,
+            movementType: 'clearance_sale',
+            qtyIn: 0,
+            qtyOut: $qtySold,
+            qtyBefore: null,
+            qtyAfter: null,
+            unitCost: $line->unit_cost,
+            unitPrice: $unitPrice,
+            referenceType: SalesOrder::class,
+            referenceId: $order->id,
+            batchNumber: $clearanceStock->batch_number,
+            expiryDate: $clearanceStock->expiry_date,
+            notes: 'Clearance sale via sales order',
+        );
+
+        return $line;
     }
 
     public function editLine(SalesOrderLine $line, int $newQty, float $newUnitPrice): void
