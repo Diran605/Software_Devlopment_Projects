@@ -78,23 +78,37 @@ class OpeningStockService
         }
 
         DB::transaction(function () use ($line, $newQty, $newCost) {
-            $qtyDiff = $newQty - $line->qty_on_hand;
-
             $batch = $line->batchInventory;
-            $batch->qty_received += $qtyDiff;
-            $batch->qty_remaining += $qtyDiff;
+
+            // How many units have actually been sold/consumed from this batch already
+            $soldQty = $batch->qty_received - $batch->qty_remaining;
+
+            // The new qty_remaining cannot go below 0 or below units already sold
+            $safeNewQty = max($newQty, $soldQty);
+            $newQtyRemaining = $safeNewQty - $soldQty;
+
+            // How much the qty_on_hand (received) is actually changing
+            $qtyDiff = $safeNewQty - $line->qty_on_hand;
+
+            // Update batch: received reflects the new total, remaining reflects what's left after sales
+            $batch->qty_received = $safeNewQty;
+            $batch->qty_remaining = $newQtyRemaining;
             $batch->unit_cost = $newCost;
             $batch->save();
 
-            $this->inventoryService->updateStockLevel(
-                branchId: $line->openingStockEntry->branch_id,
-                departmentId: $line->openingStockEntry->department_id,
-                itemId: $line->item_id,
-                qtyChange: $qtyDiff,
-                unitCost: $newCost,
-            );
+            // Only adjust inventory level by the real change in remaining stock
+            $remainingDiff = $newQtyRemaining - ($line->qty_on_hand - $soldQty);
+            if ($remainingDiff !== 0) {
+                $this->inventoryService->updateStockLevel(
+                    branchId: $line->openingStockEntry->branch_id,
+                    departmentId: $line->openingStockEntry->department_id,
+                    itemId: $line->item_id,
+                    qtyChange: $remainingDiff,
+                    unitCost: $newCost,
+                );
+            }
 
-            $line->qty_on_hand = $newQty;
+            $line->qty_on_hand = $safeNewQty;
             $line->unit_cost = $newCost;
             $line->edited_at = now();
             $line->edit_count++;

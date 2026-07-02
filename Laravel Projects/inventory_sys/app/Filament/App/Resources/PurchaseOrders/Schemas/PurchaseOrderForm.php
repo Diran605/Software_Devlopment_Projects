@@ -80,10 +80,10 @@ class PurchaseOrderForm
                                 TextInput::make('line_total')
                                     ->required()
                                     ->numeric()
-                                    ->readOnly()
                                     ->prefix('FCFA ')
                                     ->default(0.00)
-                                    ->label('Line Total'),
+                                    ->label('Line Total')
+                                    ->helperText('Auto-calculated. You can override this.'),
                                 TextInput::make('notes')
                                     ->label('Notes')
                                     ->maxLength(255),

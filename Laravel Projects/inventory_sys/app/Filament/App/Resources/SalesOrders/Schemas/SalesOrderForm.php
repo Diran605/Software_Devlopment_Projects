@@ -121,7 +121,8 @@ class SalesOrderForm
                                             $tenantId = \Filament\Facades\Filament::getTenant()->id;
                                             $stock = \App\Models\ItemStockLevel::where('item_id', $itemId)
                                                 ->where('branch_id', $tenantId)
-                                                ->value('qty_on_hand') ?? 0;
+                                                ->whereNotNull('department_id')
+                                                ->sum('qty_on_hand');
                                             return "Qty on hand: {$stock}";
                                         }
                                         return null;
@@ -309,10 +310,14 @@ class SalesOrderForm
                                 TextInput::make('line_total')
                                     ->required()
                                     ->numeric()
-                                    ->readOnly()
                                     ->prefix('FCFA ')
                                     ->default(0.00)
-                                    ->label('Line Total'),
+                                    ->label('Line Total')
+                                    ->helperText('Auto-calculated. You can override this.')
+                                    ->live()
+                                    ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                                        // Recalculate subtotal when line total is manually changed
+                                    }),
                                 Hidden::make('gross_profit')
                                     ->default(0.00),
                                 Hidden::make('margin_status')

@@ -151,6 +151,31 @@ class ProfitLossReportPage extends Page implements HasForms
             ->orderBy('date')
             ->get();
 
+        // Loss-making lines (sales where gross_profit < 0), grouped by product
+        $lossLines = \App\Models\SalesOrderLine::query()
+            ->join('sales_orders', 'sales_orders.id', '=', 'sales_order_lines.sales_order_id')
+            ->join('items', 'items.id', '=', 'sales_order_lines.item_id')
+            ->leftJoin('item_categories', 'item_categories.id', '=', 'items.category_id')
+            ->when($tenantId, fn ($q) => $q->where('sales_orders.branch_id', $tenantId))
+            ->when($from, fn ($q) => $q->whereDate('sales_orders.sold_at', '>=', $from))
+            ->when($to,   fn ($q) => $q->whereDate('sales_orders.sold_at', '<=', $to))
+            ->whereNull('sales_orders.deleted_at')
+            ->whereNull('sales_order_lines.deleted_at')
+            ->where('sales_order_lines.gross_profit', '<', 0)
+            ->select(
+                'items.name as item_name',
+                DB::raw('COALESCE(item_categories.name, "Uncategorized") as category_name'),
+                DB::raw('SUM(sales_order_lines.qty_sold) as total_qty'),
+                DB::raw('SUM(sales_order_lines.line_total) as total_revenue'),
+                DB::raw('SUM(sales_order_lines.line_cost) as total_cost'),
+                DB::raw('SUM(sales_order_lines.gross_profit) as total_loss'),
+            )
+            ->groupBy('items.id', 'items.name', 'item_categories.name')
+            ->orderBy('total_loss')
+            ->get();
+
+        $totalLoss = (float) $lossLines->sum('total_loss');
+
         return [
             'revenue'           => $revenue,
             'cogs'              => $cogs,
@@ -162,6 +187,8 @@ class ProfitLossReportPage extends Page implements HasForms
             'order_count'       => $orderCount,
             'expense_breakdown' => $expenseBreakdown,
             'daily_revenue'     => $dailyRevenue,
+            'loss_lines'        => $lossLines,
+            'total_loss'        => $totalLoss,
         ];
     }
 

@@ -67,16 +67,33 @@
         {{-- Gross Profit --}}
         <tr class="subtotal" style="background:#d4edda;">
             <td style="font-size:13px;">Gross Profit</td>
-            <td style="text-align:right;font-size:13px;" class="{{ $data['grossProfit'] >= 0 ? 'positive' : 'negative' }}">
-                FCFA {{ number_format($data['grossProfit'], 2) }}
+            <td style="text-align:right;font-size:13px;" class="{{ $data['gross_profit'] >= 0 ? 'positive' : 'negative' }}">
+                FCFA {{ number_format($data['gross_profit'], 2) }}
             </td>
         </tr>
+
+        {{-- Loss-Making Sales (If any) --}}
+        @if(isset($data['loss_lines']) && $data['loss_lines']->isNotEmpty())
+        <tr class="section-header" style="background:#9b2c2c;">
+            <td colspan="2">Loss-Making Sales (Sold below cost)</td>
+        </tr>
+        @foreach($data['loss_lines'] as $lossLine)
+            <tr class="line-item indent" style="color:#9b2c2c; background:#fff5f5;">
+                <td>{{ $lossLine->item_name }} (Qty: {{ number_format($lossLine->total_qty) }})</td>
+                <td>(FCFA {{ number_format(abs($lossLine->total_loss), 2) }})</td>
+            </tr>
+        @endforeach
+        <tr class="subtotal" style="color:#9b2c2c; background:#fed7d7;">
+            <td>Total Losses from Underselling</td>
+            <td style="text-align:right">(FCFA {{ number_format(abs($data['total_loss']), 2) }})</td>
+        </tr>
+        @endif
 
         {{-- Operating Expenses --}}
         <tr class="section-header">
             <td colspan="2">Operating Expenses</td>
         </tr>
-        @forelse($data['expenseBreakdown'] as $expense)
+        @forelse($data['expense_breakdown'] as $expense)
             <tr class="line-item indent">
                 <td>{{ $expense->category_name }}</td>
                 <td>(FCFA {{ number_format($expense->total_amount, 2) }})</td>
@@ -88,23 +105,23 @@
         @endforelse
         <tr class="subtotal">
             <td>Total Operating Expenses</td>
-            <td style="text-align:right">(FCFA {{ number_format($data['totalExpenses'], 2) }})</td>
+            <td style="text-align:right">(FCFA {{ number_format($data['total_expenses'], 2) }})</td>
         </tr>
 
         {{-- Net Profit --}}
         <tr class="grand-total">
             <td>Net Profit / (Loss)</td>
             <td style="text-align:right">
-                @if($data['netProfit'] < 0)
-                    (FCFA {{ number_format(abs($data['netProfit']), 2) }})
+                @if($data['net_profit'] < 0)
+                    (FCFA {{ number_format(abs($data['net_profit']), 2) }})
                 @else
-                    FCFA {{ number_format($data['netProfit'], 2) }}
+                    FCFA {{ number_format($data['net_profit'], 2) }}
                 @endif
             </td>
         </tr>
     </table>
 
-    @if($data['expenseBreakdown']->isNotEmpty())
+    @if($data['expense_breakdown']->isNotEmpty())
     <h3 style="font-size:12px;margin-bottom:8px;">Expense Breakdown by Category</h3>
     <table class="expense-table">
         <thead>
@@ -115,11 +132,11 @@
             </tr>
         </thead>
         <tbody>
-            @foreach($data['expenseBreakdown'] as $expense)
+            @foreach($data['expense_breakdown'] as $expense)
                 <tr>
                     <td>{{ $expense->category_name }}</td>
                     <td class="right">FCFA {{ number_format($expense->total_amount, 2) }}</td>
-                    <td class="right">{{ $data['totalExpenses'] > 0 ? number_format(($expense->total_amount / $data['totalExpenses']) * 100, 1) : 0 }}%</td>
+                    <td class="right">{{ $data['total_expenses'] > 0 ? number_format(($expense->total_amount / $data['total_expenses']) * 100, 1) : 0 }}%</td>
                 </tr>
             @endforeach
         </tbody>

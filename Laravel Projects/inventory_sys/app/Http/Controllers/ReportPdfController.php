@@ -154,59 +154,43 @@ class ReportPdfController extends Controller
 
     public function profitLoss(Request $request)
     {
-        $filters = $request->validate([
-            'date_from' => ['nullable', 'date'],
-            'date_to' => ['nullable', 'date'],
-            'branch_id' => ['nullable', 'integer'],
-        ]);
-
-        $branchId = $this->resolveReportBranchId($request);
+        $filters = $request->all();
         $branch = $this->resolveReportBranch($request);
-
-        $from = $filters['date_from'] ?? null;
-        $to = $filters['date_to'] ?? null;
-
-        $salesAgg = \App\Models\SalesOrderLine::query()
-            ->join('sales_orders', 'sales_orders.id', '=', 'sales_order_lines.sales_order_id')
-            ->where('sales_orders.branch_id', $branchId)
-            ->when($from, fn ($q) => $q->whereDate('sales_orders.sold_at', '>=', $from))
-            ->when($to, fn ($q) => $q->whereDate('sales_orders.sold_at', '<=', $to))
-            ->select(
-                DB::raw('COALESCE(SUM(sales_order_lines.line_total), 0) as revenue'),
-                DB::raw('COALESCE(SUM(sales_order_lines.line_cost), 0) as cogs'),
-                DB::raw('COALESCE(SUM(sales_order_lines.gross_profit), 0) as gross_profit')
-            )
-            ->first();
-
-        $revenue = (float) ($salesAgg->revenue ?? 0);
-        $cogs = (float) ($salesAgg->cogs ?? 0);
-        $grossProfit = (float) ($salesAgg->gross_profit ?? 0);
-
-        $totalExpenses = (float) \App\Models\Expense::query()
-            ->where('branch_id', $branchId)
-            ->when($from, fn ($q) => $q->whereDate('expense_date', '>=', $from))
-            ->when($to, fn ($q) => $q->whereDate('expense_date', '<=', $to))
-            ->sum('amount');
-
-        $netProfit = $grossProfit - $totalExpenses;
-
-        $expenseBreakdown = \App\Models\Expense::query()
-            ->leftJoin('expense_categories', 'expense_categories.id', '=', 'expenses.category_id')
-            ->where('expenses.branch_id', $branchId)
-            ->when($from, fn ($q) => $q->whereDate('expenses.expense_date', '>=', $from))
-            ->when($to, fn ($q) => $q->whereDate('expenses.expense_date', '<=', $to))
-            ->select(
-                DB::raw('COALESCE(expense_categories.name, "Uncategorized") as category_name'),
-                DB::raw('SUM(expenses.amount) as total_amount')
-            )
-            ->groupBy('expense_categories.name')
-            ->orderBy('total_amount', 'desc')
-            ->get();
-
-        $data = compact('revenue', 'cogs', 'grossProfit', 'totalExpenses', 'netProfit', 'expenseBreakdown');
+        
+        $page = new \App\Filament\App\Pages\ProfitLossReportPage();
+        $page->data = $filters;
+        $data = $page->getData();
 
         return Pdf::loadView('reports.profit-loss', compact('data', 'filters', 'branch'))
             ->download('profit-loss-'.now()->format('Y-m-d').'.pdf');
+    }
+
+    public function productProfitLoss(Request $request)
+    {
+        $filters = $request->all();
+        $branch = $this->resolveReportBranch($request);
+        
+        $page = new \App\Filament\App\Pages\ProductProfitLossReportPage();
+        $page->data = $filters;
+        $reportData = $page->getData();
+
+        return Pdf::loadView('reports.product-profit-loss', compact('reportData', 'filters', 'branch'))
+            ->setPaper('a4', 'landscape')
+            ->download('product-profit-loss-'.now()->format('Y-m-d').'.pdf');
+    }
+
+    public function trendingProducts(Request $request)
+    {
+        $filters = $request->all();
+        $branch = $this->resolveReportBranch($request);
+        
+        $page = new \App\Filament\App\Pages\TrendingProductsReportPage();
+        $page->data = $filters;
+        $reportData = $page->getData();
+
+        return Pdf::loadView('reports.trending-products', compact('reportData', 'filters', 'branch'))
+            ->setPaper('a4', 'landscape')
+            ->download('trending-products-'.now()->format('Y-m-d').'.pdf');
     }
 
     public function expiry(Request $request)
@@ -304,23 +288,30 @@ class ReportPdfController extends Controller
     {
         $filters = $request->validate([
             'category_id' => ['nullable', 'integer'],
+            'search' => ['nullable', 'string'],
             'branch_id' => ['nullable', 'integer'],
         ]);
 
         $branchId = $this->resolveReportBranchId($request);
         $branch = $this->resolveReportBranch($request);
         $categoryId = $filters['category_id'] ?? null;
+        $search = $filters['search'] ?? null;
 
         $data = \App\Models\Item::query()
             ->where('branch_id', $branchId)
             ->when($categoryId, fn ($q) => $q->where('category_id', $categoryId))
+            ->when($search, fn ($q) => $q->where('name', 'like', "%{$search}%"))
             ->with(['category', 'uom', 'itemStockLevels'])
             ->orderBy('name')
             ->get()
-            ->map(function ($item) {
-                // Get the stock level for the current branch
-                $stockLevel = $item->itemStockLevels->firstWhere('branch_id', $item->branch_id);
-                $item->qty_on_hand = $stockLevel->qty_on_hand ?? 0;
+            ->map(function ($item) use ($branchId) {
+                // Sum qty across all department-level stock records for this branch
+                // (excludes the null-dept aggregate row which may show 0)
+                $qty = $item->itemStockLevels
+                    ->where('branch_id', $branchId)
+                    ->whereNotNull('department_id')
+                    ->sum('qty_on_hand');
+                $item->qty_on_hand = $qty;
                 return $item;
             });
 

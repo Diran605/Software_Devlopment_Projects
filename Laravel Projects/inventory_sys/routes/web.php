@@ -26,6 +26,8 @@ Route::prefix('reports')->middleware(['auth'])->group(function () {
     Route::get('/items-list/pdf', [\App\Http\Controllers\ReportPdfController::class, 'itemsList'])->name('reports.items-list.pdf');
     Route::get('/purchases/pdf', [\App\Http\Controllers\ReportPdfController::class, 'purchases'])->name('reports.purchases.pdf');
     Route::get('/profit-loss/pdf', [\App\Http\Controllers\ReportPdfController::class, 'profitLoss'])->name('reports.profit-loss.pdf');
+    Route::get('/product-profit-loss/pdf', [\App\Http\Controllers\ReportPdfController::class, 'productProfitLoss'])->name('reports.product-profit-loss.pdf');
+    Route::get('/trending-products/pdf', [\App\Http\Controllers\ReportPdfController::class, 'trendingProducts'])->name('reports.trending-products.pdf');
     Route::get('/expiry/pdf', [\App\Http\Controllers\ReportPdfController::class, 'expiry'])->name('reports.expiry.pdf');
     Route::get('/low-stock/pdf', [\App\Http\Controllers\ReportPdfController::class, 'lowStock'])->name('reports.low-stock.pdf');
     Route::get('/inventory-count/{inventoryCount}/pdf', [\App\Http\Controllers\ReportPdfController::class, 'inventoryCount'])->name('reports.inventory-count.pdf');

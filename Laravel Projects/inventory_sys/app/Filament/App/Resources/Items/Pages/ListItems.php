@@ -22,7 +22,10 @@ class ListItems extends ListRecords
                 ->label('Export Items List (PDF)')
                 ->icon('heroicon-o-document-arrow-down')
                 ->color('info')
-                ->url(fn () => route('reports.items-list.pdf')),
+                ->url(fn ($livewire) => route('reports.items-list.pdf', [
+                    'category_id' => $livewire->tableFilters['category_id']['value'] ?? null,
+                    'search' => $livewire->tableSearchQuery ?? null,
+                ])),
 
             XlsxAndCsvImportAction::make()
                 ->importer(ItemImporter::class)

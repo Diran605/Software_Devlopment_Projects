@@ -79,7 +79,8 @@ class SalesOrderForm
                                         if ($itemId && $branchId) {
                                             $stock = \App\Models\ItemStockLevel::where('item_id', $itemId)
                                                 ->where('branch_id', $branchId)
-                                                ->value('qty_on_hand') ?? 0;
+                                                ->whereNotNull('department_id')
+                                                ->sum('qty_on_hand');
                                             return "Qty on hand: {$stock}";
                                         }
                                         return null;

@@ -55,7 +55,7 @@
         </x-filament::card>
 
         {{-- Summary Cards --}}
-        <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
             <div class="rounded-xl bg-zinc-800/60 border border-zinc-700 p-4">
                 <div class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Revenue</div>
                 <div class="text-2xl font-bold text-emerald-400 mt-1">FCFA {{ number_format($reportData['revenue'], 2) }}</div>
@@ -120,6 +120,31 @@
                             <td class="p-3 font-bold text-lg text-white">Gross Profit</td>
                             <td class="p-3 text-right font-bold text-lg {{ $reportData['gross_profit'] >= 0 ? 'text-emerald-400' : 'text-rose-400' }}">FCFA {{ number_format($reportData['gross_profit'], 2) }}</td>
                         </tr>
+
+                        {{-- Losses Section (negative-margin sales lines) --}}
+                        @if($reportData['loss_lines']->isNotEmpty())
+                        <tr class="bg-rose-950/40 border-b border-zinc-700">
+                            <td class="p-3 font-bold text-white text-base" colspan="2">
+                                ⚠️ Loss-Making Sales (sold below cost)
+                            </td>
+                        </tr>
+                        @foreach($reportData['loss_lines'] as $lossLine)
+                        <tr class="border-b border-zinc-800 bg-rose-950/20 hover:bg-rose-950/30">
+                            <td class="p-3 pl-6">
+                                <span class="text-rose-300 font-medium">{{ $lossLine->item_name }}</span>
+                                <span class="text-zinc-500 text-xs ml-2">{{ $lossLine->category_name }}</span>
+                                <span class="text-zinc-500 text-xs ml-2">— Qty: {{ number_format($lossLine->total_qty) }}</span>
+                            </td>
+                            <td class="p-3 text-right font-semibold text-rose-400">
+                                (FCFA {{ number_format(abs($lossLine->total_loss), 2) }})
+                            </td>
+                        </tr>
+                        @endforeach
+                        <tr class="border-b border-zinc-700 bg-rose-900/30">
+                            <td class="p-3 pl-4 font-semibold text-white">Total Losses from Underselling</td>
+                            <td class="p-3 text-right font-bold text-rose-400">(FCFA {{ number_format(abs($reportData['total_loss']), 2) }})</td>
+                        </tr>
+                        @endif
 
                         {{-- Operating Expenses --}}
                         <tr class="bg-zinc-800/50 border-b border-zinc-700">
