@@ -31,6 +31,7 @@ Route::prefix('reports')->middleware(['auth'])->group(function () {
     Route::get('/expiry/pdf', [\App\Http\Controllers\ReportPdfController::class, 'expiry'])->name('reports.expiry.pdf');
     Route::get('/low-stock/pdf', [\App\Http\Controllers\ReportPdfController::class, 'lowStock'])->name('reports.low-stock.pdf');
     Route::get('/inventory-count/{inventoryCount}/pdf', [\App\Http\Controllers\ReportPdfController::class, 'inventoryCount'])->name('reports.inventory-count.pdf');
+    Route::get('/inventory-count/{inventoryCount}/sheet', [\App\Http\Controllers\ReportPdfController::class, 'inventoryCountSheet'])->name('reports.inventory-count.sheet');
     Route::get('/clearance-activity/pdf', [\App\Http\Controllers\ReportPdfController::class, 'clearanceActivity'])->name('reports.clearance-activity.pdf');
     Route::get('/expenses/pdf', [\App\Http\Controllers\ReportPdfController::class, 'expenses'])->name('reports.expenses.pdf');
 });

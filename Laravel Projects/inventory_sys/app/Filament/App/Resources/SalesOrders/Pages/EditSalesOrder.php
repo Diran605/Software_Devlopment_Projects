@@ -76,14 +76,22 @@ class EditSalesOrder extends EditRecord
                         $dbLine = $dbLines->get($incomingLine['id']);
                         $qtyChanged = intval($incomingLine['qty_sold']) !== intval($dbLine->qty_sold);
                         $priceChanged = floatval($incomingLine['unit_price']) !== floatval($dbLine->unit_price);
+                        $totalChanged = floatval($incomingLine['line_total'] ?? 0) !== floatval($dbLine->line_total);
                         
-                        if ($qtyChanged || $priceChanged) {
-                            $service->editLine($dbLine, intval($incomingLine['qty_sold']), floatval($incomingLine['unit_price']));
+                        if ($qtyChanged || $priceChanged || $totalChanged) {
+                            $service->editLine(
+                                $dbLine, 
+                                intval($incomingLine['qty_sold']), 
+                                floatval($incomingLine['unit_price']),
+                                floatval($incomingLine['line_total'] ?? 0)
+                            );
                         }
                     } else {
                         // New line in existing order
                         $line = new \App\Models\SalesOrderLine($incomingLine);
-                        $line->line_total = $line->qty_sold * $line->unit_price;
+                        $autoTotal = $line->qty_sold * $line->unit_price;
+                        $formTotal = floatval($incomingLine['line_total'] ?? 0);
+                        $line->line_total = ($formTotal > 0 && $formTotal !== $autoTotal) ? $formTotal : $autoTotal;
                         $record->salesOrderLines()->save($line);
 
                         $allocations = app(\App\Services\BatchInventoryService::class)->allocateStock($line);
@@ -92,9 +100,9 @@ class EditSalesOrder extends EditRecord
                         foreach ($allocations as $alloc) {
                             $lineCost += $alloc['qty_allocated'] * $alloc['unit_cost'];
                             $line->salesStockAllocations()->create([
-                                'batch_inventory_id' => $alloc['batch_inventory_id'],
-                                'qty_allocated' => $alloc['qty_allocated'],
-                                'unit_cost' => $alloc['unit_cost'],
+                                    'batch_inventory_id' => $alloc['batch_inventory_id'],
+                                    'qty_allocated' => $alloc['qty_allocated'],
+                                    'unit_cost' => $alloc['unit_cost'],
                             ]);
                         }
 

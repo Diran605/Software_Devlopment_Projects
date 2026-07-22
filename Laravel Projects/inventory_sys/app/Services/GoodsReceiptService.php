@@ -31,7 +31,10 @@ class GoodsReceiptService
 
                 $line = new GrnLineItem($lineData);
                 $line->qty_received = $qtyReceived;
-                $line->line_total = $qtyReceived * $unitCost;
+                $autoTotal = $qtyReceived * $unitCost;
+                // Respect manually overridden line_total from the form; fall back to auto-calc
+                $formTotal = floatval($lineData['line_total'] ?? 0);
+                $line->line_total = ($formTotal > 0 && $formTotal !== $autoTotal) ? $formTotal : $autoTotal;
                 $grn->grnLineItems()->save($line);
 
                 $batch = $this->batchInventoryService->createBatch(
@@ -100,7 +103,7 @@ class GoodsReceiptService
         $totalReceived = $po->purchaseOrderLines->sum('qty_received');
 
         if ($totalReceived == 0) {
-            $status = $po->status;
+            $status = in_array($po->status, ['fully_received', 'partially_received']) ? 'issued' : $po->status;
         } elseif ($totalReceived < $totalOrdered) {
             $status = 'partially_received';
         } else {

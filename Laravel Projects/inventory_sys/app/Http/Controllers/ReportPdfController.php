@@ -258,6 +258,24 @@ class ReportPdfController extends Controller
             ->download('inventory-count-'.$inventoryCount->count_number.'.pdf');
     }
 
+    public function inventoryCountSheet(Request $request, InventoryCount $inventoryCount)
+    {
+        abort_unless(auth()->user()?->can('view', $inventoryCount), 403);
+
+        $inventoryCount->load([
+            'branch',
+            'department',
+            'createdBy',
+            'lines.item.category',
+            'lines.item.uom',
+            'lines.batchInventory',
+        ]);
+
+        return Pdf::loadView('reports.inventory-count-sheet', ['count' => $inventoryCount])
+            ->setPaper('a4', 'landscape')
+            ->download('count-sheet-'.$inventoryCount->count_number.'.pdf');
+    }
+
     public function clearanceActivity(Request $request)
     {
         $filters = $request->validate([

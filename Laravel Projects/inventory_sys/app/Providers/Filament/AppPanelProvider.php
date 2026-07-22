@@ -25,14 +25,38 @@ class AppPanelProvider extends PanelProvider
             ->id('app')
             ->path('app')
             ->login()
-            // ->colors(['primary' => Color::Blue])
+            // Ocean Blue & Teal — custom colour palette
             ->colors([
-                'primary' => Color::Blue,
-                'gray' => Color::Zinc,
-                'info' => Color::Sky,
-                'success' => Color::Emerald,
-                'warning' => Color::Amber,
-                'danger' => Color::Rose,
+                'primary' => [
+                    50  => '240, 253, 250',
+                    100 => '204, 251, 241',
+                    200 => '153, 246, 228',
+                    300 => '94, 234, 212',
+                    400 => '45, 212, 191',
+                    500 => '20, 184, 166',
+                    600 => '13, 148, 136',
+                    700 => '15, 118, 110',
+                    800 => '17, 94, 89',
+                    900 => '19, 78, 74',
+                    950 => '4, 47, 46',
+                ],
+                'gray' => [
+                    50  => '248, 250, 252',
+                    100 => '241, 245, 249',
+                    200 => '226, 232, 240',
+                    300 => '203, 213, 225',
+                    400 => '148, 163, 184',
+                    500 => '100, 116, 139',
+                    600 => '71, 85, 105',
+                    700 => '51, 65, 85',
+                    800 => '30, 41, 59',
+                    900 => '15, 23, 42',
+                    950 => '2, 6, 23',
+                ],
+                'info'    => \Filament\Support\Colors\Color::Cyan,
+                'success' => \Filament\Support\Colors\Color::Emerald,
+                'warning' => \Filament\Support\Colors\Color::Amber,
+                'danger'  => \Filament\Support\Colors\Color::Rose,
             ])
             ->brandName('IMS')
             ->defaultThemeMode(\Filament\Enums\ThemeMode::Dark)

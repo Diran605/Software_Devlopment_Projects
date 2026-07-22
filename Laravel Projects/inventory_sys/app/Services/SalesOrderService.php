@@ -51,9 +51,13 @@ class SalesOrderService
     {
         $qtySold = $lineData['qty_sold'];
         $unitPrice = $lineData['unit_price'];
+        $autoTotal = $qtySold * $unitPrice;
+        // Respect manually overridden line_total from the form; fall back to auto-calc
+        $formTotal = floatval($lineData['line_total'] ?? 0);
+        $lineTotal = ($formTotal > 0 && $formTotal !== $autoTotal) ? $formTotal : $autoTotal;
 
         $line = new SalesOrderLine($lineData);
-        $line->line_total = $qtySold * $unitPrice;
+        $line->line_total = $lineTotal;
         $order->salesOrderLines()->save($line);
 
         $allocations = $this->batchInventoryService->allocateStock($line);
@@ -174,16 +178,17 @@ class SalesOrderService
         return $line;
     }
 
-    public function editLine(SalesOrderLine $line, int $newQty, float $newUnitPrice): void
+    public function editLine(SalesOrderLine $line, int $newQty, float $newUnitPrice, ?float $customLineTotal = null): void
     {
-        DB::transaction(function () use ($line, $newQty, $newUnitPrice) {
+        DB::transaction(function () use ($line, $newQty, $newUnitPrice, $customLineTotal) {
             $order = $line->salesOrder;
             $oldQty = $line->qty_sold;
 
-            // If only price changed, no stock allocations are affected
+            // If only price or line_total changed, no stock allocations are affected
             if ($oldQty === $newQty) {
                 $line->unit_price = $newUnitPrice;
-                $line->line_total = $newQty * $newUnitPrice;
+                $autoTotal = $newQty * $newUnitPrice;
+                $line->line_total = ($customLineTotal !== null && $customLineTotal > 0 && $customLineTotal !== $autoTotal) ? $customLineTotal : $autoTotal;
                 $line->gross_profit = $line->line_total - $line->line_cost;
                 $line->is_low_margin = $line->gross_profit < ($line->line_total * 0.2);
                 $line->is_negative_margin = $line->gross_profit < 0;
@@ -226,7 +231,8 @@ class SalesOrderService
             // 4. Update the line sold qty & price
             $line->qty_sold = $newQty;
             $line->unit_price = $newUnitPrice;
-            $line->line_total = $newQty * $newUnitPrice;
+            $autoTotal = $newQty * $newUnitPrice;
+            $line->line_total = ($customLineTotal !== null && $customLineTotal > 0 && $customLineTotal !== $autoTotal) ? $customLineTotal : $autoTotal;
             $line->save();
 
             // 5. Run allocateStock

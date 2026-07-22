@@ -170,7 +170,8 @@ class GoodsReceivedNoteForm
                                     ->prefix('FCFA ')
                                     ->default(0.00)
                                     ->label('Line Total')
-                                    ->helperText('Auto-calculated. You can override this.'),
+                                    ->helperText('Auto-calculated. You can override this.')
+                                    ->live(),
                                 TextInput::make('batch_number')
                                     ->required()
                                     ->default(fn () => 'BCH-' . strtoupper(uniqid()))
@@ -188,9 +189,8 @@ class GoodsReceivedNoteForm
                         $totalCost = 0;
                         foreach ($lines as $line) {
                             $qty = floatval($line['qty_received'] ?? 0);
-                            $cost = floatval($line['unit_cost'] ?? 0);
                             $totalQty += $qty;
-                            $totalCost += $qty * $cost;
+                            $totalCost += floatval($line['line_total'] ?? 0);
                         }
                         $set('total_qty', $totalQty);
                         $set('total_cost', $totalCost);

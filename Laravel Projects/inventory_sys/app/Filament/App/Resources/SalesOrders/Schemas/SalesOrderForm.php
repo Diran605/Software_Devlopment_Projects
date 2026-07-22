@@ -316,7 +316,17 @@ class SalesOrderForm
                                     ->helperText('Auto-calculated. You can override this.')
                                     ->live()
                                     ->afterStateUpdated(function ($state, callable $set, callable $get) {
-                                        // Recalculate subtotal when line total is manually changed
+                                        // Only update local margin fields — totals are handled by the parent Repeater
+                                        $lineTotal = floatval($state ?? 0);
+                                        $qty = floatval($get('qty_sold') ?? 0);
+                                        if ($itemId = $get('item_id')) {
+                                            $item = \App\Models\Item::find($itemId);
+                                            if ($item) {
+                                                $grossProfit = $lineTotal - ($qty * floatval($item->unit_cost));
+                                                $set('gross_profit', $grossProfit);
+                                                $set('margin_status', $grossProfit < 0 ? 'negative' : ($grossProfit < ($lineTotal * 0.2) ? 'low' : 'normal'));
+                                            }
+                                        }
                                     }),
                                 Hidden::make('gross_profit')
                                     ->default(0.00),

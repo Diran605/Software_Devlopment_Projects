@@ -83,7 +83,8 @@ class PurchaseOrderForm
                                     ->prefix('FCFA ')
                                     ->default(0.00)
                                     ->label('Line Total')
-                                    ->helperText('Auto-calculated. You can override this.'),
+                                    ->helperText('Auto-calculated. You can override this.')
+                                    ->live(),
                                 TextInput::make('notes')
                                     ->label('Notes')
                                     ->maxLength(255),
@@ -95,9 +96,7 @@ class PurchaseOrderForm
                         $lines = $get('purchaseOrderLines') ?? [];
                         $total = 0;
                         foreach ($lines as $line) {
-                            $qty = floatval($line['qty_ordered'] ?? 0);
-                            $cost = floatval($line['unit_cost'] ?? 0);
-                            $total += $qty * $cost;
+                            $total += floatval($line['line_total'] ?? 0);
                         }
                         $set('total_amount', $total);
                     }),

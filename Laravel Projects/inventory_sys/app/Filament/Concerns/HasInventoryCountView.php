@@ -57,6 +57,12 @@ trait HasInventoryCountView
                 ->icon(Heroicon::Printer)
                 ->url(fn () => route('reports.inventory-count.pdf', $this->record))
                 ->openUrlInNewTab(),
+            Action::make('download_sheet')
+                ->label('Download Count Sheet')
+                ->icon(Heroicon::ArrowDownTray)
+                ->color('success')
+                ->url(fn () => route('reports.inventory-count.sheet', $this->record))
+                ->openUrlInNewTab(),
             Action::make('submit')
                 ->label('Submit for Approval')
                 ->color('warning')
