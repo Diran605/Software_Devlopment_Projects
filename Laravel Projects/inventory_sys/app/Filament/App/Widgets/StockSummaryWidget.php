@@ -2,7 +2,6 @@
 
 namespace App\Filament\App\Widgets;
 
-use App\Models\Item;
 use App\Models\ItemStockLevel;
 use Filament\Facades\Filament;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
@@ -15,12 +14,6 @@ class StockSummaryWidget extends BaseWidget
         $tenant = Filament::getTenant();
         $tenantId = $tenant ? $tenant->id : null;
 
-        $totalSkus = Item::where('is_active', true)
-            ->when($tenantId, fn ($q) => $q->where('branch_id', $tenantId))
-            ->count();
-
-        $totalUnits = ItemStockLevel::when($tenantId, fn ($q) => $q->where('branch_id', $tenantId))
-            ->sum('qty_on_hand');
 
         $totalValue = ItemStockLevel::when($tenantId, fn ($q) => $q->where('item_stock_levels.branch_id', $tenantId))
             ->join('items', 'items.id', '=', 'item_stock_levels.item_id')
@@ -32,10 +25,12 @@ class StockSummaryWidget extends BaseWidget
             ->count();
 
         return [
-            Stat::make('Total SKUs', $totalSkus),
-            Stat::make('Total Units on Hand', number_format($totalUnits)),
-            Stat::make('Total Stock Value', number_format($totalValue, 0) . ' XAF'),
-            Stat::make('Low Stock Items', $lowStockCount),
+            Stat::make('Total Stock Value', number_format($totalValue, 0) . ' XAF')
+                ->description('Current inventory value at cost')
+                ->color('primary'),
+            Stat::make('Low Stock Items', $lowStockCount)
+                ->description('Items at or below reorder level')
+                ->color($lowStockCount > 0 ? 'warning' : 'success'),
         ];
     }
 }

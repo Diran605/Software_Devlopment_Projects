@@ -6,11 +6,13 @@ use Filament\Facades\Filament;
 
 trait ProvidesReportPdfParams
 {
-    public function exportPdf(string $routeName): mixed
+    public function exportPdf(string $routeName, array $extraParams = []): mixed
     {
         $this->form->getState();
 
-        return redirect()->route($routeName, $this->getPdfParams());
+        $params = array_merge($this->getPdfParams(), $extraParams);
+
+        return redirect()->route($routeName, $params);
     }
 
     protected function getPdfParams(): array

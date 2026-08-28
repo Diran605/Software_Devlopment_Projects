@@ -4,7 +4,6 @@ namespace App\Filament\App\Widgets;
 
 use App\Models\SalesOrder;
 use App\Models\ItemStockLevel;
-use App\Models\StockTransfer;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use Filament\Widgets\Concerns\InteractsWithPageFilters;
@@ -65,33 +64,12 @@ class BranchStatsOverview extends BaseWidget
             : number_format($revChange, 1) . '% decrease vs last period';
         $revColor = $revChange >= 0 ? 'success' : 'danger';
 
-        // Orders stats
-        $currentOrders = SalesOrder::where('branch_id', $tenantId)
-            ->whereBetween('sold_at', [$from, $to])
-            ->count();
-        $prevOrders = SalesOrder::where('branch_id', $tenantId)
-            ->whereBetween('sold_at', [$prevFrom, $prevTo])
-            ->count();
-
-        $ordChange = 0;
-        if ($prevOrders > 0) {
-            $ordChange = (($currentOrders - $prevOrders) / $prevOrders) * 100;
-        }
-
-        $ordDesc = $ordChange >= 0
-            ? '+' . number_format($ordChange, 1) . '% increase vs last period'
-            : number_format($ordChange, 1) . '% decrease vs last period';
-        $ordColor = $ordChange >= 0 ? 'success' : 'danger';
 
         // Items below reorder level
         $lowStockCount = ItemStockLevel::where('branch_id', $tenantId)
             ->whereColumn('qty_on_hand', '<=', 'reorder_level')
             ->count();
 
-        // Pending transfers
-        $pendingTransfers = StockTransfer::where('status', 'pending_approval')
-            ->where('branch_id', $tenantId)
-            ->count();
 
         return [
             Stat::make('Total Sales (All Time)', number_format($totalSalesAllTime, 0) . ' FCFA')
@@ -101,16 +79,9 @@ class BranchStatsOverview extends BaseWidget
                 ->description($revDesc)
                 ->descriptionIcon($revChange >= 0 ? 'heroicon-m-arrow-trending-up' : 'heroicon-m-arrow-trending-down')
                 ->color($revColor),
-            Stat::make('Orders', $currentOrders)
-                ->description($ordDesc)
-                ->descriptionIcon($ordChange >= 0 ? 'heroicon-m-arrow-trending-up' : 'heroicon-m-arrow-trending-down')
-                ->color($ordColor),
             Stat::make('Items Below Reorder', $lowStockCount)
                 ->description('Needs restocking')
                 ->color($lowStockCount > 0 ? 'warning' : 'success'),
-            Stat::make('Pending Transfers', $pendingTransfers)
-                ->description('Awaiting approval')
-                ->color($pendingTransfers > 0 ? 'info' : 'gray'),
         ];
     }
 }

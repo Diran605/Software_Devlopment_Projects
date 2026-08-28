@@ -34,6 +34,7 @@ Route::prefix('reports')->middleware(['auth'])->group(function () {
     Route::get('/inventory-count/{inventoryCount}/sheet', [\App\Http\Controllers\ReportPdfController::class, 'inventoryCountSheet'])->name('reports.inventory-count.sheet');
     Route::get('/clearance-activity/pdf', [\App\Http\Controllers\ReportPdfController::class, 'clearanceActivity'])->name('reports.clearance-activity.pdf');
     Route::get('/expenses/pdf', [\App\Http\Controllers\ReportPdfController::class, 'expenses'])->name('reports.expenses.pdf');
+    Route::get('/sales-price-audit/pdf', [\App\Http\Controllers\ReportPdfController::class, 'salesPriceAudit'])->name('reports.sales-price-audit.pdf');
 });
 
 // Simple GET route to clear session/logout

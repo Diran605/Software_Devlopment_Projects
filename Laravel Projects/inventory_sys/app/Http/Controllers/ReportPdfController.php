@@ -428,7 +428,128 @@ class ReportPdfController extends Controller
                 return false;
             }
 
+
             return true;
         })->sortBy('days_to_expiry')->values();
+    }
+
+    public function salesPriceAudit(Request $request)
+    {
+        $filters = $request->validate([
+            'branch_id'     => ['nullable', 'integer'],
+            'date_from'     => ['nullable', 'date'],
+            'date_to'       => ['nullable', 'date'],
+            'department_id' => ['nullable', 'integer'],
+            'category_id'   => ['nullable', 'integer'],
+        ]);
+
+        $branchId = $this->resolveReportBranchId($request);
+        $branch   = $this->resolveReportBranch($request);
+        $from     = $filters['date_from'] ?? null;
+        $to       = $filters['date_to'] ?? null;
+        $deptId   = $filters['department_id'] ?? null;
+        $catId    = $filters['category_id'] ?? null;
+        $summaryOnly = $request->boolean('summary_only');
+
+        $department = $deptId ? \App\Models\Department::find($deptId)?->name : null;
+        $category   = $catId  ? \App\Models\ItemCategory::find($catId)?->name : null;
+
+        $products = DB::table('sales_order_lines')
+            ->join('sales_orders', 'sales_orders.id', '=', 'sales_order_lines.sales_order_id')
+            ->join('items', 'items.id', '=', 'sales_order_lines.item_id')
+            ->leftJoin('item_categories', 'item_categories.id', '=', 'items.category_id')
+            ->whereNull('sales_orders.deleted_at')
+            ->whereNull('sales_order_lines.deleted_at')
+            ->when($branchId, fn ($q) => $q->where('sales_orders.branch_id', $branchId))
+            ->when($deptId,   fn ($q) => $q->where('sales_orders.department_id', $deptId))
+            ->when($catId,    fn ($q) => $q->where('items.category_id', $catId))
+            ->when($from, fn ($q) => $q->whereDate('sales_orders.sold_at', '>=', $from))
+            ->when($to,   fn ($q) => $q->whereDate('sales_orders.sold_at', '<=', $to))
+            ->select([
+                'sales_order_lines.item_id',
+                'items.name as item_name',
+                'item_categories.name as category_name',
+                'items.selling_price as standard_price',
+                DB::raw('SUM(sales_order_lines.qty_sold) as total_qty_sold'),
+                DB::raw('SUM(sales_order_lines.line_total) as actual_revenue'),
+                DB::raw('ROUND(SUM(sales_order_lines.qty_sold * items.selling_price), 2) as expected_revenue'),
+            ])
+            ->groupBy('sales_order_lines.item_id', 'items.name', 'item_categories.name', 'items.selling_price')
+            ->orderBy('items.name')
+            ->get();
+
+        foreach ($products as $product) {
+            $currentQty = DB::table('item_stock_levels')
+                ->where('item_id', $product->item_id)
+                ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
+                ->sum('qty_on_hand');
+
+            $netAfterEnd = (float) DB::table('stock_movements')
+                ->where('item_id', $product->item_id)
+                ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
+                ->when($deptId, fn ($q) => $q->where('department_id', $deptId))
+                ->when($to, fn ($q) => $q->whereDate('moved_at', '>', $to))
+                ->sum(DB::raw('CAST(qty_in AS SIGNED) - CAST(qty_out AS SIGNED)'));
+
+            $qtyAtEnd = $currentQty - $netAfterEnd;
+
+            $netInRange = (float) DB::table('stock_movements')
+                ->where('item_id', $product->item_id)
+                ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
+                ->when($deptId, fn ($q) => $q->where('department_id', $deptId))
+                ->when($from, fn ($q) => $q->whereDate('moved_at', '>=', $from))
+                ->when($to,   fn ($q) => $q->whereDate('moved_at', '<=', $to))
+                ->sum(DB::raw('CAST(qty_in AS SIGNED) - CAST(qty_out AS SIGNED)'));
+
+            $inwardsDuringPeriod = (float) DB::table('stock_movements')
+                ->where('item_id', $product->item_id)
+                ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
+                ->when($from, fn ($q) => $q->whereDate('moved_at', '>=', $from))
+                ->when($to,   fn ($q) => $q->whereDate('moved_at', '<=', $to))
+                ->sum('qty_in');
+
+            $startStock = max(0, round($qtyAtEnd - $netInRange));
+            
+            $product->qty_available = $startStock + round($inwardsDuringPeriod);
+            $product->qty_remaining = max(0, round($qtyAtEnd));
+            $product->discrepancy   = round($product->actual_revenue - $product->expected_revenue, 2);
+
+            if (!$summaryOnly) {
+                $product->transactions = DB::table('sales_order_lines')
+                    ->join('sales_orders', 'sales_orders.id', '=', 'sales_order_lines.sales_order_id')
+                    ->join('items', 'items.id', '=', 'sales_order_lines.item_id')
+                    ->leftJoin('users', 'users.id', '=', 'sales_orders.served_by')
+                    ->whereNull('sales_orders.deleted_at')
+                    ->whereNull('sales_order_lines.deleted_at')
+                    ->where('sales_order_lines.item_id', $product->item_id)
+                    ->when($branchId, fn ($q) => $q->where('sales_orders.branch_id', $branchId))
+                    ->when($deptId,   fn ($q) => $q->where('sales_orders.department_id', $deptId))
+                    ->when($from, fn ($q) => $q->whereDate('sales_orders.sold_at', '>=', $from))
+                    ->when($to,   fn ($q) => $q->whereDate('sales_orders.sold_at', '<=', $to))
+                    ->select([
+                        'sales_orders.sold_at',
+                        'sales_orders.order_number',
+                        'users.name as cashier',
+                        'sales_order_lines.qty_sold',
+                        'sales_order_lines.unit_price as used_price',
+                        'items.selling_price as standard_price',
+                        'sales_order_lines.line_total as actual_line_total',
+                        DB::raw('ROUND(sales_order_lines.qty_sold * items.selling_price, 2) as expected_line_total'),
+                        DB::raw('ROUND(sales_order_lines.line_total - (sales_order_lines.qty_sold * items.selling_price), 2) as line_discrepancy'),
+                    ])
+                    ->orderBy('sales_orders.sold_at', 'desc')
+                    ->get();
+            } else {
+                $product->transactions = collect([]);
+            }
+        }
+
+        $reportData = $products;
+
+        return Pdf::loadView('reports.sales-price-audit', compact(
+            'reportData', 'filters', 'branch', 'from', 'to', 'department', 'category', 'summaryOnly'
+        ))
+            ->setPaper('a4', 'landscape')
+            ->download('sales-price-audit-'.now()->format('Y-m-d').'.pdf');
     }
 }
