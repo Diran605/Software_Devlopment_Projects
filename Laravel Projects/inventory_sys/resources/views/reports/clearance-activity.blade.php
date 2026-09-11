@@ -36,7 +36,8 @@
     <table>
         <thead>
             <tr>
-                <th>Date</th>
+                <th class="text-center" style="width:3%; text-align:center;">S/N</th>
+                            <th>Date</th>
                 <th>Action</th>
                 <th>Item</th>
                 <th>Batch #</th>
@@ -49,7 +50,8 @@
         <tbody>
             @forelse($data as $row)
                 <tr>
-                    <td>{{ $row->created_at?->format('M d, Y H:i') }}</td>
+                    <td class="text-center" style="text-align:center; color:#888;">{{ $loop->iteration }}</td>
+                            <td>{{ $row->created_at?->format('M d, Y H:i') }}</td>
                     <td>{{ ucfirst($row->action_type) }}</td>
                     <td>{{ $row->item?->name ?? '—' }}</td>
                     <td>{{ $row->clearanceStock?->batch_number ?? '—' }}</td>
@@ -69,16 +71,16 @@
                     <td>{{ $row->notes ?? '—' }}</td>
                 </tr>
             @empty
-                <tr><td colspan="8" style="text-align:center;color:#999;padding:10px;">No clearance activity found.</td></tr>
+                <tr><td colspan="9" style="text-align:center;color:#999;padding:10px;">No clearance activity found.</td></tr>
             @endforelse
         </tbody>
         @if($data->isNotEmpty())
         <tfoot>
             <tr>
-                <td colspan="4">Total</td>
+                <td colspan="5">Total</td>
                 <td class="right">{{ number_format($data->sum('qty')) }}</td>
                 <td class="right">FCFA {{ number_format($data->sum('loss_value'), 2) }}</td>
-                <td colspan="2">—</td>
+                <td colspan="3">—</td>
             </tr>
         </tfoot>
         @endif

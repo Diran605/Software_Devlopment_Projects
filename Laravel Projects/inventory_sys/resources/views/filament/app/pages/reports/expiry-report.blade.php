@@ -59,6 +59,7 @@
                 <table class="report-table w-full text-left border-collapse text-sm">
                     <thead>
                         <tr class="border-b border-zinc-700 bg-zinc-800 text-zinc-300">
+                            <th class="text-center" style="width:3%; text-align:center;">S/N</th>
                             <th class="p-3 font-semibold">Item</th>
                             <th class="p-3 font-semibold">Category</th>
                             <th class="p-3 font-semibold">Batch #</th>
@@ -73,7 +74,8 @@
                     <tbody class="divide-y divide-zinc-700 text-zinc-300">
                         @forelse($reportData as $row)
                             <tr class="hover:bg-zinc-800/50">
-                                <td class="p-3 font-medium">{{ $row->item->name }}</td>
+                                <td class="text-center" style="text-align:center; color:#888;">{{ $loop->iteration }}</td>
+                            <td class="p-3 font-medium">{{ $row->item->name }}</td>
                                 <td class="p-3">{{ $row->item->category?->name ?? '—' }}</td>
                                 <td class="p-3">{{ $row->batch_number }}</td>
                                 <td class="p-3">{{ $row->expiry_date ? $row->expiry_date->format('M d, Y') : '—' }}</td>
@@ -91,14 +93,14 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="9" class="p-4 text-center text-zinc-500">No records found for the selected criteria.</td>
+                                <td colspan="10" class="p-4 text-center text-zinc-500">No records found for the selected criteria.</td>
                             </tr>
                         @endforelse
                     </tbody>
                     @if($reportData->isNotEmpty())
                         <tfoot>
                             <tr class="border-t-2 border-zinc-500 bg-zinc-800/80 font-bold text-white">
-                                <td class="p-3" colspan="5">Total</td>
+                                <td class="p-3" colspan="6">Total</td>
                                 <td class="p-3 text-right">{{ number_format($reportData->sum('qty_remaining')) }}</td>
                                 <td class="p-3 text-right">—</td>
                                 <td class="p-3 text-right">FCFA {{ number_format($reportData->sum('total_cost'), 2) }}</td>

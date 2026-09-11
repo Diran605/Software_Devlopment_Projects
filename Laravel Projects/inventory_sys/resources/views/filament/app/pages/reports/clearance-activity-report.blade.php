@@ -26,6 +26,7 @@
                 <table class="report-table w-full">
                     <thead>
                         <tr>
+                            <th class="text-center" style="width:3%; text-align:center;">S/N</th>
                             <th>Date</th>
                             <th>Action</th>
                             <th>Item</th>
@@ -38,7 +39,8 @@
                     <tbody>
                         @forelse($reportData as $row)
                             <tr>
-                                <td>{{ $row->created_at?->format('M d, Y H:i') }}</td>
+                                <td class="text-center" style="text-align:center; color:#888;">{{ $loop->iteration }}</td>
+                            <td>{{ $row->created_at?->format('M d, Y H:i') }}</td>
                                 <td>{{ ucfirst($row->action_type) }}</td>
                                 <td>{{ $row->item?->name ?? '—' }}</td>
                                 <td>{{ $row->clearanceStock?->batch_number ?? '—' }}</td>
@@ -57,13 +59,13 @@
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="7" class="p-4 text-center text-zinc-500">No clearance activity found.</td></tr>
+                            <tr><td colspan="8" class="p-4 text-center text-zinc-500">No clearance activity found.</td></tr>
                         @endforelse
                     </tbody>
                     @if($reportData->isNotEmpty())
                         <tfoot>
                             <tr>
-                                <td colspan="4">Total</td>
+                                <td colspan="5">Total</td>
                                 <td class="text-right">{{ number_format($reportData->sum('qty')) }}</td>
                                 <td class="text-right">FCFA {{ number_format($reportData->sum('loss_value'), 2) }}</td>
                                 <td>—</td>

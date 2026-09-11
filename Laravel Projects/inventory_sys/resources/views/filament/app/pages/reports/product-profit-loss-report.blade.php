@@ -93,6 +93,7 @@
                 <table class="report-table">
                     <thead>
                         <tr>
+                            <th class="text-center" style="width:3%; text-align:center;">S/N</th>
                             <th>Product</th>
                             <th>Category</th>
                             <th class="text-right">Qty Sold</th>
@@ -136,7 +137,7 @@
                     </tbody>
                     <tfoot>
                         <tr>
-                            <td colspan="3" class="text-white font-bold">TOTALS</td>
+                            <td colspan="4" class="text-white font-bold">TOTALS</td>
                             <td class="text-right text-emerald-400">FCFA {{ number_format($data['total_revenue'], 2) }}</td>
                             <td class="text-right text-rose-400">FCFA {{ number_format($data['total_cost'], 2) }}</td>
                             <td class="text-right {{ $data['total_profit'] >= 0 ? 'text-emerald-400' : 'text-rose-400' }}">

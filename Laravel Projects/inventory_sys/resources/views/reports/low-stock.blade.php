@@ -27,7 +27,8 @@
     <table>
         <thead>
             <tr>
-                <th>Item</th>
+                <th class="text-center" style="width:3%; text-align:center;">S/N</th>
+                            <th>Item</th>
                 <th>Category</th>
                 <th class="right">Qty On Hand</th>
                 <th class="right">Reorder Level</th>
@@ -37,14 +38,15 @@
         <tbody>
             @forelse($data as $row)
                 <tr>
-                    <td>{{ $row->item->name }}</td>
+                    <td class="text-center" style="text-align:center; color:#888;">{{ $loop->iteration }}</td>
+                            <td>{{ $row->item->name }}</td>
                     <td>{{ $row->item->category?->name ?? '—' }}</td>
                     <td class="right">{{ number_format($row->qty_on_hand) }}</td>
                     <td class="right">{{ number_format($row->item->reorder_level) }}</td>
                     <td class="right">{{ number_format(max(0, $row->item->reorder_level - $row->qty_on_hand)) }}</td>
                 </tr>
             @empty
-                <tr><td colspan="5" style="text-align:center;color:#999;padding:10px;">No low stock items found.</td></tr>
+                <tr><td colspan="6" style="text-align:center;color:#999;padding:10px;">No low stock items found.</td></tr>
             @endforelse
         </tbody>
     </table>

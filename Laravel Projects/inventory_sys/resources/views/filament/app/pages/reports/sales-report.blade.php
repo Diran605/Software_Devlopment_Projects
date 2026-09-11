@@ -59,6 +59,7 @@
                 <table class="report-table w-full text-left border-collapse text-sm">
                     <thead>
                         <tr class="border-b border-zinc-700 bg-zinc-800 text-zinc-300">
+                            <th class="text-center" style="width:3%; text-align:center;">S/N</th>
                             <th class="p-3 font-semibold">Grouped By ({{ ucfirst($data['group_by'] ?? 'date') }})</th>
                             <th class="p-3 font-semibold text-right">Orders Count</th>
                             <th class="p-3 font-semibold text-right">Total Units Sold</th>
@@ -69,7 +70,8 @@
                     <tbody class="divide-y divide-zinc-700 text-zinc-300">
                         @forelse($reportData as $row)
                             <tr class="hover:bg-zinc-800/50">
-                                <td class="p-3 font-medium">{{ $row->label }}</td>
+                                <td class="text-center" style="text-align:center; color:#888;">{{ $loop->iteration }}</td>
+                            <td class="p-3 font-medium">{{ $row->label }}</td>
                                 <td class="p-3 text-right">{{ number_format($row->order_count) }}</td>
                                 <td class="p-3 text-right">{{ number_format($row->total_qty) }}</td>
                                 <td class="p-3 text-right">FCFA {{ number_format($row->total_revenue, 2) }}</td>
@@ -77,14 +79,14 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="p-4 text-center text-zinc-500">No records found for the selected period.</td>
+                                <td colspan="6" class="p-4 text-center text-zinc-500">No records found for the selected period.</td>
                             </tr>
                         @endforelse
                     </tbody>
                     @if($reportData->isNotEmpty())
                         <tfoot>
                             <tr class="border-t-2 border-zinc-500 bg-zinc-800/80 font-bold text-white">
-                                <td class="p-3">Total</td>
+                                <td colspan="2" class="p-3">Total</td>
                                 <td class="p-3 text-right">{{ number_format($reportData->sum('order_count')) }}</td>
                                 <td class="p-3 text-right">{{ number_format($reportData->sum('total_qty')) }}</td>
                                 <td class="p-3 text-right">FCFA {{ number_format($reportData->sum('total_revenue'), 2) }}</td>

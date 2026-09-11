@@ -40,7 +40,8 @@
     <table>
         <thead>
             <tr>
-                <th>PO Number</th>
+                <th class="text-center" style="width:3%; text-align:center;">S/N</th>
+                            <th>PO Number</th>
                 <th>Supplier</th>
                 <th>Ordered At</th>
                 <th class="center">Status</th>
@@ -50,7 +51,8 @@
         <tbody>
             @forelse($data as $po)
                 <tr class="po-header">
-                    <td>{{ $po->po_number }}</td>
+                    <td class="text-center" style="text-align:center; color:#888;">{{ $loop->iteration }}</td>
+                            <td>{{ $po->po_number }}</td>
                     <td>{{ $po->supplier?->name }}</td>
                     <td>{{ $po->ordered_at ? \Carbon\Carbon::parse($po->ordered_at)->format('M d, Y') : '—' }}</td>
                     <td class="center">
@@ -79,7 +81,8 @@
                 @if($po->purchaseOrderLines && $po->purchaseOrderLines->isNotEmpty())
                     @foreach($po->purchaseOrderLines as $line)
                         <tr class="line-items">
-                            <td colspan="2" style="padding-left:20px;">↳ {{ $line->item?->name }}</td>
+                            <td class="text-center" style="text-align:center; color:#888;">{{ $loop->iteration }}</td>
+                            <td colspan="3" style="padding-left:20px;">↳ {{ $line->item?->name }}</td>
                             <td>Qty: {{ number_format($line->qty_ordered) }} (Rcvd: {{ number_format($line->qty_received) }})</td>
                             <td class="right">@ FCFA {{ number_format($line->unit_cost, 2) }}</td>
                             <td class="right">FCFA {{ number_format($line->qty_ordered * $line->unit_cost, 2) }}</td>
@@ -87,13 +90,13 @@
                     @endforeach
                 @endif
             @empty
-                <tr><td colspan="5" style="text-align:center;color:#999;">No purchase orders found.</td></tr>
+                <tr><td colspan="6" style="text-align:center;color:#999;">No purchase orders found.</td></tr>
             @endforelse
         </tbody>
         @if($data->isNotEmpty())
         <tfoot>
             <tr>
-                <td colspan="4">Grand Total ({{ $data->count() }} orders)</td>
+                <td colspan="5">Grand Total ({{ $data->count() }} orders)</td>
                 <td class="right">FCFA {{ number_format($data->sum('total_amount'), 2) }}</td>
             </tr>
         </tfoot>

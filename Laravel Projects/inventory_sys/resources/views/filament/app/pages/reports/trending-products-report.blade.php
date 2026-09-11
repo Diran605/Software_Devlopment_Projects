@@ -75,6 +75,7 @@
                 <table class="report-table">
                     <thead>
                         <tr>
+                            <th class="text-center" style="width:3%; text-align:center;">S/N</th>
                             <th style="width:48px">#</th>
                             <th>Product</th>
                             <th>Category</th>
@@ -90,6 +91,7 @@
                     <tbody>
                         @foreach($data['products'] as $row)
                         <tr>
+                            <td class="text-center" style="text-align:center; color:#888;">{{ $loop->iteration }}</td>
                             <td>
                                 @php $rankClass = match(true) { $row->rank === 1 => 'rank-1', $row->rank === 2 => 'rank-2', $row->rank === 3 => 'rank-3', default => 'rank-other' }; @endphp
                                 <span class="rank-badge {{ $rankClass }}">{{ $row->rank }}</span>
@@ -120,7 +122,7 @@
                     </tbody>
                     <tfoot>
                         <tr>
-                            <td colspan="3" class="text-white font-bold">TOTALS</td>
+                            <td colspan="4" class="text-white font-bold">TOTALS</td>
                             <td class="text-right text-sky-300">{{ number_format($data['grand_qty']) }}</td>
                             <td></td>
                             <td class="text-right text-emerald-400">FCFA {{ number_format($data['grand_revenue'], 0) }}</td>
@@ -128,7 +130,7 @@
                             <td class="text-right {{ $data['grand_profit'] >= 0 ? 'text-emerald-400' : 'text-rose-400' }}">
                                 FCFA {{ number_format($data['grand_profit'], 0) }}
                             </td>
-                            <td colspan="2"></td>
+                            <td colspan="3"></td>
                         </tr>
                     </tfoot>
                 </table>

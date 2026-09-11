@@ -29,7 +29,8 @@
     <table>
         <thead>
             <tr>
-                <th>Product</th>
+                <th class="text-center" style="width:3%; text-align:center;">S/N</th>
+                            <th>Product</th>
                 <th>Category</th>
                 <th class="right">Qty Sold</th>
                 <th class="right">Revenue</th>
@@ -73,7 +74,7 @@
         </tbody>
         <tfoot>
             <tr class="grand-total">
-                <td colspan="3">TOTALS</td>
+                <td colspan="4">TOTALS</td>
                 <td class="right">{{ number_format($reportData['total_revenue'], 2) }}</td>
                 <td class="right">{{ number_format($reportData['total_cost'], 2) }}</td>
                 <td class="right">

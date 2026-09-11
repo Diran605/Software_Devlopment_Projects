@@ -113,6 +113,7 @@
                 <thead>
                     <tr>
                         <th style="width:2%"></th>
+                        <th style="width:3%" class="text-center">S/N</th>
                         <th>Product</th>
                         <th>Category</th>
                         <th class="text-right">Qty Available<br><span style="font-weight:400;text-transform:none;font-size:0.65rem;opacity:0.7">(start + received)</span></th>
@@ -144,6 +145,7 @@
                             <td class="text-center" style="color: rgb(var(--color-primary-400));">
                                 <span class="expand-icon" :class="{ 'rotated': expandedRows.includes({{ $product->item_id }}) }">▶</span>
                             </td>
+                            <td class="text-center text-gray-400 text-sm">{{ $loop->iteration }}</td>
                             <td class="font-semibold text-white">{{ $product->item_name }}</td>
                             <td class="text-gray-400 text-sm">{{ $product->category_name ?? '—' }}</td>
                             <td class="text-right text-gray-300">{{ number_format($product->qty_available) }}</td>
@@ -173,7 +175,7 @@
 
                         {{-- Drill-down row --}}
                         <tr class="drill-row" x-show="expandedRows.includes({{ $product->item_id }})" x-cloak>
-                            <td colspan="10" style="padding:0;border:none;">
+                            <td colspan="11" style="padding:0;border:none;">
                                 <div class="drill-inner" x-show="expandedRows.includes({{ $product->item_id }})" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform -translate-y-2" x-transition:enter-end="opacity-100 transform translate-y-0">
                                     <table class="w-full">
                                         <thead>
@@ -235,7 +237,7 @@
 
                     @empty
                         <tr>
-                            <td colspan="10" class="text-center p-8" style="color:rgba(255,255,255,0.3)">
+                            <td colspan="11" class="text-center p-8" style="color:rgba(255,255,255,0.3)">
                                 No sales data found for the selected period and filters.
                             </td>
                         </tr>
@@ -245,8 +247,8 @@
                 @if($reportData->isNotEmpty())
                 <tfoot>
                     <tr class="totals-row">
-                        <td colspan="4">Grand Total</td>
-                        <td class="text-right">{{ number_format($reportData->sum('total_qty_sold')) }}</td>
+                        <td colspan="5" class="text-right">Grand Totals:</td>
+                        <td class="text-right text-white">{{ number_format($reportData->sum('total_qty_sold')) }}</td>
                         <td></td>
                         <td class="text-right">{{ number_format($reportData->sum('expected_revenue'), 0) }}</td>
                         <td class="text-right">{{ number_format($reportData->sum('actual_revenue'), 0) }}</td>

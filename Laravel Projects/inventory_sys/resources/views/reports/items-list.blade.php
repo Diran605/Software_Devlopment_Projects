@@ -27,7 +27,8 @@
     <table>
         <thead>
             <tr>
-                <th>Item</th>
+                <th class="text-center" style="width:3%; text-align:center;">S/N</th>
+                            <th>Item</th>
                 <th>Description</th>
                 <th>Category</th>
                 <th>UoM</th>
@@ -40,7 +41,8 @@
         <tbody>
             @forelse($data as $item)
                 <tr>
-                    <td>{{ $item->name }}</td>
+                    <td class="text-center" style="text-align:center; color:#888;">{{ $loop->iteration }}</td>
+                            <td>{{ $item->name }}</td>
                     <td>{{ $item->description ?? '-' }}</td>
                     <td>{{ $item->category?->name ?? 'Uncategorized' }}</td>
                     <td>{{ $item->uom?->abbreviation ?? $item->uom?->name }}</td>
@@ -50,7 +52,7 @@
                     <td class="right">FCFA {{ number_format($item->selling_price, 2) }}</td>
                 </tr>
             @empty
-                <tr><td colspan="8" style="text-align:center;color:#999;">No items found.</td></tr>
+                <tr><td colspan="9" style="text-align:center;color:#999;">No items found.</td></tr>
             @endforelse
         </tbody>
     </table>

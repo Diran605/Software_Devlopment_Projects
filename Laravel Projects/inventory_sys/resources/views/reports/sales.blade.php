@@ -40,7 +40,8 @@
     <table>
         <thead>
             <tr>
-                <th>{{ ucfirst($groupBy) }}</th>
+                <th class="text-center" style="width:3%; text-align:center;">S/N</th>
+                            <th>{{ ucfirst($groupBy) }}</th>
                 <th class="right">Orders</th>
                 <th class="right">Units Sold</th>
                 <th class="right">Revenue</th>
@@ -50,20 +51,21 @@
         <tbody>
             @forelse($data as $row)
                 <tr>
-                    <td>{{ $row->label }}</td>
+                    <td class="text-center" style="text-align:center; color:#888;">{{ $loop->iteration }}</td>
+                            <td>{{ $row->label }}</td>
                     <td class="right">{{ number_format($row->order_count) }}</td>
                     <td class="right">{{ number_format($row->total_qty) }}</td>
                     <td class="right">FCFA {{ number_format($row->total_revenue, 2) }}</td>
                     <td class="right">FCFA {{ number_format($row->total_profit, 2) }}</td>
                 </tr>
             @empty
-                <tr><td colspan="5" style="text-align:center;color:#999;">No data found.</td></tr>
+                <tr><td colspan="6" style="text-align:center;color:#999;">No data found.</td></tr>
             @endforelse
         </tbody>
         @if($data->isNotEmpty())
         <tfoot>
             <tr>
-                <td>Total</td>
+                <td colspan="2">Total</td>
                 <td class="right">{{ number_format($data->sum('order_count')) }}</td>
                 <td class="right">{{ number_format($data->sum('total_qty')) }}</td>
                 <td class="right">FCFA {{ number_format($data->sum('total_revenue'), 2) }}</td>

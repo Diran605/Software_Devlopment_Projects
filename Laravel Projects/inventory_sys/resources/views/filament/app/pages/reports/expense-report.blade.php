@@ -39,7 +39,8 @@
             <table class="report-table w-full mb-8">
                 <thead>
                     <tr>
-                        <th>Category</th>
+                        <th class="text-center" style="width:3%; text-align:center;">S/N</th>
+                            <th>Category</th>
                         <th class="text-right">Count</th>
                         <th class="text-right">Total</th>
                     </tr>
@@ -47,12 +48,13 @@
                 <tbody>
                     @forelse($reportData['category_summary'] as $row)
                         <tr>
+                            <td class="text-center" style="text-align:center; color:#888;">{{ $loop->iteration }}</td>
                             <td>{{ $row->category_name }}</td>
                             <td class="text-right">{{ number_format($row->expense_count) }}</td>
                             <td class="text-right">FCFA {{ number_format($row->total_amount, 2) }}</td>
                         </tr>
                     @empty
-                        <tr><td colspan="3" class="p-4 text-center text-zinc-500">No expenses found.</td></tr>
+                        <tr><td colspan="4" class="p-4 text-center text-zinc-500">No expenses found.</td></tr>
                     @endforelse
                 </tbody>
             </table>
@@ -62,6 +64,7 @@
                 <table class="report-table w-full">
                     <thead>
                         <tr>
+                            <th class="text-center" style="width:3%; text-align:center;">S/N</th>
                             <th>Date</th>
                             <th>Reference</th>
                             <th>Category</th>
@@ -73,7 +76,8 @@
                     <tbody>
                         @forelse($reportData['rows'] as $expense)
                             <tr>
-                                <td>{{ $expense->expense_date?->format('M d, Y') }}</td>
+                                <td class="text-center" style="text-align:center; color:#888;">{{ $loop->iteration }}</td>
+                            <td>{{ $expense->expense_date?->format('M d, Y') }}</td>
                                 <td>{{ $expense->reference_number ?? '—' }}</td>
                                 <td>{{ $expense->category?->name ?? 'Uncategorized' }}</td>
                                 <td>{{ $expense->payee ?? '—' }}</td>
@@ -81,7 +85,7 @@
                                 <td class="text-right">FCFA {{ number_format($expense->amount, 2) }}</td>
                             </tr>
                         @empty
-                            <tr><td colspan="6" class="p-4 text-center text-zinc-500">No expenses found.</td></tr>
+                            <tr><td colspan="7" class="p-4 text-center text-zinc-500">No expenses found.</td></tr>
                         @endforelse
                     </tbody>
                 </table>

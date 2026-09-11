@@ -29,7 +29,8 @@
     <table>
         <thead>
             <tr>
-                <th>#</th>
+                <th class="text-center" style="width:3%; text-align:center;">S/N</th>
+                            <th>#</th>
                 <th>Product</th>
                 <th>Category</th>
                 <th class="right">Qty Sold</th>
@@ -44,7 +45,8 @@
         <tbody>
             @foreach($reportData['products'] as $row)
                 <tr>
-                    <td>{{ $row->rank }}</td>
+                    <td class="text-center" style="text-align:center; color:#888;">{{ $loop->iteration }}</td>
+                            <td>{{ $row->rank }}</td>
                     <td><strong>{{ $row->item_name }}</strong></td>
                     <td style="color:#555;">{{ $row->category_name ?? '—' }}</td>
                     <td class="right">{{ number_format($row->total_qty) }}</td>
@@ -65,13 +67,13 @@
         </tbody>
         <tfoot>
             <tr class="grand-total">
-                <td colspan="3">TOTALS</td>
+                <td colspan="4">TOTALS</td>
                 <td class="right">{{ number_format($reportData['grand_qty']) }}</td>
                 <td></td>
                 <td class="right">{{ number_format($reportData['grand_revenue'], 0) }}</td>
                 <td></td>
                 <td class="right">{{ number_format($reportData['grand_profit'], 0) }}</td>
-                <td colspan="2"></td>
+                <td colspan="3"></td>
             </tr>
         </tfoot>
     </table>

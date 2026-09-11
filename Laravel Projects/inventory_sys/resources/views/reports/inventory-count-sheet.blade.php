@@ -144,7 +144,8 @@
     <table>
         <thead>
             <tr>
-                <th style="width:5%">#</th>
+                <th class="text-center" style="width:3%; text-align:center;">S/N</th>
+                            <th style="width:5%">#</th>
                 <th style="width:21%">Item Name</th>
                 <th style="width:10%">Category</th>
                 <th style="width:7%">UOM</th>
@@ -163,7 +164,7 @@
                 @php $i++; $isNewItem = $line->item_id !== $prevItemId; $prevItemId = $line->item_id; @endphp
                 @if($isNewItem)
                     <tr class="group-header">
-                        <td colspan="11">&nbsp;&nbsp;{{ $line->item?->name ?? 'Unknown Item' }}</td>
+                        <td colspan="12">&nbsp;&nbsp;{{ $line->item?->name ?? 'Unknown Item' }}</td>
                     </tr>
                 @endif
                 <tr>

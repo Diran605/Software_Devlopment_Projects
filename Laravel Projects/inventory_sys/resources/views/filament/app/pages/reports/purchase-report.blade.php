@@ -82,6 +82,7 @@
                 <table class="report-table w-full text-left border-collapse text-sm">
                     <thead>
                         <tr class="border-b border-zinc-700 bg-zinc-800 text-zinc-300">
+                            <th class="text-center" style="width:3%; text-align:center;">S/N</th>
                             <th class="p-3 font-semibold">PO Number</th>
                             <th class="p-3 font-semibold">Supplier</th>
                             <th class="p-3 font-semibold">Ordered At</th>
@@ -93,7 +94,8 @@
                     <tbody class="divide-y divide-zinc-700 text-zinc-300">
                         @forelse($reportData as $row)
                             <tr class="bg-zinc-900 font-medium text-white border-t border-zinc-700">
-                                <td class="p-3 font-bold">{{ $row->po_number }}</td>
+                                <td class="text-center" style="text-align:center; color:#888;">{{ $loop->iteration }}</td>
+                            <td class="p-3 font-bold">{{ $row->po_number }}</td>
                                 <td class="p-3 text-zinc-400">{{ $row->supplier?->name }}</td>
                                 <td class="p-3 text-zinc-400">{{ $row->ordered_at ? \Carbon\Carbon::parse($row->ordered_at)->format('M d, Y H:i') : '—' }}</td>
                                 <td class="p-3 text-zinc-400">{{ $row->expected_delivery_at ? \Carbon\Carbon::parse($row->expected_delivery_at)->format('M d, Y') : '—' }}</td>
@@ -124,12 +126,13 @@
                             </tr>
                             @if($row->purchaseOrderLines && $row->purchaseOrderLines->isNotEmpty())
                                 <tr>
-                                    <td colspan="6" class="p-0 bg-zinc-950/40">
+                                    <td colspan="7" class="p-0 bg-zinc-950/40">
                                         <div class="pl-8 pr-3 py-2">
                                             <table class="nested-report-table">
                                                 <thead>
                                                     <tr class="border-b border-zinc-800 text-zinc-400 font-semibold">
-                                                        <th class="py-1 px-2">Item</th>
+                                                        <th class="text-center" style="width:3%; text-align:center;">S/N</th>
+                            <th class="py-1 px-2">Item</th>
                                                         <th class="py-1 px-2 text-right">Qty Ordered</th>
                                                         <th class="py-1 px-2 text-right">Qty Received</th>
                                                         <th class="py-1 px-2 text-right">Unit Cost</th>
@@ -139,7 +142,8 @@
                                                 <tbody class="divide-y divide-zinc-900 text-zinc-400">
                                                     @foreach($row->purchaseOrderLines as $line)
                                                         <tr>
-                                                            <td class="py-1 px-2 font-semibold text-zinc-300">{{ $line->item?->name }}</td>
+                                                            <td class="text-center" style="text-align:center; color:#888;">{{ $loop->iteration }}</td>
+                            <td class="py-1 px-2 font-semibold text-zinc-300">{{ $line->item?->name }}</td>
                                                             <td class="py-1 px-2 text-right">{{ number_format($line->qty_ordered) }}</td>
                                                             <td class="py-1 px-2 text-right">{{ number_format($line->qty_received) }}</td>
                                                             <td class="py-1 px-2 text-right">FCFA {{ number_format($line->unit_cost, 2) }}</td>
@@ -154,14 +158,14 @@
                             @endif
                         @empty
                             <tr>
-                                <td colspan="6" class="p-4 text-center text-zinc-500">No purchase orders found for the selected supplier or status.</td>
+                                <td colspan="7" class="p-4 text-center text-zinc-500">No purchase orders found for the selected supplier or status.</td>
                             </tr>
                         @endforelse
                     </tbody>
                     @if($reportData->isNotEmpty())
                         <tfoot>
                             <tr class="border-t-2 border-zinc-500 bg-zinc-800/80 font-bold text-white">
-                                <td colspan="5" class="p-3 text-left">Grand Total</td>
+                                <td colspan="6" class="p-3 text-left">Grand Total</td>
                                 <td class="p-3 text-right text-success-400">FCFA {{ number_format($reportData->sum('total_amount'), 2) }}</td>
                             </tr>
                         </tfoot>

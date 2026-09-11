@@ -41,7 +41,8 @@
     <table>
         <thead>
             <tr>
-                <th>Item</th>
+                <th class="text-center" style="width:3%; text-align:center;">S/N</th>
+                            <th>Item</th>
                 <th>SKU</th>
                 <th>Batch #</th>
                 <th>Expiry</th>
@@ -55,7 +56,8 @@
         <tbody>
             @foreach($count->lines as $line)
                 <tr>
-                    <td>{{ $line->item?->name ?? '—' }}</td>
+                    <td class="text-center" style="text-align:center; color:#888;">{{ $loop->iteration }}</td>
+                            <td>{{ $line->item?->name ?? '—' }}</td>
                     <td>{{ $line->item?->sku ?? '—' }}</td>
                     <td>{{ $line->batchInventory?->batch_number ?? '—' }}</td>
                     <td>{{ $line->batchInventory?->expiry_date?->format('M d, Y') ?? '—' }}</td>

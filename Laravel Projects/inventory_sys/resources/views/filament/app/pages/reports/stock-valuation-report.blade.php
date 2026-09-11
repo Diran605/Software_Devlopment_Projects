@@ -82,6 +82,7 @@
                 <table class="report-table w-full text-left border-collapse text-sm">
                     <thead>
                         <tr class="border-b border-zinc-700 bg-zinc-800 text-zinc-300">
+                            <th class="text-center" style="width:3%; text-align:center;">S/N</th>
                             <th class="p-3 font-semibold">Item & SKU</th>
                             <th class="p-3 font-semibold">Category</th>
                             <th class="p-3 font-semibold">UoM</th>
@@ -93,7 +94,8 @@
                     <tbody class="divide-y divide-zinc-700 text-zinc-300">
                         @forelse($reportData as $row)
                             <tr class="bg-zinc-900 font-medium text-white border-t border-zinc-700">
-                                <td class="p-3">
+                                <td class="text-center" style="text-align:center; color:#888;">{{ $loop->iteration }}</td>
+                            <td class="p-3">
                                     <div class="font-bold">{{ $row->item?->name }}</div>
                                     <div class="text-xs text-zinc-400 font-mono">SKU: {{ $row->item?->sku }}</div>
                                 </td>
@@ -105,12 +107,13 @@
                             </tr>
                             @if($row->batches && $row->batches->isNotEmpty())
                                 <tr>
-                                    <td colspan="6" class="p-0 bg-zinc-950/40">
+                                    <td colspan="7" class="p-0 bg-zinc-950/40">
                                         <div class="pl-8 pr-3 py-2">
                                             <table class="nested-report-table w-full text-left border-collapse text-xs">
                                                 <thead>
                                                     <tr class="border-b border-zinc-850 text-zinc-400 font-semibold">
-                                                        <th class="py-1 px-2">Batch #</th>
+                                                        <th class="text-center" style="width:3%; text-align:center;">S/N</th>
+                            <th class="py-1 px-2">Batch #</th>
                                                         <th class="py-1 px-2">Expiry Date</th>
                                                         <th class="py-1 px-2 text-right">Remaining Qty</th>
                                                         <th class="py-1 px-2 text-right">Unit Cost</th>
@@ -120,7 +123,8 @@
                                                 <tbody class="divide-y divide-zinc-900 text-zinc-450">
                                                     @foreach($row->batches as $batch)
                                                         <tr>
-                                                            <td class="py-1 px-2 font-mono">{{ $batch->batch_number }}</td>
+                                                            <td class="text-center" style="text-align:center; color:#888;">{{ $loop->iteration }}</td>
+                            <td class="py-1 px-2 font-mono">{{ $batch->batch_number }}</td>
                                                             <td class="py-1 px-2">{{ $batch->expiry_date ? \Carbon\Carbon::parse($batch->expiry_date)->format('M d, Y') : 'No Expiry' }}</td>
                                                             <td class="py-1 px-2 text-right">{{ number_format($batch->qty_remaining) }}</td>
                                                             <td class="py-1 px-2 text-right">FCFA {{ number_format($batch->unit_cost, 2) }}</td>
@@ -135,14 +139,14 @@
                             @endif
                         @empty
                             <tr>
-                                <td colspan="6" class="p-4 text-center text-zinc-500">No stock levels found for the selected department or category.</td>
+                                <td colspan="7" class="p-4 text-center text-zinc-500">No stock levels found for the selected department or category.</td>
                             </tr>
                         @endforelse
                     </tbody>
                     @if($reportData->isNotEmpty())
                         <tfoot>
                             <tr class="border-t-2 border-zinc-500 bg-zinc-800/80 font-bold text-white">
-                                <td colspan="3" class="p-3 text-left">Grand Total</td>
+                                <td colspan="4" class="p-3 text-left">Grand Total</td>
                                 <td class="p-3 text-right">{{ number_format($reportData->sum('qty_on_hand')) }}</td>
                                 <td class="p-3"></td>
                                 <td class="p-3 text-right text-success-400">FCFA {{ number_format($reportData->sum(fn($row) => $row->qty_on_hand * ($row->item?->unit_cost ?? 0)), 2) }}</td>

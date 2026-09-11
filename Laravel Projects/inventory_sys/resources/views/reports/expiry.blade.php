@@ -53,7 +53,8 @@
     <table>
         <thead>
             <tr>
-                <th>Item</th>
+                <th class="text-center" style="width:3%; text-align:center;">S/N</th>
+                            <th>Item</th>
                 <th>Category</th>
                 <th>Batch #</th>
                 <th>Expiry Date</th>
@@ -67,7 +68,8 @@
         <tbody>
             @forelse($data as $row)
                 <tr>
-                    <td>{{ $row->item->name }}</td>
+                    <td class="text-center" style="text-align:center; color:#888;">{{ $loop->iteration }}</td>
+                            <td>{{ $row->item->name }}</td>
                     <td>{{ $row->item->category?->name ?? '—' }}</td>
                     <td>{{ $row->batch_number }}</td>
                     <td>{{ $row->expiry_date ? $row->expiry_date->format('M d, Y') : '—' }}</td>
@@ -88,13 +90,13 @@
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="9" style="text-align:center;color:#999;padding: 10px;">No batches nearing expiry found within selected filters.</td></tr>
+                <tr><td colspan="10" style="text-align:center;color:#999;padding: 10px;">No batches nearing expiry found within selected filters.</td></tr>
             @endforelse
         </tbody>
         @if($data->isNotEmpty())
         <tfoot>
             <tr>
-                <td colspan="5">Total</td>
+                <td colspan="6">Total</td>
                 <td class="right">{{ number_format($data->sum('qty_remaining')) }}</td>
                 <td class="right">—</td>
                 <td class="right">FCFA {{ number_format($data->sum('total_cost'), 2) }}</td>

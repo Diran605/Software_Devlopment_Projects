@@ -91,7 +91,7 @@
                     <tbody class="text-zinc-300">
                         {{-- Revenue Section --}}
                         <tr class="bg-zinc-800/50 border-b border-zinc-700">
-                            <td class="p-3 font-bold text-white text-base" colspan="2">Revenue</td>
+                            <td class="p-3 font-bold text-white text-base" colspan="3">Revenue</td>
                         </tr>
                         <tr class="border-b border-zinc-800">
                             <td class="p-3 pl-6">Sales Revenue</td>
@@ -104,7 +104,7 @@
 
                         {{-- COGS Section --}}
                         <tr class="bg-zinc-800/50 border-b border-zinc-700 mt-2">
-                            <td class="p-3 font-bold text-white text-base" colspan="2">Cost of Goods Sold</td>
+                            <td class="p-3 font-bold text-white text-base" colspan="3">Cost of Goods Sold</td>
                         </tr>
                         <tr class="border-b border-zinc-800">
                             <td class="p-3 pl-6">Direct Cost of Items Sold</td>
@@ -124,12 +124,13 @@
                         {{-- Losses Section (negative-margin sales lines) --}}
                         @if($reportData['loss_lines']->isNotEmpty())
                         <tr class="bg-rose-950/40 border-b border-zinc-700">
-                            <td class="p-3 font-bold text-white text-base" colspan="2">
+                            <td class="p-3 font-bold text-white text-base" colspan="3">
                                 ⚠️ Loss-Making Sales (sold below cost)
                             </td>
                         </tr>
                         @foreach($reportData['loss_lines'] as $lossLine)
                         <tr class="border-b border-zinc-800 bg-rose-950/20 hover:bg-rose-950/30">
+                            <td class="text-center" style="text-align:center; color:#888;">{{ $loop->iteration }}</td>
                             <td class="p-3 pl-6">
                                 <span class="text-rose-300 font-medium">{{ $lossLine->item_name }}</span>
                                 <span class="text-zinc-500 text-xs ml-2">{{ $lossLine->category_name }}</span>
@@ -148,16 +149,17 @@
 
                         {{-- Operating Expenses --}}
                         <tr class="bg-zinc-800/50 border-b border-zinc-700">
-                            <td class="p-3 font-bold text-white text-base" colspan="2">Operating Expenses</td>
+                            <td class="p-3 font-bold text-white text-base" colspan="3">Operating Expenses</td>
                         </tr>
                         @forelse($reportData['expense_breakdown'] as $expense)
                             <tr class="border-b border-zinc-800 hover:bg-zinc-800/40">
-                                <td class="p-3 pl-6">{{ $expense->category_name }}</td>
+                                <td class="text-center" style="text-align:center; color:#888;">{{ $loop->iteration }}</td>
+                            <td class="p-3 pl-6">{{ $expense->category_name }}</td>
                                 <td class="p-3 text-right font-semibold text-amber-400">(FCFA {{ number_format($expense->total_amount, 2) }})</td>
                             </tr>
                         @empty
                             <tr class="border-b border-zinc-800">
-                                <td class="p-3 pl-6 text-zinc-500 italic" colspan="2">No expenses recorded for this period.</td>
+                                <td class="p-3 pl-6 text-zinc-500 italic" colspan="3">No expenses recorded for this period.</td>
                             </tr>
                         @endforelse
                         <tr class="border-b border-zinc-700 bg-zinc-800/30">
@@ -189,6 +191,7 @@
                 <table class="report-table w-full text-left border-collapse text-sm">
                     <thead>
                         <tr class="border-b border-zinc-700 bg-zinc-800 text-zinc-300">
+                            <th class="text-center" style="width:3%; text-align:center;">S/N</th>
                             <th class="p-3 font-semibold">Category</th>
                             <th class="p-3 font-semibold text-right">Count</th>
                             <th class="p-3 font-semibold text-right">Amount</th>
@@ -198,7 +201,8 @@
                     <tbody class="divide-y divide-zinc-700 text-zinc-300">
                         @foreach($reportData['expense_breakdown'] as $expense)
                             <tr class="hover:bg-zinc-800/50">
-                                <td class="p-3 font-medium">{{ $expense->category_name }}</td>
+                                <td class="text-center" style="text-align:center; color:#888;">{{ $loop->iteration }}</td>
+                            <td class="p-3 font-medium">{{ $expense->category_name }}</td>
                                 <td class="p-3 text-right">{{ number_format($expense->expense_count) }}</td>
                                 <td class="p-3 text-right font-semibold">FCFA {{ number_format($expense->total_amount, 2) }}</td>
                                 <td class="p-3 text-right">
@@ -215,7 +219,7 @@
                     </tbody>
                     <tfoot>
                         <tr class="border-t-2 border-zinc-500 bg-zinc-800/80 font-bold text-white">
-                            <td class="p-3">Total</td>
+                            <td colspan="2" class="p-3">Total</td>
                             <td class="p-3 text-right">{{ $reportData['expense_breakdown']->sum('expense_count') }}</td>
                             <td class="p-3 text-right text-amber-400">FCFA {{ number_format($reportData['total_expenses'], 2) }}</td>
                             <td class="p-3 text-right">100%</td>

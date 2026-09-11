@@ -40,7 +40,7 @@
     <table>
         {{-- Revenue --}}
         <tr class="section-header">
-            <td colspan="2">Revenue</td>
+            <td colspan="3">Revenue</td>
         </tr>
         <tr class="line-item indent">
             <td>Sales Revenue</td>
@@ -53,7 +53,7 @@
 
         {{-- COGS --}}
         <tr class="section-header">
-            <td colspan="2">Cost of Goods Sold</td>
+            <td colspan="3">Cost of Goods Sold</td>
         </tr>
         <tr class="line-item indent">
             <td>Direct Cost of Items Sold</td>
@@ -75,11 +75,12 @@
         {{-- Loss-Making Sales (If any) --}}
         @if(isset($data['loss_lines']) && $data['loss_lines']->isNotEmpty())
         <tr class="section-header" style="background:#9b2c2c;">
-            <td colspan="2">Loss-Making Sales (Sold below cost)</td>
+            <td colspan="3">Loss-Making Sales (Sold below cost)</td>
         </tr>
         @foreach($data['loss_lines'] as $lossLine)
             <tr class="line-item indent" style="color:#9b2c2c; background:#fff5f5;">
-                <td>{{ $lossLine->item_name }} (Qty: {{ number_format($lossLine->total_qty) }})</td>
+                <td class="text-center" style="text-align:center; color:#888;">{{ $loop->iteration }}</td>
+                            <td>{{ $lossLine->item_name }} (Qty: {{ number_format($lossLine->total_qty) }})</td>
                 <td>(FCFA {{ number_format(abs($lossLine->total_loss), 2) }})</td>
             </tr>
         @endforeach
@@ -91,16 +92,17 @@
 
         {{-- Operating Expenses --}}
         <tr class="section-header">
-            <td colspan="2">Operating Expenses</td>
+            <td colspan="3">Operating Expenses</td>
         </tr>
         @forelse($data['expense_breakdown'] as $expense)
             <tr class="line-item indent">
-                <td>{{ $expense->category_name }}</td>
+                <td class="text-center" style="text-align:center; color:#888;">{{ $loop->iteration }}</td>
+                            <td>{{ $expense->category_name }}</td>
                 <td>(FCFA {{ number_format($expense->total_amount, 2) }})</td>
             </tr>
         @empty
             <tr class="line-item indent">
-                <td colspan="2" style="color:#999;font-style:italic;">No expenses recorded</td>
+                <td colspan="3" style="color:#999;font-style:italic;">No expenses recorded</td>
             </tr>
         @endforelse
         <tr class="subtotal">
@@ -126,7 +128,8 @@
     <table class="expense-table">
         <thead>
             <tr>
-                <th>Category</th>
+                <th class="text-center" style="width:3%; text-align:center;">S/N</th>
+                            <th>Category</th>
                 <th class="right">Amount</th>
                 <th class="right">% of Total</th>
             </tr>
@@ -134,7 +137,8 @@
         <tbody>
             @foreach($data['expense_breakdown'] as $expense)
                 <tr>
-                    <td>{{ $expense->category_name }}</td>
+                    <td class="text-center" style="text-align:center; color:#888;">{{ $loop->iteration }}</td>
+                            <td>{{ $expense->category_name }}</td>
                     <td class="right">FCFA {{ number_format($expense->total_amount, 2) }}</td>
                     <td class="right">{{ $data['total_expenses'] > 0 ? number_format(($expense->total_amount / $data['total_expenses']) * 100, 1) : 0 }}%</td>
                 </tr>

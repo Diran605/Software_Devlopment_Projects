@@ -35,7 +35,8 @@
     <table>
         <thead>
             <tr>
-                <th>Category</th>
+                <th class="text-center" style="width:3%; text-align:center;">S/N</th>
+                            <th>Category</th>
                 <th class="right">Count</th>
                 <th class="right">Total</th>
             </tr>
@@ -43,7 +44,8 @@
         <tbody>
             @foreach($data['category_summary'] as $row)
                 <tr>
-                    <td>{{ $row->category_name }}</td>
+                    <td class="text-center" style="text-align:center; color:#888;">{{ $loop->iteration }}</td>
+                            <td>{{ $row->category_name }}</td>
                     <td class="right">{{ number_format($row->expense_count) }}</td>
                     <td class="right">FCFA {{ number_format($row->total_amount, 2) }}</td>
                 </tr>
@@ -55,7 +57,8 @@
     <table>
         <thead>
             <tr>
-                <th>Date</th>
+                <th class="text-center" style="width:3%; text-align:center;">S/N</th>
+                            <th>Date</th>
                 <th>Reference</th>
                 <th>Category</th>
                 <th>Payee</th>
@@ -66,7 +69,8 @@
         <tbody>
             @forelse($data['rows'] as $expense)
                 <tr>
-                    <td>{{ $expense->expense_date?->format('M d, Y') }}</td>
+                    <td class="text-center" style="text-align:center; color:#888;">{{ $loop->iteration }}</td>
+                            <td>{{ $expense->expense_date?->format('M d, Y') }}</td>
                     <td>{{ $expense->reference_number ?? '—' }}</td>
                     <td>{{ $expense->category?->name ?? 'Uncategorized' }}</td>
                     <td>{{ $expense->payee ?? '—' }}</td>
@@ -74,13 +78,13 @@
                     <td class="right">FCFA {{ number_format($expense->amount, 2) }}</td>
                 </tr>
             @empty
-                <tr><td colspan="6" style="text-align:center;color:#999;padding:10px;">No expenses found.</td></tr>
+                <tr><td colspan="7" style="text-align:center;color:#999;padding:10px;">No expenses found.</td></tr>
             @endforelse
         </tbody>
         @if($data['rows']->isNotEmpty())
         <tfoot>
             <tr>
-                <td colspan="5">Total</td>
+                <td colspan="6">Total</td>
                 <td class="right">FCFA {{ number_format($data['total_amount'], 2) }}</td>
             </tr>
         </tfoot>

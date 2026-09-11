@@ -25,6 +25,7 @@
                 <table class="report-table w-full">
                     <thead>
                         <tr>
+                            <th class="text-center" style="width:3%; text-align:center;">S/N</th>
                             <th>Item</th>
                             <th>Category</th>
                             <th class="text-right">Qty On Hand</th>
@@ -35,14 +36,15 @@
                     <tbody>
                         @forelse($reportData as $row)
                             <tr>
-                                <td>{{ $row->item->name }}</td>
+                                <td class="text-center" style="text-align:center; color:#888;">{{ $loop->iteration }}</td>
+                            <td>{{ $row->item->name }}</td>
                                 <td>{{ $row->item->category?->name ?? '—' }}</td>
                                 <td class="text-right">{{ number_format($row->qty_on_hand) }}</td>
                                 <td class="text-right">{{ number_format($row->item->reorder_level) }}</td>
                                 <td class="text-right text-danger-500">{{ number_format(max(0, $row->item->reorder_level - $row->qty_on_hand)) }}</td>
                             </tr>
                         @empty
-                            <tr><td colspan="5" class="p-4 text-center text-zinc-500">No low stock items found.</td></tr>
+                            <tr><td colspan="6" class="p-4 text-center text-zinc-500">No low stock items found.</td></tr>
                         @endforelse
                     </tbody>
                 </table>

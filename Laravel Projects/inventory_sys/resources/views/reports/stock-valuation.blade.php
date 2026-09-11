@@ -29,7 +29,8 @@
     <table>
         <thead>
             <tr>
-                <th>Item</th>
+                <th class="text-center" style="width:3%; text-align:center;">S/N</th>
+                            <th>Item</th>
                 <th>Category</th>
                 <th>UoM</th>
                 <th class="right">Qty On Hand</th>
@@ -40,7 +41,8 @@
         <tbody>
             @forelse($data as $row)
                 <tr>
-                    <td>{{ $row->item?->name }}</td>
+                    <td class="text-center" style="text-align:center; color:#888;">{{ $loop->iteration }}</td>
+                            <td>{{ $row->item?->name }}</td>
                     <td>{{ $row->item?->category?->name ?? 'Uncategorized' }}</td>
                     <td>{{ $row->item?->uom?->abbreviation ?? $row->item?->uom?->name }}</td>
                     <td class="right">{{ number_format($row->qty_on_hand) }}</td>
@@ -48,13 +50,13 @@
                     <td class="right">FCFA {{ number_format($row->qty_on_hand * ($row->item?->unit_cost ?? 0), 2) }}</td>
                 </tr>
             @empty
-                <tr><td colspan="6" style="text-align:center;color:#999;">No stock data found.</td></tr>
+                <tr><td colspan="7" style="text-align:center;color:#999;">No stock data found.</td></tr>
             @endforelse
         </tbody>
         @if($data->isNotEmpty())
         <tfoot>
             <tr>
-                <td colspan="3">Grand Total</td>
+                <td colspan="4">Grand Total</td>
                 <td class="right">{{ number_format($data->sum('qty_on_hand')) }}</td>
                 <td></td>
                 <td class="right">FCFA {{ number_format($data->sum(fn($r) => $r->qty_on_hand * ($r->item?->unit_cost ?? 0)), 2) }}</td>

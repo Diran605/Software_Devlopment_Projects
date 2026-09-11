@@ -123,6 +123,7 @@
         <table style="width: 100%; border-collapse: collapse; border: 1px solid #0d9488; margin-top: 10px;">
             <thead>
                 <tr style="background: #134e4a; color: #fff;">
+                    <th style="padding: 5px 8px; font-size: 8px; text-align: left; width: 3%;">S/N</th>
                     <th style="padding: 5px 8px; font-size: 8px; text-align: left;">Product</th>
                     <th style="padding: 5px 8px; font-size: 8px; text-align: left;">Category</th>
                     <th class="r" style="padding: 5px 8px; font-size: 8px; text-align: right;">Qty Available<br><span style="font-weight:normal;font-size:6px;color:#99f6e4">(start + received)</span></th>
@@ -144,6 +145,7 @@
                                  ? round(abs($product->discrepancy) / $product->expected_revenue * 100, 1) : 0;
                     @endphp
                     <tr style="background: {{ $loop->even ? '#f8fafc' : '#ffffff' }};">
+                        <td style="padding: 5px 8px; font-size: 8px; border-bottom: 1px solid #e2e8f0; color: #64748b;">{{ $loop->iteration }}</td>
                         <td style="padding: 5px 8px; font-size: 8px; font-weight: bold; border-bottom: 1px solid #e2e8f0;">{{ $product->item_name }}</td>
                         <td style="padding: 5px 8px; font-size: 8px; color: #64748b; border-bottom: 1px solid #e2e8f0;">{{ $product->category_name ?? '—' }}</td>
                         <td class="r" style="padding: 5px 8px; font-size: 8px; text-align: right; border-bottom: 1px solid #e2e8f0;">{{ number_format($product->qty_available) }}</td>
@@ -180,7 +182,7 @@
 
             <div class="product-block">
                 <div class="product-header">
-                    <span>{{ $product->item_name }} @if($product->category_name) &mdash; <em style="opacity:0.8;font-size:8px">{{ $product->category_name }}</em> @endif</span>
+                    <span>{{ $loop->iteration }}. {{ $product->item_name }} @if($product->category_name) &mdash; <em style="opacity:0.8;font-size:8px">{{ $product->category_name }}</em> @endif</span>
                     <span>
                         @if($isShortfall)
                             <span class="badge badge-shortfall">⚠ Below Standard ({{ $pct }}%)</span>
