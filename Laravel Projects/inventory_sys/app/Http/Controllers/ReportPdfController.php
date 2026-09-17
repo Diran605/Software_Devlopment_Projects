@@ -162,6 +162,7 @@ class ReportPdfController extends Controller
         $data = $page->getData();
 
         return Pdf::loadView('reports.profit-loss', compact('data', 'filters', 'branch'))
+            ->setPaper('a4', 'landscape')
             ->download('profit-loss-'.now()->format('Y-m-d').'.pdf');
     }
 

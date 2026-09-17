@@ -51,14 +51,20 @@ class GoodsReceivedNoteForm
                                         foreach ($po->purchaseOrderLines as $poLine) {
                                             $remaining = $poLine->qty_ordered - $poLine->qty_received;
                                             if ($remaining > 0) {
+                                                $isPack = $poLine->entry_mode === 'pack';
+                                                $units = max(1, $poLine->units_per_pack ?? 1);
+                                                $remPacks = $isPack ? floor($remaining / $units) : 0;
+                                                $remQty = $isPack ? ($remPacks * $units) : $remaining;
+
                                                 $lines[] = [
                                                     'item_id' => $poLine->item_id,
-                                                    'entry_mode' => 'unit',
-                                                    'pack_quantity' => 0,
-                                                    'units_per_pack' => 1,
-                                                    'qty_received' => $remaining,
+                                                    'entry_mode' => $isPack ? 'pack' : 'unit',
+                                                    'packaging_type_id' => $poLine->packaging_type_id,
+                                                    'pack_quantity' => $remPacks,
+                                                    'units_per_pack' => $units,
+                                                    'qty_received' => $remQty,
                                                     'unit_cost' => $poLine->unit_cost,
-                                                    'line_total' => $remaining * $poLine->unit_cost,
+                                                    'line_total' => $remQty * $poLine->unit_cost,
                                                     'batch_number' => 'BCH-' . strtoupper(uniqid()),
                                                     'expiry_date' => null,
                                                 ];

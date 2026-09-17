@@ -13,8 +13,14 @@
                 {{ $this->form }}
                 <div class="flex items-center gap-3 mt-4">
                     <x-filament::button type="submit" color="primary">Filter Report</x-filament::button>
-                    <x-filament::button wire:click="exportPdf('reports.low-stock.pdf')" color="success" icon="heroicon-o-document-arrow-down">
+                    <x-filament::button type="button" wire:click="exportPdf('reports.low-stock.pdf')" color="success" icon="heroicon-o-document-arrow-down">
                         Export PDF
+                    </x-filament::button>
+                    <x-filament::button type="button" wire:click="exportCsv('low-stock-report')" color="info" icon="heroicon-o-table-cells">
+                        Export CSV
+                    </x-filament::button>
+                    <x-filament::button type="button" wire:click="exportExcel('low-stock-report')" color="warning" icon="heroicon-o-document-text">
+                        Export Excel
                     </x-filament::button>
                 </div>
             </form>

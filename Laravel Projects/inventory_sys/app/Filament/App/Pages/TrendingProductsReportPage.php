@@ -53,8 +53,9 @@ class TrendingProductsReportPage extends Page implements HasForms
             'branch_id' => Filament::getTenant()?->id,
             'date_from' => now()->startOfMonth()->format('Y-m-d'),
             'date_to'   => now()->endOfMonth()->format('Y-m-d'),
-            'sort_by'   => 'revenue',
-            'limit'     => 20,
+            'sort_by'      => 'revenue',
+            'limit_preset' => 20,
+            'limit_custom' => 100,
         ]);
     }
 
@@ -87,15 +88,24 @@ class TrendingProductsReportPage extends Page implements HasForms
                             ])
                             ->default('revenue')
                             ->live(),
-                        Select::make('limit')
+                        Select::make('limit_preset')
                             ->label('Show Top')
                             ->options([
                                 10 => 'Top 10',
                                 20 => 'Top 20',
                                 50 => 'Top 50',
+                                'all' => 'All Products',
+                                'custom' => 'Custom...',
                             ])
                             ->default(20)
                             ->live(),
+                        \Filament\Forms\Components\TextInput::make('limit_custom')
+                            ->label('Custom Limit')
+                            ->numeric()
+                            ->minValue(1)
+                            ->default(100)
+                            ->live(debounce: 500)
+                            ->visible(fn (callable $get) => $get('limit_preset') === 'custom'),
                     ])
             ])
             ->statePath('data');
@@ -113,7 +123,14 @@ class TrendingProductsReportPage extends Page implements HasForms
         $from     = $this->data['date_from'] ?? null;
         $to       = $this->data['date_to'] ?? null;
         $sortBy   = $this->data['sort_by'] ?? 'revenue';
-        $limit    = (int) ($this->data['limit'] ?? 20);
+        $limitPreset = $this->data['limit_preset'] ?? 20;
+        if ($limitPreset === 'all') {
+            $limit = 1000000;
+        } elseif ($limitPreset === 'custom') {
+            $limit = (int) ($this->data['limit_custom'] ?? 100);
+        } else {
+            $limit = (int) $limitPreset;
+        }
 
         $orderCol = match ($sortBy) {
             'qty'    => 'total_qty',

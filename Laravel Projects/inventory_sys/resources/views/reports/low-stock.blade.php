@@ -4,6 +4,13 @@
     <meta charset="utf-8">
     <title>Low Stock Report</title>
     <style>
+
+        @page { margin: 20px; }
+        body { padding: 0 !important; margin: 0 !important; font-size: 12px !important; }
+        table { width: 100% !important; max-width: 100% !important; table-layout: fixed; word-wrap: break-word; }
+        th, td { word-wrap: break-word; overflow-wrap: break-word; font-size: 11px !important; padding: 6px 4px !important; }
+        th { font-size: 11px !important; }
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'DejaVu Sans', Arial, sans-serif; font-size: 10px; color: #1a1a1a; line-height: 1.4; }
         .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; }

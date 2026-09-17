@@ -1,58 +1,121 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Enterprise Multi-Branch Inventory & POS System
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A robust, multi-tenant inventory management and Point of Sale (POS) system built with **Laravel**, **Filament v3**, and **Livewire**. Designed to handle complex retail operations across multiple branches with strict role-based access control, real-time financial reporting, and comprehensive stock movement tracking.
 
-## About Laravel
+## 🚀 Key Features
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+### 🏢 Multi-Tenant Architecture
+* **Admin Panel (`/admin`)**: For Superadmins to manage global settings, oversee all branches, view consolidated reports, and administer system backups.
+* **App Panel (`/app`)**: For Branch Managers and Cashiers to manage localized daily operations, isolated strictly to their assigned branch.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### 📦 Advanced Inventory Management
+* **Batch & Expiry Tracking**: Track specific item batches from receiving to sale. Warns on expiring stock.
+* **Smart GRN (Goods Received Notes)**: Intelligent conversion of Purchase Orders into stock with "Pack Mode" logic (receive bulk packs, automatically unpack into sellable singular units).
+* **Inventory Counts (Stocktakes)**: Perform blind counts, auto-calculate variances, and enforce manager approval workflows before posting stock adjustments.
+* **Clearance Module**: Dedicated tracking for damaged, expired, or lost stock with direct integration into Profit & Loss shrinkage.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### 💰 Sales & Reporting
+* **Point of Sale (POS)**: Streamlined sales order processing.
+* **Comprehensive Analytics**: 11+ dynamic reports including:
+  * Profit & Loss (Revenue vs COGS vs Expenses)
+  * Top Selling Products
+  * Cashier Performance
+  * Sales Price Audits
+* **Exporting Engine**: Native support for exporting massive reports and tables to **PDF**, **Excel (.xlsx)**, and **CSV**.
 
-## Learning Laravel
+### 🔒 Security & Maintenance
+* **Administer Backups**: Built-in GUI to trigger instant MySQL database dumps, securely storing them locally in `.zip` format. 
+* **Role-Based Access Control (RBAC)**: Strict permission boundaries (e.g., Cashiers cannot approve inventory counts or access P&L reports).
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+---
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## 💻 Tech Stack
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+* **Backend**: PHP 8.4, Laravel 13.x
+* **Frontend**: Filament PHP v3, Livewire 3, Tailwind CSS, Alpine.js
+* **Database**: MySQL
+* **PDF Engine**: `barryvdh/laravel-dompdf`
+* **Excel Engine**: `phpoffice/phpspreadsheet`
+* **Backups**: `spatie/laravel-backup`
 
-## Agentic Development
+---
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+## 🛠️ Installation & Setup
 
+Follow these steps to get the application running on your local machine.
+
+### 1. Prerequisites
+* PHP >= 8.2 (8.4 recommended)
+* Composer
+* MySQL Server
+* Node.js & NPM (optional, for asset compiling)
+
+### 2. Clone and Configure
+Clone the repository and install the PHP dependencies:
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+composer install
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+Copy the environment file:
+```bash
+cp .env.example .env
+```
 
-## Contributing
+Generate the application key:
+```bash
+php artisan key:generate
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### 3. Database Setup
+Create a new MySQL database (e.g., `inventoryss`) and update your `.env` file with the connection details:
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=inventoryss
+DB_USERNAME=root
+DB_PASSWORD=
+```
 
-## Code of Conduct
+Run the database migrations and seed the initial roles, permissions, and test data:
+```bash
+php artisan migrate --seed
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### 4. Storage Link
+Link the storage directory to make local backups and uploads accessible:
+```bash
+php artisan storage:link
+```
 
-## Security Vulnerabilities
+### 5. Start the Server
+Start the local Laravel development server:
+```bash
+php artisan serve
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+---
 
-## License
+## 🚦 Usage Guide
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Once the server is running (usually at `http://localhost:8000` or `http://inventory_sys.test` via Herd/Valet):
+
+1. **Superadmin Login**
+   * Navigate to `http://localhost:8000/admin`
+   * Login with your seeded superadmin credentials.
+2. **Branch Manager Login**
+   * Navigate to `http://localhost:8000/app`
+   * Login with branch manager credentials to access the localized store dashboard.
+
+### 🗄️ Database Backups
+To trigger a manual database backup via the command line (if you don't want to use the GUI):
+```bash
+php artisan backup:run --only-db
+```
+Backups are securely stored in `storage/app/private/backups/`.
+
+---
+
+## ⚠️ Important Configuration Notes
+* **Queue Connection**: The `.env` file must have `QUEUE_CONNECTION=sync` for table exports (like the massive Items list) to process immediately without a background worker.
+* **Environment Name**: Ensure `APP_NAME` is set correctly in `.env` as it dictates certain system naming conventions.

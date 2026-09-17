@@ -45,9 +45,7 @@ class SalesOrderForm
                             ->required()
                             ->label('Sold At'),
                         Select::make('department_id')
-                            ->relationship('department', 'name', modifyQueryUsing: fn (Builder $query, callable $get) =>
-                                $query->when($get('branch_id'), fn ($q, $id) => $q->where('branch_id', $id))
-                            )
+                            ->relationship('department', 'name')
                             ->nullable()
                             ->label('Department'),
                         Textarea::make('notes')
@@ -60,11 +58,64 @@ class SalesOrderForm
                         Grid::make(6)
                             ->schema([
                                 Hidden::make('id'),
+                                Select::make('clearance_stock_id')
+                                    ->label('Clearance Stock')
+                                    ->options(function (callable $get) {
+                                        $tenantId = $get('../../branch_id');
+
+                                        return \App\Models\ClearanceStock::query()
+                                            ->where('branch_id', $tenantId)
+                                            ->where('qty_remaining', '>', 0)
+                                            ->with('item')
+                                            ->get()
+                                            ->mapWithKeys(function ($stock) {
+                                                $expiry = \App\Support\FormatsDates::formatDate($stock->expiry_date);
+
+                                                return [$stock->id => "{$stock->item->name} | Batch: {$stock->batch_number} | Exp: {$expiry} | Price: FCFA ".number_format($stock->clearance_price, 0)." | Qty: {$stock->qty_remaining}"];
+                                            });
+                                    })
+                                    ->searchable()
+                                    ->nullable()
+                                    ->live()
+                                    ->columnSpan(2)
+                                    ->disabled(fn (callable $get) => filled($get('id')))
+                                    ->helperText('Select clearance stock to sell at the discounted clearance price')
+                                    ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                                        if ($state) {
+                                            $stock = \App\Models\ClearanceStock::find($state);
+                                            if ($stock) {
+                                                $set('item_id', $stock->item_id);
+                                                $set('batch_inventory_id', $stock->batch_inventory_id);
+                                                $set('unit_price', $stock->clearance_price);
+                                                $set('qty_sold', min((int) ($get('qty_sold') ?: 1), $stock->qty_remaining));
+
+                                                $qty = min((int) ($get('qty_sold') ?: 1), $stock->qty_remaining);
+                                                $set('line_total', $qty * $stock->clearance_price);
+                                            }
+                                        } else {
+                                            $set('batch_inventory_id', null);
+                                        }
+                                        self::updateTotals($get, $set);
+                                    }),
+                                Placeholder::make('clearance_batch_display')
+                                    ->label('Clearance Batch')
+                                    ->visible(fn (callable $get) => filled($get('clearance_stock_id')))
+                                    ->content(function (callable $get) {
+                                        $stock = \App\Models\ClearanceStock::find($get('clearance_stock_id'));
+
+                                        if (! $stock) {
+                                            return '—';
+                                        }
+
+                                        $expiry = \App\Support\FormatsDates::formatDate($stock->expiry_date);
+
+                                        return "Batch: {$stock->batch_number} | Exp: {$expiry} | Available: {$stock->qty_remaining}";
+                                    }),
                                 Select::make('item_id')
                                     ->options(function (callable $get) {
-                                        $branchId = $get('../../branch_id');
+                                        $tenantId = $get('../../branch_id');
                                         return \App\Models\Item::query()
-                                            ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
+                                            ->when($tenantId, fn ($q) => $q->where('branch_id', $tenantId))
                                             ->where('is_active', true)
                                             ->orderBy('name')
                                             ->pluck('name', 'id');
@@ -72,13 +123,13 @@ class SalesOrderForm
                                     ->required()
                                     ->searchable()
                                     ->label('Item')
-                                    ->disabled(fn (callable $get) => filled($get('id')))
+                                    ->disabled(fn (callable $get) => filled($get('id')) || filled($get('clearance_stock_id')))
                                     ->helperText(function (callable $get) {
                                         $itemId = $get('item_id');
-                                        $branchId = $get('../../branch_id');
-                                        if ($itemId && $branchId) {
+                                        if ($itemId) {
+                                            $tenantId = \Filament\Facades\Filament::getTenant()->id;
                                             $stock = \App\Models\ItemStockLevel::where('item_id', $itemId)
-                                                ->where('branch_id', $branchId)
+                                                ->where('branch_id', $tenantId)
                                                 ->whereNotNull('department_id')
                                                 ->sum('qty_on_hand');
                                             return "Qty on hand: {$stock}";
@@ -86,14 +137,25 @@ class SalesOrderForm
                                         return null;
                                     })
                                     ->live()
-                                    ->afterStateUpdated(function ($state, callable $set) {
+                                    ->afterStateUpdated(function ($state, callable $set, callable $get) {
                                         if ($state) {
-                                             $item = \App\Models\Item::find($state);
+                                             $item = \App\Models\Item::with('packagingType')->find($state);
                                              if ($item) {
                                                  $set('unit_price', $item->selling_price);
+                                                 if ($item->packaging_type_id) {
+                                                     $set('packaging_type_id', $item->packaging_type_id);
+                                                     $set('units_per_pack', $item->packagingType?->units_per_pack ?? 1);
+                                                 }
+                                                 
+                                                 $qty = floatval($get('qty_sold') ?: 1);
+                                                 $set('qty_sold', $qty);
+                                                 $set('line_total', $qty * $item->selling_price);
                                              }
                                          }
                                          $set('batch_inventory_id', null);
+                                         $set('clearance_stock_id', null);
+                                     
+                                         self::updateTotals($get, $set);
                                      }),
                                 Select::make('batch_inventory_id')
                                     ->label('Batch (Optional)')
@@ -101,20 +163,35 @@ class SalesOrderForm
                                         $itemId = $get('item_id');
                                         if (!$itemId) return [];
                                         
-                                        $branchId = $get('../../branch_id');
-                                        return \App\Models\BatchInventory::where('item_id', $itemId)
-                                            ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
-                                            ->where('qty_remaining', '>', 0)
-                                            ->get()
-                                            ->mapWithKeys(function ($batch) {
+                                        $tenantId = $get('../../branch_id');
+                                        $selectedBatchId = $get('batch_inventory_id');
+
+                                        $batches = \App\Models\BatchInventory::query()
+                                            ->where('item_id', $itemId)
+                                            ->when($tenantId, fn ($q) => $q->where('branch_id', $tenantId))
+                                            ->where(function ($query) use ($selectedBatchId) {
+                                                $query->where('qty_remaining', '>', 0);
+
+                                                if ($selectedBatchId) {
+                                                    $query->orWhere('id', $selectedBatchId);
+                                                }
+                                            })
+                                            ->get();
+
+                                        return $batches->mapWithKeys(function ($batch) {
                                                 $expiry = $batch->expiry_date ? " | Exp: " . $batch->expiry_date->format('Y-m-d') : '';
-                                                return [$batch->id => "Batch: {$batch->batch_number}{$expiry} (Qty: {$batch->qty_remaining})"];
+                                                $qtyLabel = $batch->qty_remaining > 0
+                                                    ? "Qty: {$batch->qty_remaining}"
+                                                    : 'Clearance batch';
+
+                                                return [$batch->id => "Batch: {$batch->batch_number}{$expiry} ({$qtyLabel})"];
                                             });
                                     })
                                     ->searchable()
                                     ->preload()
                                     ->nullable()
                                     ->live()
+                                    ->visible(fn (callable $get) => ! filled($get('clearance_stock_id')))
                                     ->disabled(fn (callable $get) => filled($get('id'))),
                                 Toggle::make('entry_mode')
                                     ->label('Pack Mode')
@@ -123,15 +200,35 @@ class SalesOrderForm
                                     ->default(false)
                                     ->live(),
                                 Select::make('packaging_type_id')
-                                    ->options(\App\Models\PackagingType::orderBy('name')->pluck('name', 'id'))
+                                    ->options(function (callable $get) {
+                                        $tenantId = $get('../../branch_id');
+
+                                        return \App\Models\PackagingType::query()
+                                            ->when($tenantId, fn ($q) => $q->where(fn ($inner) => $inner->where('branch_id', $tenantId)->orWhereNull('branch_id')))
+                                            ->orderBy('name')
+                                            ->pluck('name', 'id');
+                                    })
                                     ->nullable()
                                     ->searchable()
+                                    ->live()
                                     ->label('Packaging Type')
-                                    ->visible(fn (callable $get) => $get('entry_mode')),
+                                    ->visible(fn (callable $get) => $get('entry_mode'))
+                                    ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                                        if ($state) {
+                                            $pack = \App\Models\PackagingType::find($state);
+                                            if ($pack) {
+                                                $set('units_per_pack', $pack->units_per_pack);
+                                                $packQty = floatval($get('pack_quantity') ?? 0);
+                                                if ($packQty > 0) {
+                                                    $set('qty_sold', $packQty * $pack->units_per_pack);
+                                                }
+                                            }
+                                        }
+                                    }),
                                 TextInput::make('pack_quantity')
                                     ->numeric()
                                     ->default(0)
-                                    ->live()
+                                    ->live(onBlur: true)
                                     ->visible(fn (callable $get) => $get('entry_mode'))
                                     ->afterStateUpdated(function ($state, callable $set, callable $get) {
                                         $units = floatval($get('units_per_pack') ?? 1);
@@ -150,11 +247,12 @@ class SalesOrderForm
                                                 $set('margin_status', $grossProfit < 0 ? 'negative' : ($grossProfit < ($lineTotal * 0.2) ? 'low' : 'normal'));
                                             }
                                         }
+                                        self::updateTotals($get, $set);
                                     }),
                                 TextInput::make('units_per_pack')
                                     ->numeric()
                                     ->default(1)
-                                    ->live()
+                                    ->live(onBlur: true)
                                     ->visible(fn (callable $get) => $get('entry_mode'))
                                     ->afterStateUpdated(function ($state, callable $set, callable $get) {
                                         $packs = floatval($get('pack_quantity') ?? 0);
@@ -173,12 +271,20 @@ class SalesOrderForm
                                                 $set('margin_status', $grossProfit < 0 ? 'negative' : ($grossProfit < ($lineTotal * 0.2) ? 'low' : 'normal'));
                                             }
                                         }
+                                        self::updateTotals($get, $set);
                                     }),
                                 TextInput::make('qty_sold')
                                     ->required()
                                     ->numeric()
                                     ->minValue(1)
-                                    ->live()
+                                    ->maxValue(function (callable $get) {
+                                        if ($clearanceStockId = $get('clearance_stock_id')) {
+                                            return \App\Models\ClearanceStock::find($clearanceStockId)?->qty_remaining;
+                                        }
+
+                                        return null;
+                                    })
+                                    ->live(debounce: 500)
                                     ->label('Qty Sold')
                                     ->readOnly(fn (callable $get) => $get('entry_mode'))
                                     ->afterStateUpdated(function ($state, callable $set, callable $get) {
@@ -195,6 +301,7 @@ class SalesOrderForm
                                                 $set('margin_status', $grossProfit < 0 ? 'negative' : ($grossProfit < ($lineTotal * 0.2) ? 'low' : 'normal'));
                                             }
                                         }
+                                        self::updateTotals($get, $set);
                                     }),
                                 TextInput::make('unit_price')
                                     ->required()
@@ -202,7 +309,7 @@ class SalesOrderForm
                                     ->minValue(0)
                                     ->prefix('FCFA ')
                                     ->label('Unit Price')
-                                    ->live()
+                                    ->live(debounce: 500)
                                     ->afterStateUpdated(function ($state, callable $set, callable $get) {
                                         $price = floatval($state ?? 0);
                                         $qty = floatval($get('qty_sold') ?? 0);
@@ -217,14 +324,30 @@ class SalesOrderForm
                                                 $set('margin_status', $grossProfit < 0 ? 'negative' : ($grossProfit < ($lineTotal * 0.2) ? 'low' : 'normal'));
                                             }
                                         }
+                                        self::updateTotals($get, $set);
                                     }),
                                 TextInput::make('line_total')
                                     ->required()
                                     ->numeric()
-                                    ->readOnly()
                                     ->prefix('FCFA ')
                                     ->default(0.00)
-                                    ->label('Line Total'),
+                                    ->label('Line Total')
+                                    ->helperText('Auto-calculated. You can override this.')
+                                    ->live(debounce: 500)
+                                    ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                                        // Only update local margin fields — totals are handled by the parent Repeater
+                                        $lineTotal = floatval($state ?? 0);
+                                        $qty = floatval($get('qty_sold') ?? 0);
+                                        if ($itemId = $get('item_id')) {
+                                            $item = \App\Models\Item::find($itemId);
+                                            if ($item) {
+                                                $grossProfit = $lineTotal - ($qty * floatval($item->unit_cost));
+                                                $set('gross_profit', $grossProfit);
+                                                $set('margin_status', $grossProfit < 0 ? 'negative' : ($grossProfit < ($lineTotal * 0.2) ? 'low' : 'normal'));
+                                            }
+                                        }
+                                        self::updateTotals($get, $set);
+                                    }),
                                 Hidden::make('gross_profit')
                                     ->default(0.00),
                                 Hidden::make('margin_status')
@@ -255,7 +378,7 @@ class SalesOrderForm
                         $set('grand_total', $subtotal - $discount);
                     }),
 
-                Grid::make(4)
+                Grid::make(['default' => 1, 'md' => 2])
                     ->schema([
                         TextInput::make('subtotal')
                             ->required()
@@ -269,7 +392,7 @@ class SalesOrderForm
                             ->numeric()
                             ->prefix('FCFA ')
                             ->default(0.00)
-                            ->live()
+                            ->live(debounce: 500)
                             ->afterStateUpdated(function ($state, callable $set, callable $get) {
                                 $subtotal = floatval($get('subtotal') ?? 0);
                                 $discount = floatval($state ?? 0);
@@ -291,5 +414,17 @@ class SalesOrderForm
                             ->default(fn () => auth()->id()),
                     ]),
             ]);
+    }
+
+    public static function updateTotals(callable $get, callable $set): void
+    {
+        $lines = $get('../../salesOrderLines') ?? [];
+        $subtotal = 0;
+        foreach ($lines as $line) {
+            $subtotal += floatval($line['line_total'] ?? 0);
+        }
+        $set('../../subtotal', $subtotal);
+        $discount = floatval($get('../../discount_total') ?? 0);
+        $set('../../grand_total', $subtotal - $discount);
     }
 }

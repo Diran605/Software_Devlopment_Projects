@@ -14,7 +14,7 @@ class SalesTrendWidget extends ChartWidget
 
     protected function getData(): array
     {
-        $tenantId = Filament::getTenant()?->id;
+        $tenantId = Filament::getTenant()?->id ?? ($this->filters['branch_id'] ?? null);
 
         $sales = SalesOrder::query()
             ->when($tenantId, fn ($q) => $q->where('branch_id', $tenantId))

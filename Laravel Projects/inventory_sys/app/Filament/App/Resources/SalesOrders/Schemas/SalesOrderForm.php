@@ -87,6 +87,7 @@ class SalesOrderForm
                                         } else {
                                             $set('batch_inventory_id', null);
                                         }
+                                        self::updateTotals($get, $set);
                                     }),
                                 Placeholder::make('clearance_batch_display')
                                     ->label('Clearance Batch')
@@ -128,7 +129,7 @@ class SalesOrderForm
                                         return null;
                                     })
                                     ->live()
-                                    ->afterStateUpdated(function ($state, callable $set) {
+                                    ->afterStateUpdated(function ($state, callable $set, callable $get) {
                                         if ($state) {
                                              $item = \App\Models\Item::with('packagingType')->find($state);
                                              if ($item) {
@@ -137,10 +138,16 @@ class SalesOrderForm
                                                      $set('packaging_type_id', $item->packaging_type_id);
                                                      $set('units_per_pack', $item->packagingType?->units_per_pack ?? 1);
                                                  }
+                                                 
+                                                 $qty = floatval($get('qty_sold') ?: 1);
+                                                 $set('qty_sold', $qty);
+                                                 $set('line_total', $qty * $item->selling_price);
                                              }
                                          }
                                          $set('batch_inventory_id', null);
                                          $set('clearance_stock_id', null);
+                                     
+                                         self::updateTotals($get, $set);
                                      }),
                                 Select::make('batch_inventory_id')
                                     ->label('Batch (Optional)')
@@ -213,7 +220,7 @@ class SalesOrderForm
                                 TextInput::make('pack_quantity')
                                     ->numeric()
                                     ->default(0)
-                                    ->live()
+                                    ->live(onBlur: true)
                                     ->visible(fn (callable $get) => $get('entry_mode'))
                                     ->afterStateUpdated(function ($state, callable $set, callable $get) {
                                         $units = floatval($get('units_per_pack') ?? 1);
@@ -232,11 +239,12 @@ class SalesOrderForm
                                                 $set('margin_status', $grossProfit < 0 ? 'negative' : ($grossProfit < ($lineTotal * 0.2) ? 'low' : 'normal'));
                                             }
                                         }
+                                        self::updateTotals($get, $set);
                                     }),
                                 TextInput::make('units_per_pack')
                                     ->numeric()
                                     ->default(1)
-                                    ->live()
+                                    ->live(onBlur: true)
                                     ->visible(fn (callable $get) => $get('entry_mode'))
                                     ->afterStateUpdated(function ($state, callable $set, callable $get) {
                                         $packs = floatval($get('pack_quantity') ?? 0);
@@ -255,6 +263,7 @@ class SalesOrderForm
                                                 $set('margin_status', $grossProfit < 0 ? 'negative' : ($grossProfit < ($lineTotal * 0.2) ? 'low' : 'normal'));
                                             }
                                         }
+                                        self::updateTotals($get, $set);
                                     }),
                                 TextInput::make('qty_sold')
                                     ->required()
@@ -267,7 +276,7 @@ class SalesOrderForm
 
                                         return null;
                                     })
-                                    ->live()
+                                    ->live(debounce: 500)
                                     ->label('Qty Sold')
                                     ->readOnly(fn (callable $get) => $get('entry_mode'))
                                     ->afterStateUpdated(function ($state, callable $set, callable $get) {
@@ -284,6 +293,7 @@ class SalesOrderForm
                                                 $set('margin_status', $grossProfit < 0 ? 'negative' : ($grossProfit < ($lineTotal * 0.2) ? 'low' : 'normal'));
                                             }
                                         }
+                                        self::updateTotals($get, $set);
                                     }),
                                 TextInput::make('unit_price')
                                     ->required()
@@ -291,7 +301,7 @@ class SalesOrderForm
                                     ->minValue(0)
                                     ->prefix('FCFA ')
                                     ->label('Unit Price')
-                                    ->live()
+                                    ->live(debounce: 500)
                                     ->afterStateUpdated(function ($state, callable $set, callable $get) {
                                         $price = floatval($state ?? 0);
                                         $qty = floatval($get('qty_sold') ?? 0);
@@ -306,6 +316,7 @@ class SalesOrderForm
                                                 $set('margin_status', $grossProfit < 0 ? 'negative' : ($grossProfit < ($lineTotal * 0.2) ? 'low' : 'normal'));
                                             }
                                         }
+                                        self::updateTotals($get, $set);
                                     }),
                                 TextInput::make('line_total')
                                     ->required()
@@ -314,7 +325,7 @@ class SalesOrderForm
                                     ->default(0.00)
                                     ->label('Line Total')
                                     ->helperText('Auto-calculated. You can override this.')
-                                    ->live()
+                                    ->live(debounce: 500)
                                     ->afterStateUpdated(function ($state, callable $set, callable $get) {
                                         // Only update local margin fields — totals are handled by the parent Repeater
                                         $lineTotal = floatval($state ?? 0);
@@ -327,6 +338,7 @@ class SalesOrderForm
                                                 $set('margin_status', $grossProfit < 0 ? 'negative' : ($grossProfit < ($lineTotal * 0.2) ? 'low' : 'normal'));
                                             }
                                         }
+                                        self::updateTotals($get, $set);
                                     }),
                                 Hidden::make('gross_profit')
                                     ->default(0.00),
@@ -358,7 +370,7 @@ class SalesOrderForm
                         $set('grand_total', $subtotal - $discount);
                     }),
 
-                Grid::make(4)
+                Grid::make(['default' => 1, 'md' => 2])
                     ->schema([
                         TextInput::make('subtotal')
                             ->required()
@@ -372,7 +384,7 @@ class SalesOrderForm
                             ->numeric()
                             ->prefix('FCFA ')
                             ->default(0.00)
-                            ->live()
+                            ->live(debounce: 500)
                             ->afterStateUpdated(function ($state, callable $set, callable $get) {
                                 $subtotal = floatval($get('subtotal') ?? 0);
                                 $discount = floatval($state ?? 0);
@@ -394,5 +406,17 @@ class SalesOrderForm
                             ->default(fn () => auth()->id()),
                     ]),
             ]);
+    }
+
+    public static function updateTotals(callable $get, callable $set): void
+    {
+        $lines = $get('../../salesOrderLines') ?? [];
+        $subtotal = 0;
+        foreach ($lines as $line) {
+            $subtotal += floatval($line['line_total'] ?? 0);
+        }
+        $set('../../subtotal', $subtotal);
+        $discount = floatval($get('../../discount_total') ?? 0);
+        $set('../../grand_total', $subtotal - $discount);
     }
 }

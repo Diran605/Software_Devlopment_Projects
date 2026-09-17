@@ -84,12 +84,24 @@
                     icon="heroicon-o-document-arrow-down">
                     Export Full PDF
                 </x-filament::button>
+                    <x-filament::button type="button" wire:click="exportCsv('sales-price-audit-report')" color="info" icon="heroicon-o-table-cells">
+                        Export CSV
+                    </x-filament::button>
+                    <x-filament::button type="button" wire:click="exportExcel('sales-price-audit-report')" color="warning" icon="heroicon-o-document-text">
+                        Export Excel
+                    </x-filament::button>
                 <x-filament::button
                     wire:click="exportPdf('reports.sales-price-audit.pdf', { summary_only: 1 })"
                     color="gray"
                     icon="heroicon-o-document-text">
                     Export Summary Only
                 </x-filament::button>
+                    <x-filament::button type="button" wire:click="exportCsv('sales-price-audit-report')" color="info" icon="heroicon-o-table-cells">
+                        Export CSV
+                    </x-filament::button>
+                    <x-filament::button type="button" wire:click="exportExcel('sales-price-audit-report')" color="warning" icon="heroicon-o-document-text">
+                        Export Excel
+                    </x-filament::button>
             </div>
         </form>
     </x-filament::card>

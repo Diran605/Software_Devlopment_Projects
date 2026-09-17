@@ -14,6 +14,12 @@ class BranchStatsOverview extends BaseWidget
 {
     use InteractsWithPageFilters;
 
+    protected int | array | null $columns = [
+        'default' => 1,
+        'sm' => 2,
+        'xl' => 4,
+    ];
+
     protected function getStats(): array
     {
         $tenant = Filament::getTenant();
@@ -64,12 +70,15 @@ class BranchStatsOverview extends BaseWidget
             : number_format($revChange, 1) . '% decrease vs last period';
         $revColor = $revChange >= 0 ? 'success' : 'danger';
 
+        $currentProfit = \App\Models\SalesOrderLine::join('sales_orders', 'sales_orders.id', '=', 'sales_order_lines.sales_order_id')
+            ->where('sales_orders.branch_id', $tenantId)
+            ->whereBetween('sales_orders.sold_at', [$from, $to])
+            ->whereNull('sales_orders.deleted_at')
+            ->sum('sales_order_lines.gross_profit');
 
-        // Items below reorder level
-        $lowStockCount = ItemStockLevel::where('branch_id', $tenantId)
-            ->whereColumn('qty_on_hand', '<=', 'reorder_level')
-            ->count();
-
+        $totalPurchase = \App\Models\PurchaseOrder::where('branch_id', $tenantId)
+            ->whereBetween('ordered_at', [$from, $to])
+            ->sum('total_amount');
 
         return [
             Stat::make('Total Sales (All Time)', number_format($totalSalesAllTime, 0) . ' FCFA')
@@ -79,9 +88,12 @@ class BranchStatsOverview extends BaseWidget
                 ->description($revDesc)
                 ->descriptionIcon($revChange >= 0 ? 'heroicon-m-arrow-trending-up' : 'heroicon-m-arrow-trending-down')
                 ->color($revColor),
-            Stat::make('Items Below Reorder', $lowStockCount)
-                ->description('Needs restocking')
-                ->color($lowStockCount > 0 ? 'warning' : 'success'),
+            Stat::make('Gross Profit', number_format($currentProfit, 0) . ' FCFA')
+                ->description('Gross profit for period')
+                ->color('success'),
+            Stat::make('Total Purchases', number_format($totalPurchase, 0) . ' FCFA')
+                ->description('Purchases for period')
+                ->color('info'),
         ];
     }
 }

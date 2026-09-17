@@ -9,16 +9,27 @@ use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Schema;
 use Illuminate\Database\Eloquent\Builder;
 
 class PurchaseOrderForm
 {
+    public static function updateTotals(callable $get, callable $set): void
+    {
+        $lines = $get('../../purchaseOrderLines') ?? [];
+        $total = 0;
+        foreach ($lines as $line) {
+            $total += floatval($line['line_total'] ?? 0);
+        }
+        $set('../../total_amount', $total);
+    }
+
     public static function configure(Schema $schema): Schema
     {
         return $schema
             ->components([
-                Grid::make(3)
+                Grid::make(2)
                     ->schema([
                         Select::make('branch_id')
                             ->relationship('branch', 'name')
@@ -26,7 +37,7 @@ class PurchaseOrderForm
                             ->live()
                             ->label('Branch'),
                         Select::make('supplier_id')
-                            ->relationship('supplier', 'name', modifyQueryUsing: fn (Builder $query, callable $get) => 
+                            ->relationship('supplier', 'name', modifyQueryUsing: fn (Builder $query, callable $get) =>
                                 $query->when($get('branch_id'), fn ($q, $id) => $q->where('branch_id', $id))
                             )
                             ->required()
@@ -44,75 +55,157 @@ class PurchaseOrderForm
                 Repeater::make('purchaseOrderLines')
                     ->relationship('purchaseOrderLines')
                     ->schema([
-                        Grid::make(5)
+                        Grid::make(['default' => 1, 'md' => 4])
                             ->schema([
                                 Select::make('item_id')
-                                    ->relationship('item', 'name', modifyQueryUsing: fn (Builder $query, callable $get) => 
+                                    ->relationship('item', 'name', modifyQueryUsing: fn (Builder $query, callable $get) =>
                                         $query->when($get('../../branch_id'), fn ($q, $id) => $q->where('branch_id', $id))
                                     )
                                     ->required()
                                     ->searchable()
                                     ->preload()
                                     ->label('Item')
-                                    ->live()
-                                    ->afterStateUpdated(function ($state, callable $set) {
+                                    ->live(debounce: 500)
+                                    ->afterStateUpdated(function ($state, callable $set, callable $get) {
                                         if ($state) {
                                             $item = \App\Models\Item::find($state);
                                             if ($item) {
                                                 $set('unit_cost', $item->unit_cost);
+                                                $qty = floatval($get('qty_ordered') ?? 0);
+                                                $set('line_total', $qty * floatval($item->unit_cost));
+                                            }
+                                        }
+                                        self::updateTotals($get, $set);
+                                    })
+                                    ->columnSpan(['default' => 1, 'md' => 2]),
+                                
+                                Toggle::make('entry_mode')
+                                    ->label('Pack Mode')
+                                    ->formatStateUsing(fn ($state) => $state === 'pack')
+                                    ->dehydrateStateUsing(fn ($state) => $state ? 'pack' : 'loose')
+                                    ->default(false)
+                                    ->live(),
+
+                                Select::make('packaging_type_id')
+                                    ->options(function (callable $get) {
+                                        $tenantId = $get('../../branch_id');
+                                        return \App\Models\PackagingType::query()
+                                            ->when($tenantId, fn ($q) => $q->where(fn ($inner) => 
+                                                $inner->where('branch_id', $tenantId)->orWhereNull('branch_id')))
+                                            ->orderBy('name')
+                                            ->pluck('name', 'id');
+                                    })
+                                    ->nullable()
+                                    ->searchable()
+                                    ->live()
+                                    ->label('Packaging Type')
+                                    ->visible(fn (callable $get) => $get('entry_mode'))
+                                    ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                                        if ($state) {
+                                            $pack = \App\Models\PackagingType::find($state);
+                                            if ($pack) {
+                                                $set('units_per_pack', $pack->units_per_pack);
+                                                $packQty = floatval($get('pack_quantity') ?? 0);
+                                                if ($packQty > 0) {
+                                                    $qty = $packQty * $pack->units_per_pack;
+                                                    $set('qty_ordered', $qty);
+                                                    $cost = floatval($get('unit_cost') ?? 0);
+                                                    $set('line_total', $qty * $cost);
+                                                    self::updateTotals($get, $set);
+                                                }
                                             }
                                         }
                                     }),
+                                
+                                TextInput::make('pack_quantity')
+                                    ->numeric()
+                                    ->default(0)
+                                    ->live(onBlur: true)
+                                    ->visible(fn (callable $get) => $get('entry_mode'))
+                                    ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                                        $units = floatval($get('units_per_pack') ?? 1);
+                                        $qty = floatval($state ?? 0) * $units;
+                                        $set('qty_ordered', $qty);
+                                        
+                                        $cost = floatval($get('unit_cost') ?? 0);
+                                        $set('line_total', $qty * $cost);
+                                        self::updateTotals($get, $set);
+                                    }),
+
+                                TextInput::make('units_per_pack')
+                                    ->numeric()
+                                    ->default(1)
+                                    ->live(onBlur: true)
+                                    ->visible(fn (callable $get) => $get('entry_mode'))
+                                    ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                                        $packs = floatval($get('pack_quantity') ?? 0);
+                                        $qty = $packs * floatval($state ?? 1);
+                                        $set('qty_ordered', $qty);
+
+                                        $cost = floatval($get('unit_cost') ?? 0);
+                                        $set('line_total', $qty * $cost);
+                                        self::updateTotals($get, $set);
+                                    }),
+
                                 TextInput::make('qty_ordered')
                                     ->required()
                                     ->numeric()
                                     ->minValue(1)
                                     ->default(1)
                                     ->label('Qty Ordered')
-                                    ->live()
+                                    ->readOnly(fn (callable $get) => $get('entry_mode'))
+                                    ->live(onBlur: true)
                                     ->afterStateUpdated(function ($state, callable $set, callable $get) {
                                         $qty = floatval($state ?? 0);
                                         $cost = floatval($get('unit_cost') ?? 0);
                                         $set('line_total', $qty * $cost);
+                                        self::updateTotals($get, $set);
                                     }),
+
                                 TextInput::make('unit_cost')
                                     ->required()
                                     ->numeric()
                                     ->minValue(0)
                                     ->prefix('FCFA ')
                                     ->label('Unit Cost')
-                                    ->live()
+                                    ->live(onBlur: true)
                                     ->afterStateUpdated(function ($state, callable $set, callable $get) {
                                         $cost = floatval($state ?? 0);
                                         $qty = floatval($get('qty_ordered') ?? 0);
                                         $set('line_total', $qty * $cost);
+                                        self::updateTotals($get, $set);
                                     }),
+
                                 TextInput::make('line_total')
                                     ->required()
                                     ->numeric()
-                                    ->readOnly()
                                     ->prefix('FCFA ')
                                     ->default(0.00)
-                                    ->label('Line Total'),
+                                    ->label('Line Total')
+                                    ->helperText('Auto-calculated.')
+                                    ->live(onBlur: true)
+                                    ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                                        self::updateTotals($get, $set);
+                                    }),
+
                                 TextInput::make('notes')
                                     ->label('Notes')
-                                    ->maxLength(255),
+                                    ->maxLength(255)
+                                    ->columnSpanFull(),
                             ]),
                     ])
                     ->columnSpanFull()
-                    ->live()
+                    ->live(debounce: 500)
                     ->afterStateUpdated(function (callable $set, callable $get) {
                         $lines = $get('purchaseOrderLines') ?? [];
                         $total = 0;
                         foreach ($lines as $line) {
-                            $qty = floatval($line['qty_ordered'] ?? 0);
-                            $cost = floatval($line['unit_cost'] ?? 0);
-                            $total += $qty * $cost;
+                            $total += floatval($line['line_total'] ?? 0);
                         }
                         $set('total_amount', $total);
                     }),
 
-                Grid::make(3)
+                Grid::make(['default' => 1, 'md' => 3])
                     ->schema([
                         TextInput::make('total_amount')
                             ->required()
@@ -131,3 +224,4 @@ class PurchaseOrderForm
             ]);
     }
 }
+

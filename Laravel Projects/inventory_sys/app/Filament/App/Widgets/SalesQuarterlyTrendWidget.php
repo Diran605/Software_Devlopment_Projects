@@ -12,7 +12,7 @@ class SalesQuarterlyTrendWidget extends ChartWidget
 {
     use InteractsWithPageFilters;
 
-    protected ?string $heading = 'Financial Sales Trend (Quarterly)';
+    protected ?string $heading = 'Financial Sales Trend (Monthly)';
 
     protected int | string | array $columnSpan = 'full';
 
@@ -20,7 +20,7 @@ class SalesQuarterlyTrendWidget extends ChartWidget
 
     protected function getData(): array
     {
-        $tenantId = Filament::getTenant()?->id;
+        $tenantId = Filament::getTenant()?->id ?? ($this->filters['branch_id'] ?? null);
 
         // Determine the year to display from dashboard filters
         $period = $this->filters['period'] ?? 'month';
@@ -33,32 +33,30 @@ class SalesQuarterlyTrendWidget extends ChartWidget
             }
         }
 
-        $quarters = [
-            'Q1' => [1, 3],
-            'Q2' => [4, 6],
-            'Q3' => [7, 9],
-            'Q4' => [10, 12],
+        $months = [
+            1  => 'Jan', 2  => 'Feb', 3  => 'Mar',
+            4  => 'Apr', 5  => 'May', 6  => 'Jun',
+            7  => 'Jul', 8  => 'Aug', 9  => 'Sep',
+            10 => 'Oct', 11 => 'Nov', 12 => 'Dec',
         ];
 
         $labels  = [];
         $revenue = [];
         $profit  = [];
 
-        foreach ($quarters as $label => [$startMonth, $endMonth]) {
+        foreach ($months as $monthNum => $label) {
             $labels[] = "{$label} {$year}";
 
             $qRevenue = SalesOrder::query()
                 ->when($tenantId, fn ($q) => $q->where('branch_id', $tenantId))
                 ->whereYear('sold_at', $year)
-                ->whereMonth('sold_at', '>=', $startMonth)
-                ->whereMonth('sold_at', '<=', $endMonth)
+                ->whereMonth('sold_at', $monthNum)
                 ->sum('grand_total');
 
             $qProfit = SalesOrder::query()
                 ->when($tenantId, fn ($q) => $q->where('branch_id', $tenantId))
                 ->whereYear('sold_at', $year)
-                ->whereMonth('sold_at', '>=', $startMonth)
-                ->whereMonth('sold_at', '<=', $endMonth)
+                ->whereMonth('sold_at', $monthNum)
                 ->sum('gross_profit');
 
             $revenue[] = (float) $qRevenue;

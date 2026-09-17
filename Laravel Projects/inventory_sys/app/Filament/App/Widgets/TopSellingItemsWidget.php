@@ -20,7 +20,7 @@ class TopSellingItemsWidget extends Widget
     protected function getViewData(): array
     {
         $tenant = Filament::getTenant();
-        $branchId = $tenant ? $tenant->id : null;
+        $branchId = $tenant ? $tenant->id : ($this->filters['branch_id'] ?? null);
 
         // Date logic from filters
         $period = $this->filters['period'] ?? 'today';
@@ -50,7 +50,7 @@ class TopSellingItemsWidget extends Widget
             ->join('sales_orders', 'sales_orders.id', '=', 'sales_order_lines.sales_order_id')
             ->join('items', 'items.id', '=', 'sales_order_lines.item_id')
             ->leftJoin('item_categories', 'item_categories.id', '=', 'items.category_id')
-            ->where('sales_orders.branch_id', $branchId)
+            ->when($branchId, fn ($q) => $q->where('sales_orders.branch_id', $branchId))
             ->whereBetween('sales_orders.sold_at', [$from, $to])
             ->whereNull('sales_order_lines.deleted_at')
             ->groupBy('sales_order_lines.item_id', 'items.name', 'item_categories.name')

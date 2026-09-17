@@ -2,6 +2,10 @@
 
 namespace App\Filament\App\Resources\Items\Tables;
 
+use Filament\Actions\ExportAction;
+use Filament\Actions\ExportBulkAction;
+use App\Filament\Exports\ItemExporter;
+
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Actions\DeleteAction;
@@ -73,6 +77,9 @@ class ItemsTable
                     ->label('Active Status'),
             ])
             ->defaultSort('name')
+            ->headerActions([
+                ExportAction::make()->exporter(ItemExporter::class),
+            ])
             ->actions([
                 ViewAction::make(),
                 EditAction::make(),
@@ -80,6 +87,7 @@ class ItemsTable
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
+                    ExportBulkAction::make()->exporter(ItemExporter::class),
                     DeleteBulkAction::make(),
                 ]),
             ])

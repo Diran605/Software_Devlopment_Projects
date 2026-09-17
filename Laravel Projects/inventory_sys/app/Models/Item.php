@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'branch_id', 'category_id', 'uom_id', 'packaging_type_id',
     'name', 'description', 'unit_cost', 'min_selling_price',
     'selling_price', 'reorder_level', 'reorder_quantity',
-    'is_packaged', 'is_active'
+    'is_packaged', 'is_active', 'packaging_notes'
 ])]
 class Item extends Model
 {

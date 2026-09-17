@@ -49,8 +49,7 @@ class GoodsReceivedNoteForm
                             ->nullable()
                             ->searchable()
                             ->preload()
-                            ->live()
-                            ->afterStateUpdated(function ($state, callable $set) {
+                            ->live(debounce: 500)->afterStateUpdated(function ($state, callable $set) {
                                 if ($state) {
                                     $po = \App\Models\PurchaseOrder::with('purchaseOrderLines')->find($state);
                                     if ($po) {
@@ -60,14 +59,20 @@ class GoodsReceivedNoteForm
                                         foreach ($po->purchaseOrderLines as $poLine) {
                                             $remaining = $poLine->qty_ordered - $poLine->qty_received;
                                             if ($remaining > 0) {
+                                                $isPack = $poLine->entry_mode === 'pack';
+                                                $units = max(1, $poLine->units_per_pack ?? 1);
+                                                $remPacks = $isPack ? floor($remaining / $units) : 0;
+                                                $remQty = $isPack ? ($remPacks * $units) : $remaining;
+
                                                 $lines[] = [
                                                     'item_id' => $poLine->item_id,
-                                                    'entry_mode' => 'unit',
-                                                    'pack_quantity' => 0,
-                                                    'units_per_pack' => 1,
-                                                    'qty_received' => $remaining,
+                                                    'entry_mode' => $isPack ? 'pack' : 'unit',
+                                                    'packaging_type_id' => $poLine->packaging_type_id,
+                                                    'pack_quantity' => $remPacks,
+                                                    'units_per_pack' => $units,
+                                                    'qty_received' => $remQty,
                                                     'unit_cost' => $poLine->unit_cost,
-                                                    'line_total' => $remaining * $poLine->unit_cost,
+                                                    'line_total' => $remQty * $poLine->unit_cost,
                                                     'batch_number' => 'BCH-' . strtoupper(uniqid()),
                                                     'expiry_date' => null,
                                                 ];
@@ -109,8 +114,7 @@ class GoodsReceivedNoteForm
                                     ->required()
                                     ->searchable()
                                     ->label('Item')
-                                    ->live()
-                                    ->afterStateUpdated(function ($state, callable $set) {
+                                    ->live(debounce: 500)->afterStateUpdated(function ($state, callable $set) {
                                          if ($state) {
                                              $item = \App\Models\Item::find($state);
                                              if ($item) {
@@ -169,8 +173,7 @@ class GoodsReceivedNoteForm
                                     ->minValue(0)
                                     ->prefix('FCFA ')
                                     ->label('Unit Cost')
-                                    ->live()
-                                    ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                                    ->live(debounce: 500)->afterStateUpdated(function ($state, callable $set, callable $get) {
                                         $cost = floatval($state ?? 0);
                                         $qty = floatval($get('qty_received') ?? 0);
                                         $set('line_total', $qty * $cost);
@@ -192,8 +195,7 @@ class GoodsReceivedNoteForm
                             ]),
                     ])
                     ->columnSpanFull()
-                    ->live()
-                    ->afterStateUpdated(function (callable $set, callable $get) {
+                    ->live(debounce: 500)->afterStateUpdated(function (callable $set, callable $get) {
                         $lines = $get('grnLineItems') ?? [];
                         $totalQty = 0;
                         $totalCost = 0;

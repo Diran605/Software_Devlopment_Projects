@@ -47,6 +47,10 @@ class AdminPanelProvider extends PanelProvider
                 \App\Filament\App\Pages\LowStockReportPage::class,
                 \App\Filament\App\Pages\ClearanceActivityReportPage::class,
                 \App\Filament\App\Pages\ExpenseReportPage::class,
+                  \App\Filament\App\Pages\ProductProfitLossReportPage::class,
+                  \App\Filament\App\Pages\SalesPriceAuditReportPage::class,
+                  \App\Filament\App\Pages\TrendingProductsReportPage::class,
+                  \App\Filament\App\Pages\AdministerBackup::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Admin/Widgets'), for: 'App\\Filament\\Admin\\Widgets')
             ->middleware([

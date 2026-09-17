@@ -8,7 +8,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[Fillable([
     'purchase_order_id', 'item_id', 'qty_ordered',
-    'qty_received', 'unit_cost', 'line_total', 'notes'
+    'qty_received', 'unit_cost', 'line_total', 'notes',
+    'packaging_type_id', 'entry_mode', 'pack_quantity', 'units_per_pack'
 ])]
 class PurchaseOrderLine extends Model
 {

@@ -2,6 +2,10 @@
 
 namespace App\Filament\Admin\Resources\Items\Tables;
 
+use Filament\Actions\ExportAction;
+use Filament\Actions\ExportBulkAction;
+use App\Filament\Exports\ItemExporter;
+
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -74,6 +78,7 @@ class ItemsTable
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
+                    ExportBulkAction::make()->exporter(ItemExporter::class),
                     DeleteBulkAction::make(),
                 ]),
             ])

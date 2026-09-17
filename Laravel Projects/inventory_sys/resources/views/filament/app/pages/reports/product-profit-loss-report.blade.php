@@ -19,8 +19,14 @@
                         Apply Filters
                     </x-filament::button>
                     
-                    <x-filament::button wire:click="exportPdf('reports.product-profit-loss.pdf')" color="success" icon="heroicon-o-document-arrow-down">
+                    <x-filament::button type="button" wire:click="exportPdf('reports.product-profit-loss.pdf')" color="success" icon="heroicon-o-document-arrow-down">
                         Export PDF
+                    </x-filament::button>
+                    <x-filament::button type="button" wire:click="exportCsv('product-profit-loss-report')" color="info" icon="heroicon-o-table-cells">
+                        Export CSV
+                    </x-filament::button>
+                    <x-filament::button type="button" wire:click="exportExcel('product-profit-loss-report')" color="warning" icon="heroicon-o-document-text">
+                        Export Excel
                     </x-filament::button>
                 </div>
             </form>

@@ -70,8 +70,14 @@
                         Filter Report
                     </x-filament::button>
                     
-                    <x-filament::button wire:click="exportPdf('reports.stock-valuation.pdf')" color="success" icon="heroicon-o-document-arrow-down">
+                    <x-filament::button type="button" wire:click="exportPdf('reports.stock-valuation.pdf')" color="success" icon="heroicon-o-document-arrow-down">
                         Export PDF
+                    </x-filament::button>
+                    <x-filament::button type="button" wire:click="exportCsv('stock-valuation-report')" color="info" icon="heroicon-o-table-cells">
+                        Export CSV
+                    </x-filament::button>
+                    <x-filament::button type="button" wire:click="exportExcel('stock-valuation-report')" color="warning" icon="heroicon-o-document-text">
+                        Export Excel
                     </x-filament::button>
                 </div>
             </form>
