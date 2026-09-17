@@ -31,12 +31,34 @@ trait HasInventoryCountView
                 $this->getFormContentComponent(),
                 Section::make('Count Progress')
                     ->schema([
-                        View::make('filament.inventory-counts.summary')
-                            ->viewData(fn (): array => [
-                                'summary' => $this->record->countSummary(),
-                                'variance' => $this->record->varianceSummary(),
-                                'showVariance' => $this->record->status === 'pending_approval',
-                            ]),
+                        \Filament\Schemas\Components\Grid::make(4)->schema([
+                        \Filament\Schemas\Components\Group::make([
+                            \Filament\Schemas\Components\Text::make('Total Lines')->color('gray')->size('sm'),
+                            \Filament\Schemas\Components\Text::make(fn () => number_format($this->record->countSummary()['total'] ?? 0))->size('xl')->weight('semibold'),
+                        ]),
+                        \Filament\Schemas\Components\Group::make([
+                            \Filament\Schemas\Components\Text::make('Counted')->color('gray')->size('sm'),
+                            \Filament\Schemas\Components\Text::make(fn () => number_format($this->record->countSummary()['counted'] ?? 0))->size('xl')->weight('semibold')->color('success'),
+                        ]),
+                        \Filament\Schemas\Components\Group::make([
+                            \Filament\Schemas\Components\Text::make('Remaining')->color('gray')->size('sm'),
+                            \Filament\Schemas\Components\Text::make(fn () => number_format($this->record->countSummary()['remaining'] ?? 0))->size('xl')->weight('semibold')->color('warning'),
+                        ]),
+                        \Filament\Schemas\Components\Group::make([
+                            \Filament\Schemas\Components\Text::make('Net Variance')->color('gray')->size('sm'),
+                            \Filament\Schemas\Components\Text::make(fn () => number_format($this->record->countSummary()['net_variance_value'] ?? 0) . ' XAF')
+                                ->size('xl')
+                                ->weight('semibold')
+                                ->color(fn () => ($this->record->countSummary()['net_variance_value'] ?? 0) < 0 ? 'danger' : (($this->record->countSummary()['net_variance_value'] ?? 0) > 0 ? 'success' : 'gray')),
+                        ]),
+                        \Filament\Schemas\Components\Group::make([
+                            \Filament\Schemas\Components\Text::make('Count Progress')->color('gray')->size('sm'),
+                            \Filament\Schemas\Components\Text::make(fn () => ($this->record->countSummary()['progress_percent'] ?? 0) . '%')
+                                ->size('xl')
+                                ->weight('bold')
+                                ->color('primary'),
+                        ])->columnSpanFull(),
+                    ])
                     ]),
                 Section::make('Count Lines')
                     ->extraAttributes(['class' => 'inventory-count-lines-table'])
@@ -128,13 +150,39 @@ trait HasInventoryCountView
                                 $batch->qty_remaining = $line->qty_counted;
                                 if ($line->unit_cost != $batch->unit_cost) {
                                     $batch->unit_cost = $line->unit_cost;
-
+                                    
                                     \App\Models\ItemStockLevel::where('branch_id', $this->record->branch_id)
                                         ->where('department_id', $this->record->department_id)
                                         ->where('item_id', $line->item_id)
                                         ->update(['unit_cost' => $line->unit_cost]);
                                 }
                                 $batch->save();
+                            } elseif ($variance > 0) {
+                                $batch = \App\Models\BatchInventory::create([
+                                    'branch_id' => $this->record->branch_id,
+                                    'department_id' => $this->record->department_id,
+                                    'item_id' => $line->item_id,
+                                    'source_type' => \App\Models\InventoryCount::class,
+                                    'source_id' => $this->record->id,
+                                    'batch_number' => 'FOUND-' . date('YmdHi') . '-' . rand(10, 99),
+                                    'qty_received' => $line->qty_counted,
+                                    'qty_remaining' => $line->qty_counted,
+                                    'unit_cost' => $line->unit_cost,
+                                    'received_at' => now(),
+                                ]);
+                                $line->batch_inventory_id = $batch->id;
+                                $line->save();
+                            } elseif ($variance > 0) {
+                                $batch = \App\Models\BatchInventory::create([
+                                    'branch_id' => $this->record->branch_id,
+                                    'department_id' => $this->record->department_id,
+                                    'item_id' => $line->item_id,
+                                    'batch_number' => 'FOUND-' . date('YmdHi') . '-' . rand(10, 99),
+                                    'qty_remaining' => $line->qty_counted,
+                                    'unit_cost' => $line->unit_cost,
+                                ]);
+                                $line->batch_inventory_id = $batch->id;
+                                $line->save();
                             }
 
                             if ($line->selling_price !== null && $line->selling_price != $line->item->selling_price) {
@@ -250,7 +298,65 @@ trait HasInventoryCountView
                     }),
             ])
             ->headerActions([
-                Action::make('expandAllGroups')
+                \Filament\Actions\Action::make('add_line')
+                    ->label('Add Unlisted Item')
+                    ->icon('heroicon-o-plus')
+                    ->form([
+                        \Filament\Forms\Components\Select::make('item_id')
+                            ->label('Item')
+                            ->options(\App\Models\Item::pluck('name', 'id'))
+                            ->searchable()
+                            ->required()
+                            ->reactive()
+                            ->afterStateUpdated(fn (callable $set) => $set('batch_inventory_id', null)),
+                        \Filament\Forms\Components\Select::make('batch_inventory_id')
+                            ->label('Batch (Depleted/Hidden)')
+                            ->options(function (callable $get) {
+                                if (!$get('item_id')) return [];
+                                return \App\Models\BatchInventory::where('item_id', $get('item_id'))
+                                    ->where('branch_id', $this->record->branch_id)
+                                    ->whereNotIn('id', $this->record->lines()->whereNotNull('batch_inventory_id')->pluck('batch_inventory_id'))
+                                    ->get()
+                                    ->mapWithKeys(fn($b) => [$b->id => $b->batch_number . ' (System Qty: ' . $b->qty_remaining . ')'])
+                                    ->toArray();
+                            })
+                            ->searchable(),
+                        \Filament\Forms\Components\TextInput::make('qty_counted')
+                            ->required()
+                            ->numeric()
+                            ->minValue(0)
+                            ->label('Actual Qty'),
+                        \Filament\Forms\Components\TextInput::make('unit_cost')
+                            ->required()
+                            ->numeric()
+                            ->minValue(0)
+                            ->label('Cost Price'),
+                        \Filament\Forms\Components\TextInput::make('selling_price')
+                            ->required()
+                            ->numeric()
+                            ->minValue(0)
+                            ->label('Selling Price'),
+                    ])
+                    ->action(function (array $data): void {
+                        $data['inventory_count_id'] = $this->record->id;
+                        
+                        $systemQty = 0;
+                        if (!empty($data['batch_inventory_id'])) {
+                            $batch = \App\Models\BatchInventory::find($data['batch_inventory_id']);
+                            if ($batch) {
+                                $systemQty = $batch->qty_remaining;
+                            }
+                        }
+                        
+                        $data['qty_system'] = $systemQty;
+                        $data['qty_variance'] = $data['qty_counted'] - $systemQty;
+                        $data['variance_value'] = $data['qty_variance'] * $data['unit_cost'];
+                        
+                        \App\Models\InventoryCountLine::create($data);
+                    })
+                    ->successNotificationTitle('Item added to count')
+                    ->visible(fn () => in_array($this->record->status, ['draft', 'in_progress'])),
+Action::make('expandAllGroups')
                     ->label('Expand All')
                     ->link()
                     ->action(function () use ($allGroupTitles): void {

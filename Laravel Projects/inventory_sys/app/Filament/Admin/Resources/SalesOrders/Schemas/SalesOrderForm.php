@@ -130,7 +130,7 @@ class SalesOrderForm
                                             $tenantId = \Filament\Facades\Filament::getTenant()->id;
                                             $stock = \App\Models\ItemStockLevel::where('item_id', $itemId)
                                                 ->where('branch_id', $tenantId)
-                                                ->whereNotNull('department_id')
+                                                ->when(fn() => $get('../../department_id'), fn($q) => $q->where('department_id', $get('../../department_id')))
                                                 ->sum('qty_on_hand');
                                             return "Qty on hand: {$stock}";
                                         }
