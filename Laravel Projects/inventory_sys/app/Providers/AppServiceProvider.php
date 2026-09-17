@@ -23,6 +23,13 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Fix for Windows: ensure SYSTEMROOT is available to child processes (like mysqldump).
+        // Without this, Windows Winsock cannot initialize in subprocesses → error 10106.
+        if (PHP_OS_FAMILY === 'Windows' && ! getenv('SYSTEMROOT')) {
+            putenv('SYSTEMROOT=C:\\Windows');
+            $_ENV['SYSTEMROOT'] = 'C:\\Windows';
+        }
+
         $auditListener = app(ModelEventAuditListener::class);
 
         foreach (['created', 'updated', 'deleted', 'restored'] as $event) {

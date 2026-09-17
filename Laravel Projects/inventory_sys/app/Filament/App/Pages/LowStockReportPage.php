@@ -49,7 +49,8 @@ class LowStockReportPage extends Page implements HasForms
     public function mount(): void
     {
         $this->form->fill([
-            'branch_id' => Filament::getTenant()?->id,
+            'branch_id'     => Filament::getTenant()?->id,
+            'department_id' => null,
         ]);
     }
 
@@ -57,7 +58,7 @@ class LowStockReportPage extends Page implements HasForms
     {
         return $form
             ->schema([
-                Grid::make(1)
+                Grid::make(2)
                     ->schema([
                         Select::make('branch_id')
                             ->label('Branch')
@@ -67,6 +68,20 @@ class LowStockReportPage extends Page implements HasForms
                             ->preload()
                             ->live()
                             ->visible(! Filament::getTenant()),
+                        Select::make('department_id')
+                            ->label('Department')
+                            ->options(function () {
+                                $branchId = Filament::getTenant()?->id ?? ($this->data['branch_id'] ?? null);
+                                return \App\Models\Department::query()
+                                    ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
+                                    ->where('is_active', true)
+                                    ->orderBy('name')
+                                    ->pluck('name', 'id');
+                            })
+                            ->nullable()
+                            ->searchable()
+                            ->preload()
+                            ->live(),
                     ]),
             ])
             ->statePath('data');
@@ -80,6 +95,7 @@ class LowStockReportPage extends Page implements HasForms
     public function getReportData()
     {
         $branchId = Filament::getTenant()?->id ?? ($this->data['branch_id'] ?? null);
+        $departmentId = $this->data['department_id'] ?? null;
 
         return ItemStockLevel::query()
             ->join('items', 'items.id', '=', 'item_stock_levels.item_id')
@@ -87,6 +103,10 @@ class LowStockReportPage extends Page implements HasForms
             ->whereNotNull('item_stock_levels.department_id')
             ->where('items.reorder_level', '>', 0)
             ->whereColumn('item_stock_levels.qty_on_hand', '<=', 'items.reorder_level')
+            ->when($departmentId, fn ($q) => $q->whereIn('items.id',
+                \App\Models\StockMovement::where('department_id', $departmentId)
+                    ->distinct()->pluck('item_id')
+            ))
             ->select('item_stock_levels.*')
             ->with(['item', 'item.category'])
             ->orderBy('item_stock_levels.qty_on_hand')

@@ -49,11 +49,12 @@ class PurchaseReportPage extends Page implements HasForms
     public function mount(): void
     {
         $this->form->fill([
-            'branch_id'   => Filament::getTenant()?->id,
-            'date_from'   => now()->startOfMonth()->format('Y-m-d'),
-            'date_to'     => now()->endOfMonth()->format('Y-m-d'),
-            'supplier_id' => null,
-            'status'      => [],
+            'branch_id'     => Filament::getTenant()?->id,
+            'date_from'     => now()->startOfMonth()->format('Y-m-d'),
+            'date_to'       => now()->endOfMonth()->format('Y-m-d'),
+            'supplier_id'   => null,
+            'status'        => [],
+            'department_id' => null,
         ]);
     }
 
@@ -63,7 +64,7 @@ class PurchaseReportPage extends Page implements HasForms
 
         return $form
             ->schema([
-                Grid::make($tenantId ? 4 : 5)
+                Grid::make($tenantId ? 5 : 6)
                     ->schema([
                         Select::make('branch_id')
                             ->label('Branch')
@@ -107,6 +108,21 @@ class PurchaseReportPage extends Page implements HasForms
                             ])
                             ->preload()
                             ->live(),
+
+                        Select::make('department_id')
+                            ->label('Department')
+                            ->options(function () use ($tenantId) {
+                                $branchId = $tenantId ?? ($this->data['branch_id'] ?? null);
+                                return \App\Models\Department::query()
+                                    ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
+                                    ->where('is_active', true)
+                                    ->orderBy('name')
+                                    ->pluck('name', 'id');
+                            })
+                            ->nullable()
+                            ->searchable()
+                            ->preload()
+                            ->live(),
                     ])
             ])
             ->statePath('data');
@@ -126,6 +142,7 @@ class PurchaseReportPage extends Page implements HasForms
         $to         = $this->data['date_to'] ?? null;
         $supplierId = $this->data['supplier_id'] ?? null;
         $statuses   = $this->data['status'] ?? [];
+        $departmentId = $this->data['department_id'] ?? null;
 
         return \App\Models\PurchaseOrder::query()
             ->when($tenantId, fn ($q) => $q->where('branch_id', $tenantId))
@@ -133,6 +150,7 @@ class PurchaseReportPage extends Page implements HasForms
             ->when($to,   fn ($q) => $q->whereDate('ordered_at', '<=', $to))
             ->when($supplierId, fn ($q) => $q->where('supplier_id', $supplierId))
             ->when(!empty($statuses), fn ($q) => $q->whereIn('status', $statuses))
+            ->when($departmentId, fn ($q) => $q->whereHas('goodsReceivedNotes', fn ($g) => $g->where('department_id', $departmentId)))
             ->with(['supplier', 'purchaseOrderLines', 'purchaseOrderLines.item'])
             ->orderBy('ordered_at', 'desc')
             ->get();

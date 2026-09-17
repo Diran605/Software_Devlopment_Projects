@@ -38,6 +38,12 @@ trait ProvidesReportPdfParams
             fputcsv($file, $headers);
             foreach ($data as $row) {
                 $rowArray = is_array($row) ? $row : (is_object($row) && method_exists($row, "toArray") ? $row->toArray() : (array) $row);
+                // Sanitize nested arrays/objects for CSV/Excel output
+                foreach ($rowArray as $key => $value) {
+                    if (is_array($value) || is_object($value)) {
+                        $rowArray[$key] = json_encode($value);
+                    }
+                }
                 fputcsv($file, $rowArray);
             }
             fclose($file);
@@ -77,6 +83,12 @@ trait ProvidesReportPdfParams
         $rowNum = 2;
         foreach ($data as $row) {
             $rowArray = is_array($row) ? $row : (is_object($row) && method_exists($row, "toArray") ? $row->toArray() : (array) $row);
+                // Sanitize nested arrays/objects for CSV/Excel output
+                foreach ($rowArray as $key => $value) {
+                    if (is_array($value) || is_object($value)) {
+                        $rowArray[$key] = json_encode($value);
+                    }
+                }
             $col = 1;
             foreach ($rowArray as $value) {
                 $sheet->setCellValue([$col++, $rowNum], $value);

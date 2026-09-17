@@ -50,10 +50,11 @@ class SalesReportPage extends Page implements HasForms
     public function mount(): void
     {
         $this->form->fill([
-            'branch_id' => Filament::getTenant()?->id,
-            'date_from' => now()->startOfMonth()->format('Y-m-d'),
-            'date_to' => now()->endOfMonth()->format('Y-m-d'),
-            'group_by' => 'date',
+            'branch_id'     => Filament::getTenant()?->id,
+            'date_from'     => now()->startOfMonth()->format('Y-m-d'),
+            'date_to'       => now()->endOfMonth()->format('Y-m-d'),
+            'group_by'      => 'date',
+            'department_id' => null,
         ]);
     }
 
@@ -61,7 +62,7 @@ class SalesReportPage extends Page implements HasForms
     {
         return $form
             ->schema([
-                Grid::make(Filament::getTenant() ? 3 : 4)
+                Grid::make(Filament::getTenant() ? 4 : 5)
                     ->schema([
                         Select::make('branch_id')
                             ->label('Branch')
@@ -87,6 +88,20 @@ class SalesReportPage extends Page implements HasForms
                             ])
                             ->required()
                             ->live(),
+                        Select::make('department_id')
+                            ->label('Department')
+                            ->options(function () {
+                                $branchId = Filament::getTenant()?->id ?? ($this->data['branch_id'] ?? null);
+                                return \App\Models\Department::query()
+                                    ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
+                                    ->where('is_active', true)
+                                    ->orderBy('name')
+                                    ->pluck('name', 'id');
+                            })
+                            ->nullable()
+                            ->searchable()
+                            ->preload()
+                            ->live(),
                     ])
             ])
             ->statePath('data');
@@ -105,12 +120,14 @@ class SalesReportPage extends Page implements HasForms
         $from = $this->data['date_from'] ?? null;
         $to = $this->data['date_to'] ?? null;
         $groupBy = $this->data['group_by'] ?? 'date';
+        $departmentId = $this->data['department_id'] ?? null;
 
         $query = \App\Models\SalesOrderLine::query()
             ->join('sales_orders', 'sales_orders.id', '=', 'sales_order_lines.sales_order_id')
             ->when($tenantId, fn ($q) => $q->where('sales_orders.branch_id', $tenantId))
             ->when($from, fn ($q) => $q->whereDate('sales_orders.sold_at', '>=', $from))
-            ->when($to, fn ($q) => $q->whereDate('sales_orders.sold_at', '<=', $to));
+            ->when($to, fn ($q) => $q->whereDate('sales_orders.sold_at', '<=', $to))
+            ->when($departmentId, fn ($q) => $q->where('sales_orders.department_id', $departmentId));
 
         if ($groupBy === 'date') {
             return $query

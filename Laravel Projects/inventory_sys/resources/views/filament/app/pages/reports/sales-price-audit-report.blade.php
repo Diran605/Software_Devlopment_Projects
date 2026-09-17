@@ -1,7 +1,7 @@
 <x-filament-panels::page>
 <style>
     /* ── Table base ── */
-    .audit-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+    .audit-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
     .audit-table th {
         padding: 0.75rem 1rem;
         font-weight: 600;
@@ -11,7 +11,7 @@
         background: rgb(var(--color-primary-700) / 0.25);
         color: rgb(var(--color-primary-300));
         border-bottom: 1px solid rgb(var(--color-primary-700) / 0.4);
-        white-space: nowrap;
+        white-space: normal; line-height: 1.2; vertical-align: bottom;
     }
     .audit-table td { padding: 0.75rem 1rem; border-bottom: 1px solid rgba(255,255,255,0.06); }
     .text-right { text-align: right !important; }
@@ -74,7 +74,7 @@
     <x-filament::card>
         <form wire:submit.prevent="submit" class="space-y-4">
             {{ $this->form }}
-            <div class="flex items-center gap-3 mt-4">
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-top: 1rem; flex-wrap: wrap;">
                 <x-filament::button type="submit" color="primary" icon="heroicon-o-funnel">
                     Generate Report
                 </x-filament::button>
@@ -92,16 +92,10 @@
                     </x-filament::button>
                 <x-filament::button
                     wire:click="exportPdf('reports.sales-price-audit.pdf', { summary_only: 1 })"
-                    color="gray"
+                    color="secondary"
                     icon="heroicon-o-document-text">
                     Export Summary Only
                 </x-filament::button>
-                    <x-filament::button type="button" wire:click="exportCsv('sales-price-audit-report')" color="info" icon="heroicon-o-table-cells">
-                        Export CSV
-                    </x-filament::button>
-                    <x-filament::button type="button" wire:click="exportExcel('sales-price-audit-report')" color="warning" icon="heroicon-o-document-text">
-                        Export Excel
-                    </x-filament::button>
             </div>
         </form>
     </x-filament::card>
@@ -128,11 +122,11 @@
                         <th style="width:3%" class="text-center">S/N</th>
                         <th>Product</th>
                         <th>Category</th>
-                        <th class="text-right">Qty Available<br><span style="font-weight:400;text-transform:none;font-size:0.65rem;opacity:0.7">(start + received)</span></th>
+                        <th class="text-right" style="min-width: 100px;">Qty Available<br><span style="font-weight:400;text-transform:none;font-size:0.65rem;opacity:0.7">(start + received)</span></th>
                         <th class="text-right">Qty Sold</th>
-                        <th class="text-right">Qty Remaining<br><span style="font-weight:400;text-transform:none;font-size:0.65rem;opacity:0.7">(at period end)</span></th>
-                        <th class="text-right">Expected Revenue<br><span style="font-weight:400;text-transform:none;font-size:0.65rem;opacity:0.7">(at standard price)</span></th>
-                        <th class="text-right">Actual Revenue<br><span style="font-weight:400;text-transform:none;font-size:0.65rem;opacity:0.7">(as recorded)</span></th>
+                        <th class="text-right" style="min-width: 100px;">Qty Remaining<br><span style="font-weight:400;text-transform:none;font-size:0.65rem;opacity:0.7">(at period end)</span></th>
+                        <th class="text-right" style="min-width: 110px;">Expected Revenue<br><span style="font-weight:400;text-transform:none;font-size:0.65rem;opacity:0.7">(at standard price)</span></th>
+                        <th class="text-right" style="min-width: 110px;">Actual Revenue<br><span style="font-weight:400;text-transform:none;font-size:0.65rem;opacity:0.7">(as recorded)</span></th>
                         <th class="text-right">Variance</th>
                         <th class="text-center">Remark</th>
                     </tr>
@@ -154,27 +148,27 @@
                             x-on:click="expandedRows.includes({{ $product->item_id }}) ? expandedRows = expandedRows.filter(id => id !== {{ $product->item_id }}) : expandedRows.push({{ $product->item_id }})"
                             :class="{ 'expanded': expandedRows.includes({{ $product->item_id }}) }"
                         >
-                            <td class="text-center" style="color: rgb(var(--color-primary-400));">
+                            <td style="text-align:center; color: rgb(var(--color-primary-400));">
                                 <span class="expand-icon" :class="{ 'rotated': expandedRows.includes({{ $product->item_id }}) }">▶</span>
                             </td>
-                            <td class="text-center text-gray-400 text-sm">{{ $loop->iteration }}</td>
-                            <td class="font-semibold text-white">{{ $product->item_name }}</td>
-                            <td class="text-gray-400 text-sm">{{ $product->category_name ?? '—' }}</td>
-                            <td class="text-right text-gray-300">{{ number_format($product->qty_available) }}</td>
-                            <td class="text-right text-white font-medium">{{ number_format($product->total_qty_sold) }}</td>
-                            <td class="text-right text-gray-300">{{ number_format($product->qty_remaining) }}</td>
-                            <td class="text-right text-gray-300">{{ number_format($product->expected_revenue, 0) }}</td>
-                            <td class="text-right text-white font-medium">{{ number_format($product->actual_revenue, 0) }}</td>
-                            <td class="text-right">
+                            <td style="text-align:center; color:#9ca3af; font-size:0.8rem;">{{ $loop->iteration }}</td>
+                            <td style="font-weight:600; color:#f1f5f9;">{{ $product->item_name }}</td>
+                            <td style="color:#9ca3af; font-size:0.8rem;">{{ $product->category_name ?? '—' }}</td>
+                            <td style="text-align:right; color:#d1d5db;">{{ number_format($product->qty_available) }}</td>
+                            <td style="text-align:right; color:#fff; font-weight:600;">{{ number_format($product->total_qty_sold) }}</td>
+                            <td style="text-align:right; color:#d1d5db;">{{ number_format($product->qty_remaining) }}</td>
+                            <td style="text-align:right; color:#d1d5db;">{{ number_format($product->expected_revenue, 0) }}</td>
+                            <td style="text-align:right; color:#fff; font-weight:600;">{{ number_format($product->actual_revenue, 0) }}</td>
+                            <td style="text-align:right;">
                                 @if($isShortfall)
-                                    <span style="color:#f87171">−{{ number_format(abs($product->discrepancy), 0) }}</span>
+                                    <span style="color:#f87171; font-weight:600;">−{{ number_format(abs($product->discrepancy), 0) }}</span>
                                 @elseif($isSurplus)
-                                    <span style="color:#fbbf24">+{{ number_format($product->discrepancy, 0) }}</span>
+                                    <span style="color:#fbbf24; font-weight:600;">+{{ number_format($product->discrepancy, 0) }}</span>
                                 @else
-                                    <span style="color:#6b7280">0</span>
+                                    <span style="color:#6b7280;">0</span>
                                 @endif
                             </td>
-                            <td class="text-center">
+                            <td style="text-align:center;">
                                 @if($isShortfall)
                                     <span class="badge badge-shortfall">⚠ Below Standard ({{ $pct }}%)</span>
                                 @elseif($isSurplus)
@@ -212,25 +206,25 @@
                                                 @endphp
                                                 <tr>
                                                     <td>{{ \Carbon\Carbon::parse($tx->sold_at)->format('M d, Y H:i') }}</td>
-                                                    <td style="font-family:monospace;color:rgb(var(--color-primary-300))">{{ $tx->order_number }}</td>
+                                                    <td style="font-family:monospace; color:rgb(var(--color-primary-300));">{{ $tx->order_number }}</td>
                                                     <td>{{ $tx->cashier ?? 'Unknown' }}</td>
-                                                    <td class="text-right">{{ number_format($tx->qty_sold) }}</td>
-                                                    <td class="text-right">{{ number_format($tx->standard_price, 0) }}</td>
-                                                    <td class="text-right" style="{{ $priceChanged ? 'color:#fbbf24;font-weight:600' : '' }}">
+                                                    <td style="text-align:right;">{{ number_format($tx->qty_sold) }}</td>
+                                                    <td style="text-align:right;">{{ number_format($tx->standard_price, 0) }}</td>
+                                                    <td style="text-align:right; {{ $priceChanged ? 'color:#fbbf24; font-weight:600;' : '' }}">
                                                         {{ number_format($tx->used_price, 0) }}
                                                     </td>
-                                                    <td class="text-right text-gray-400">{{ number_format($tx->expected_line_total, 0) }}</td>
-                                                    <td class="text-right text-white">{{ number_format($tx->actual_line_total, 0) }}</td>
-                                                    <td class="text-right">
+                                                    <td style="text-align:right; color:#9ca3af;">{{ number_format($tx->expected_line_total, 0) }}</td>
+                                                    <td style="text-align:right; color:#fff;">{{ number_format($tx->actual_line_total, 0) }}</td>
+                                                    <td style="text-align:right;">
                                                         @if($txDisc < -0.01)
-                                                            <span style="color:#f87171">−{{ number_format(abs($txDisc), 0) }}</span>
+                                                            <span style="color:#f87171;">−{{ number_format(abs($txDisc), 0) }}</span>
                                                         @elseif($txDisc > 0.01)
-                                                            <span style="color:#fbbf24">+{{ number_format($txDisc, 0) }}</span>
+                                                            <span style="color:#fbbf24;">+{{ number_format($txDisc, 0) }}</span>
                                                         @else
-                                                            <span style="color:#6b7280">—</span>
+                                                            <span style="color:#6b7280;">—</span>
                                                         @endif
                                                     </td>
-                                                    <td class="text-center">
+                                                    <td style="text-align:center;">
                                                         @if($txDisc < -0.01)
                                                             <span class="badge badge-shortfall">Price Altered ↓</span>
                                                         @elseif($txDisc > 0.01)
@@ -259,19 +253,20 @@
                 @if($reportData->isNotEmpty())
                 <tfoot>
                     <tr class="totals-row">
-                        <td colspan="5" class="text-right">Grand Totals:</td>
-                        <td class="text-right text-white">{{ number_format($reportData->sum('total_qty_sold')) }}</td>
-                        <td></td>
-                        <td class="text-right">{{ number_format($reportData->sum('expected_revenue'), 0) }}</td>
-                        <td class="text-right">{{ number_format($reportData->sum('actual_revenue'), 0) }}</td>
-                        <td class="text-right">
+                        <td colspan="4" style="text-align:right; font-weight:700; color:#fff; padding-right: 1rem;">Grand Totals:</td>
+                        <td style="text-align:right; color:#d1d5db;">{{ number_format($reportData->sum('qty_available')) }}</td>
+                        <td style="text-align:right; color:#fff; font-weight:700;">{{ number_format($reportData->sum('total_qty_sold')) }}</td>
+                        <td style="text-align:right; color:#d1d5db;">{{ number_format($reportData->sum('qty_remaining')) }}</td>
+                        <td style="text-align:right; color:#d1d5db;">{{ number_format($reportData->sum('expected_revenue'), 0) }}</td>
+                        <td style="text-align:right; color:#fff; font-weight:700;">{{ number_format($reportData->sum('actual_revenue'), 0) }}</td>
+                        <td style="text-align:right;">
                             @php $totalDisc = round($reportData->sum('actual_revenue') - $reportData->sum('expected_revenue'), 2); @endphp
                             @if($totalDisc < -0.01)
-                                <span style="color:#f87171">−{{ number_format(abs($totalDisc), 0) }}</span>
+                                <span style="color:#f87171; font-weight:700;">−{{ number_format(abs($totalDisc), 0) }}</span>
                             @elseif($totalDisc > 0.01)
-                                <span style="color:#fbbf24">+{{ number_format($totalDisc, 0) }}</span>
+                                <span style="color:#fbbf24; font-weight:700;">+{{ number_format($totalDisc, 0) }}</span>
                             @else
-                                <span style="color:#6b7280">0</span>
+                                <span style="color:#6b7280;">0</span>
                             @endif
                         </td>
                         <td></td>

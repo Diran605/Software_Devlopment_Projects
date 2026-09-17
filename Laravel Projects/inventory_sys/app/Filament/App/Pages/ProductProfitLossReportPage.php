@@ -50,11 +50,12 @@ class ProductProfitLossReportPage extends Page implements HasForms
     public function mount(): void
     {
         $this->form->fill([
-            'branch_id'   => Filament::getTenant()?->id,
-            'date_from'   => now()->startOfMonth()->format('Y-m-d'),
-            'date_to'     => now()->endOfMonth()->format('Y-m-d'),
-            'category_id' => null,
-            'filter'      => 'all',
+            'branch_id'     => Filament::getTenant()?->id,
+            'date_from'     => now()->startOfMonth()->format('Y-m-d'),
+            'date_to'       => now()->endOfMonth()->format('Y-m-d'),
+            'category_id'   => null,
+            'filter'        => 'all',
+            'department_id' => null,
         ]);
     }
 
@@ -62,7 +63,7 @@ class ProductProfitLossReportPage extends Page implements HasForms
     {
         return $form
             ->schema([
-                Grid::make(Filament::getTenant() ? 4 : 5)
+                Grid::make(Filament::getTenant() ? 5 : 6)
                     ->schema([
                         Select::make('branch_id')
                             ->label('Branch')
@@ -96,6 +97,20 @@ class ProductProfitLossReportPage extends Page implements HasForms
                             ])
                             ->default('all')
                             ->live(),
+                        Select::make('department_id')
+                            ->label('Department')
+                            ->options(function () {
+                                $branchId = Filament::getTenant()?->id ?? ($this->data['branch_id'] ?? null);
+                                return \App\Models\Department::query()
+                                    ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
+                                    ->where('is_active', true)
+                                    ->orderBy('name')
+                                    ->pluck('name', 'id');
+                            })
+                            ->nullable()
+                            ->searchable()
+                            ->preload()
+                            ->live(),
                     ])
             ])
             ->statePath('data');
@@ -114,6 +129,7 @@ class ProductProfitLossReportPage extends Page implements HasForms
         $to         = $this->data['date_to'] ?? null;
         $categoryId = $this->data['category_id'] ?? null;
         $filter     = $this->data['filter'] ?? 'all';
+        $departmentId = $this->data['department_id'] ?? null;
 
         $query = \App\Models\SalesOrderLine::query()
             ->join('sales_orders', 'sales_orders.id', '=', 'sales_order_lines.sales_order_id')
@@ -123,6 +139,7 @@ class ProductProfitLossReportPage extends Page implements HasForms
             ->when($from, fn ($q) => $q->whereDate('sales_orders.sold_at', '>=', $from))
             ->when($to,   fn ($q) => $q->whereDate('sales_orders.sold_at', '<=', $to))
             ->when($categoryId, fn ($q) => $q->where('items.category_id', $categoryId))
+            ->when($departmentId, fn ($q) => $q->where('sales_orders.department_id', $departmentId))
             ->whereNull('sales_orders.deleted_at')
             ->whereNull('sales_order_lines.deleted_at')
             ->select(

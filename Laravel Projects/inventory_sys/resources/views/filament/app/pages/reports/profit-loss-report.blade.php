@@ -42,7 +42,7 @@
             <form wire:submit.prevent="submit" class="space-y-4">
                 {{ $this->form }}
                 
-                <div class="flex items-center gap-3 mt-4">
+                <div style="display: flex; align-items: center; gap: 0.75rem; margin-top: 1rem; flex-wrap: wrap;">
                     <x-filament::button type="submit" color="primary">
                         Filter Report
                     </x-filament::button>
@@ -62,30 +62,30 @@
 
         {{-- Summary Cards --}}
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
-            <div class="rounded-xl bg-zinc-800/60 border border-zinc-700 p-4">
-                <div class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Revenue</div>
-                <div class="text-2xl font-bold text-emerald-400 mt-1">FCFA {{ number_format($reportData['revenue'], 2) }}</div>
-                <div class="text-xs text-zinc-500 mt-1">{{ $reportData['order_count'] }} orders</div>
+            <div style="background: rgba(39,39,42,0.6); border-radius: 0.75rem; padding: 1rem; border: 1px solid #3f3f46;">
+                <div style="font-size: 0.75rem; color: #a1a1aa; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">Revenue</div>
+                <div style="font-size: 1.5rem; font-weight: bold; color: #34d399; margin-top: 0.25rem;">FCFA {{ number_format($reportData['revenue'], 2) }}</div>
+                <div style="font-size: 0.75rem; color: #71717a; margin-top: 0.25rem;">{{ $reportData['order_count'] }} orders</div>
             </div>
-            <div class="rounded-xl bg-zinc-800/60 border border-zinc-700 p-4">
-                <div class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Cost of Goods</div>
-                <div class="text-2xl font-bold text-rose-400 mt-1">FCFA {{ number_format($reportData['cogs'], 2) }}</div>
-                <div class="text-xs text-zinc-500 mt-1">Direct costs</div>
+            <div style="background: rgba(39,39,42,0.6); border-radius: 0.75rem; padding: 1rem; border: 1px solid #3f3f46;">
+                <div style="font-size: 0.75rem; color: #a1a1aa; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">Cost of Goods</div>
+                <div style="font-size: 1.5rem; font-weight: bold; color: #fb7185; margin-top: 0.25rem;">FCFA {{ number_format($reportData['cogs'], 2) }}</div>
+                <div style="font-size: 0.75rem; color: #71717a; margin-top: 0.25rem;">Direct costs</div>
             </div>
-            <div class="rounded-xl bg-zinc-800/60 border border-zinc-700 p-4">
-                <div class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Gross Profit</div>
-                <div class="text-2xl font-bold {{ $reportData['gross_profit'] >= 0 ? 'text-emerald-400' : 'text-rose-400' }} mt-1">FCFA {{ number_format($reportData['gross_profit'], 2) }}</div>
-                <div class="text-xs text-zinc-500 mt-1">{{ $reportData['gross_margin'] }}% margin</div>
+            <div style="background: rgba(39,39,42,0.6); border-radius: 0.75rem; padding: 1rem; border: 1px solid #3f3f46;">
+                <div style="font-size: 0.75rem; color: #a1a1aa; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">Gross Profit</div>
+                <div style="font-size: 1.5rem; font-weight: bold; color: {{ $reportData['gross_profit'] >= 0 ? '#34d399' : '#fb7185' }}; margin-top: 0.25rem;">FCFA {{ number_format($reportData['gross_profit'], 2) }}</div>
+                <div style="font-size: 0.75rem; color: #71717a; margin-top: 0.25rem;">{{ $reportData['gross_margin'] }}% margin</div>
             </div>
-            <div class="rounded-xl bg-zinc-800/60 border border-zinc-700 p-4">
-                <div class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Expenses</div>
-                <div class="text-2xl font-bold text-amber-400 mt-1">FCFA {{ number_format($reportData['total_expenses'], 2) }}</div>
-                <div class="text-xs text-zinc-500 mt-1">Operating costs</div>
+            <div style="background: rgba(39,39,42,0.6); border-radius: 0.75rem; padding: 1rem; border: 1px solid #3f3f46;">
+                <div style="font-size: 0.75rem; color: #a1a1aa; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">Expenses</div>
+                <div style="font-size: 1.5rem; font-weight: bold; color: #fbbf24; margin-top: 0.25rem;">FCFA {{ number_format($reportData['total_expenses'], 2) }}</div>
+                <div style="font-size: 0.75rem; color: #71717a; margin-top: 0.25rem;">Operating costs</div>
             </div>
-            <div class="rounded-xl bg-zinc-800/60 border {{ $reportData['net_profit'] >= 0 ? 'border-emerald-700/50' : 'border-rose-700/50' }} p-4">
-                <div class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Net Profit</div>
-                <div class="text-2xl font-bold {{ $reportData['net_profit'] >= 0 ? 'text-emerald-400' : 'text-rose-400' }} mt-1">FCFA {{ number_format($reportData['net_profit'], 2) }}</div>
-                <div class="text-xs text-zinc-500 mt-1">{{ $reportData['net_margin'] }}% margin</div>
+            <div style="background: rgba(39,39,42,0.6); border-radius: 0.75rem; padding: 1rem; border: 1px solid {{ $reportData['net_profit'] >= 0 ? 'rgba(4,120,87,0.5)' : 'rgba(190,18,60,0.5)' }};">
+                <div style="font-size: 0.75rem; color: #a1a1aa; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">Net Profit</div>
+                <div style="font-size: 1.5rem; font-weight: bold; color: {{ $reportData['net_profit'] >= 0 ? '#34d399' : '#fb7185' }}; margin-top: 0.25rem;">FCFA {{ number_format($reportData['net_profit'], 2) }}</div>
+                <div style="font-size: 0.75rem; color: #71717a; margin-top: 0.25rem;">{{ $reportData['net_margin'] }}% margin</div>
             </div>
         </div>
 
@@ -96,81 +96,81 @@
                 <table class="report-table w-full text-left border-collapse text-sm">
                     <tbody class="text-zinc-300">
                         {{-- Revenue Section --}}
-                        <tr class="bg-zinc-800/50 border-b border-zinc-700">
-                            <td class="p-3 font-bold text-white text-base" colspan="3">Revenue</td>
+                        <tr style="background: rgba(39,39,42,0.5); border-bottom: 1px solid #3f3f46;">
+                            <td style="padding: 0.75rem; font-weight: bold; color: #fff; font-size: 1rem;" colspan="3">Revenue</td>
                         </tr>
-                        <tr class="border-b border-zinc-800">
-                            <td class="p-3 pl-6">Sales Revenue</td>
-                            <td class="p-3 text-right font-semibold text-emerald-400">FCFA {{ number_format($reportData['revenue'], 2) }}</td>
+                        <tr style="border-bottom: 1px solid #27272a;">
+                            <td style="padding: 0.75rem 0.75rem 0.75rem 1.5rem;">Sales Revenue</td>
+                            <td style="padding: 0.75rem; text-align: right; font-weight: 600; color: #34d399;">FCFA {{ number_format($reportData['revenue'], 2) }}</td>
                         </tr>
-                        <tr class="border-b border-zinc-700 bg-zinc-800/30">
-                            <td class="p-3 pl-4 font-semibold text-white">Total Revenue</td>
-                            <td class="p-3 text-right font-bold text-emerald-400">FCFA {{ number_format($reportData['revenue'], 2) }}</td>
+                        <tr style="border-bottom: 1px solid #3f3f46; background: rgba(39,39,42,0.3);">
+                            <td style="padding: 0.75rem 0.75rem 0.75rem 1rem; font-weight: 600; color: #fff;">Total Revenue</td>
+                            <td style="padding: 0.75rem; text-align: right; font-weight: bold; color: #34d399;">FCFA {{ number_format($reportData['revenue'], 2) }}</td>
                         </tr>
 
                         {{-- COGS Section --}}
-                        <tr class="bg-zinc-800/50 border-b border-zinc-700 mt-2">
-                            <td class="p-3 font-bold text-white text-base" colspan="3">Cost of Goods Sold</td>
+                        <tr style="background: rgba(39,39,42,0.5); border-bottom: 1px solid #3f3f46;">
+                            <td style="padding: 0.75rem; font-weight: bold; color: #fff; font-size: 1rem;" colspan="3">Cost of Goods Sold</td>
                         </tr>
-                        <tr class="border-b border-zinc-800">
-                            <td class="p-3 pl-6">Direct Cost of Items Sold</td>
-                            <td class="p-3 text-right font-semibold text-rose-400">(FCFA {{ number_format($reportData['cogs'], 2) }})</td>
+                        <tr style="border-bottom: 1px solid #27272a;">
+                            <td style="padding: 0.75rem 0.75rem 0.75rem 1.5rem;">Direct Cost of Items Sold</td>
+                            <td style="padding: 0.75rem; text-align: right; font-weight: 600; color: #fb7185;">(FCFA {{ number_format($reportData['cogs'], 2) }})</td>
                         </tr>
-                        <tr class="border-b border-zinc-700 bg-zinc-800/30">
-                            <td class="p-3 pl-4 font-semibold text-white">Total COGS</td>
-                            <td class="p-3 text-right font-bold text-rose-400">(FCFA {{ number_format($reportData['cogs'], 2) }})</td>
+                        <tr style="border-bottom: 1px solid #3f3f46; background: rgba(39,39,42,0.3);">
+                            <td style="padding: 0.75rem 0.75rem 0.75rem 1rem; font-weight: 600; color: #fff;">Total COGS</td>
+                            <td style="padding: 0.75rem; text-align: right; font-weight: bold; color: #fb7185;">(FCFA {{ number_format($reportData['cogs'], 2) }})</td>
                         </tr>
 
                         {{-- Gross Profit --}}
-                        <tr class="border-b-2 border-zinc-500 bg-zinc-800/60">
-                            <td class="p-3 font-bold text-lg text-white">Gross Profit</td>
-                            <td class="p-3 text-right font-bold text-lg {{ $reportData['gross_profit'] >= 0 ? 'text-emerald-400' : 'text-rose-400' }}">FCFA {{ number_format($reportData['gross_profit'], 2) }}</td>
+                        <tr style="border-bottom: 2px solid #71717a; background: rgba(39,39,42,0.6);">
+                            <td style="padding: 0.75rem; font-weight: bold; font-size: 1.125rem; color: #fff;">Gross Profit</td>
+                            <td style="padding: 0.75rem; text-align: right; font-weight: bold; font-size: 1.125rem; color: {{ $reportData['gross_profit'] >= 0 ? '#34d399' : '#fb7185' }};">FCFA {{ number_format($reportData['gross_profit'], 2) }}</td>
                         </tr>
 
                         {{-- Losses Section (negative-margin sales lines) --}}
                         @if($reportData['loss_lines']->isNotEmpty())
-                        <tr class="bg-rose-950/40 border-b border-zinc-700">
-                            <td class="p-3 font-bold text-white text-base" colspan="3">
+                        <tr style="background: rgba(76,5,25,0.4); border-bottom: 1px solid #3f3f46;">
+                            <td style="padding: 0.75rem; font-weight: bold; color: #fff; font-size: 1rem;" colspan="3">
                                 ⚠️ Loss-Making Sales (sold below cost)
                             </td>
                         </tr>
                         @foreach($reportData['loss_lines'] as $lossLine)
-                        <tr class="border-b border-zinc-800 bg-rose-950/20 hover:bg-rose-950/30">
+                        <tr style="background: rgba(76,5,25,0.2); border-bottom: 1px solid #27272a;">
                             <td class="text-center" style="text-align:center; color:#888;">{{ $loop->iteration }}</td>
-                            <td class="p-3 pl-6">
-                                <span class="text-rose-300 font-medium">{{ $lossLine->item_name }}</span>
-                                <span class="text-zinc-500 text-xs ml-2">{{ $lossLine->category_name }}</span>
-                                <span class="text-zinc-500 text-xs ml-2">— Qty: {{ number_format($lossLine->total_qty) }}</span>
+                            <td style="padding: 0.75rem 0.75rem 0.75rem 1.5rem;">
+                                <span style="color: #fda4af; font-weight: 500;">{{ $lossLine->item_name }}</span>
+                                <span style="color: #71717a; font-size: 0.75rem; margin-left: 0.5rem;">{{ $lossLine->category_name }}</span>
+                                <span style="color: #71717a; font-size: 0.75rem; margin-left: 0.5rem;">— Qty: {{ number_format($lossLine->total_qty) }}</span>
                             </td>
-                            <td class="p-3 text-right font-semibold text-rose-400">
+                            <td style="padding: 0.75rem; text-align: right; font-weight: 600; color: #fb7185;">
                                 (FCFA {{ number_format(abs($lossLine->total_loss), 2) }})
                             </td>
                         </tr>
                         @endforeach
-                        <tr class="border-b border-zinc-700 bg-rose-900/30">
-                            <td class="p-3 pl-4 font-semibold text-white">Total Losses from Underselling</td>
-                            <td class="p-3 text-right font-bold text-rose-400">(FCFA {{ number_format(abs($reportData['total_loss']), 2) }})</td>
+                        <tr style="border-bottom: 1px solid #3f3f46; background: rgba(136,19,55,0.3);">
+                            <td style="padding: 0.75rem 0.75rem 0.75rem 1rem; font-weight: 600; color: #fff;">Total Losses from Underselling</td>
+                            <td style="padding: 0.75rem; text-align: right; font-weight: bold; color: #fb7185;">(FCFA {{ number_format(abs($reportData['total_loss']), 2) }})</td>
                         </tr>
                         @endif
 
                         {{-- Operating Expenses --}}
-                        <tr class="bg-zinc-800/50 border-b border-zinc-700">
-                            <td class="p-3 font-bold text-white text-base" colspan="3">Operating Expenses</td>
+                        <tr style="background: rgba(39,39,42,0.5); border-bottom: 1px solid #3f3f46;">
+                            <td style="padding: 0.75rem; font-weight: bold; color: #fff; font-size: 1rem;" colspan="3">Operating Expenses</td>
                         </tr>
                         @forelse($reportData['expense_breakdown'] as $expense)
                             <tr class="border-b border-zinc-800 hover:bg-zinc-800/40">
                                 <td class="text-center" style="text-align:center; color:#888;">{{ $loop->iteration }}</td>
-                            <td class="p-3 pl-6">{{ $expense->category_name }}</td>
-                                <td class="p-3 text-right font-semibold text-amber-400">(FCFA {{ number_format($expense->total_amount, 2) }})</td>
+                            <td style="padding: 0.75rem 0.75rem 0.75rem 1.5rem;">{{ $expense->category_name }}</td>
+                                <td style="padding: 0.75rem; text-align: right; font-weight: 600; color: #fbbf24;">(FCFA {{ number_format($expense->total_amount, 2) }})</td>
                             </tr>
                         @empty
-                            <tr class="border-b border-zinc-800">
+                            <tr style="border-bottom: 1px solid #27272a;">
                                 <td class="p-3 pl-6 text-zinc-500 italic" colspan="3">No expenses recorded for this period.</td>
                             </tr>
                         @endforelse
-                        <tr class="border-b border-zinc-700 bg-zinc-800/30">
-                            <td class="p-3 pl-4 font-semibold text-white">Total Expenses</td>
-                            <td class="p-3 text-right font-bold text-amber-400">(FCFA {{ number_format($reportData['total_expenses'], 2) }})</td>
+                        <tr style="border-bottom: 1px solid #3f3f46; background: rgba(39,39,42,0.3);">
+                            <td style="padding: 0.75rem 0.75rem 0.75rem 1rem; font-weight: 600; color: #fff;">Total Expenses</td>
+                            <td style="padding: 0.75rem; text-align: right; font-weight: bold; color: #fbbf24;">(FCFA {{ number_format($reportData['total_expenses'], 2) }})</td>
                         </tr>
 
                         {{-- Net Profit --}}

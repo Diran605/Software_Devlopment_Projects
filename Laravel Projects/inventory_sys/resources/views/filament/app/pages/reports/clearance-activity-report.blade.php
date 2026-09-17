@@ -8,11 +8,11 @@
         .report-table tfoot tr { border-top: 2px solid #52525b; background-color: rgba(39, 39, 42, 0.8) !important; font-weight: bold; color: #ffffff !important; }
         .text-right { text-align: right !important; }
     </style>
-    <div class="space-y-6">
+    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
         <x-filament::card>
-            <form wire:submit.prevent="submit" class="space-y-4">
+            <form wire:submit.prevent="submit" style="display: flex; flex-direction: column; gap: 1rem;">
                 {{ $this->form }}
-                <div class="flex items-center gap-3 mt-4">
+                <div style="display: flex; align-items: center; gap: 0.75rem; margin-top: 1rem;">
                     <x-filament::button type="submit" color="primary">Filter Report</x-filament::button>
                     <x-filament::button type="button" wire:click="exportPdf('reports.clearance-activity.pdf')" color="success" icon="heroicon-o-document-arrow-down">
                         Export PDF
@@ -28,8 +28,8 @@
         </x-filament::card>
 
         <x-filament::card>
-            <div class="overflow-x-auto">
-                <table class="report-table w-full">
+            <div style="overflow-x: auto;">
+                <table class="report-table">
                     <thead>
                         <tr>
                             <th class="text-center" style="width:3%; text-align:center;">S/N</th>
@@ -65,7 +65,7 @@
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="8" class="p-4 text-center text-zinc-500">No clearance activity found.</td></tr>
+                            <tr><td colspan="8" style="padding: 1rem; text-align: center; color: #71717a;">No clearance activity found.</td></tr>
                         @endforelse
                     </tbody>
                     @if($reportData->isNotEmpty())

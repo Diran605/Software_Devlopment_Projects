@@ -52,10 +52,11 @@ class ExpiryReportPage extends Page implements HasForms
     public function mount(): void
     {
         $this->form->fill([
-            'branch_id' => Filament::getTenant()?->id,
+            'branch_id'      => Filament::getTenant()?->id,
             'days_threshold' => 90,
-            'category_id' => null,
-            'urgency_band' => 'all',
+            'category_id'    => null,
+            'urgency_band'   => 'all',
+            'department_id'  => null,
         ]);
     }
 
@@ -63,7 +64,7 @@ class ExpiryReportPage extends Page implements HasForms
     {
         return $form
             ->schema([
-                Grid::make(Filament::getTenant() ? 3 : 4)
+                Grid::make(Filament::getTenant() ? 4 : 5)
                     ->schema([
                         Select::make('branch_id')
                             ->label('Branch')
@@ -98,6 +99,20 @@ class ExpiryReportPage extends Page implements HasForms
                             ])
                             ->live()
                             ->required(),
+                        Select::make('department_id')
+                            ->label('Department')
+                            ->options(function () {
+                                $branchId = Filament::getTenant()?->id ?? ($this->data['branch_id'] ?? null);
+                                return \App\Models\Department::query()
+                                    ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
+                                    ->where('is_active', true)
+                                    ->orderBy('name')
+                                    ->pluck('name', 'id');
+                            })
+                            ->nullable()
+                            ->searchable()
+                            ->preload()
+                            ->live(),
                     ])
             ])
             ->statePath('data');
@@ -116,6 +131,7 @@ class ExpiryReportPage extends Page implements HasForms
         $daysThreshold = intval($this->data['days_threshold'] ?? 90);
         $categoryId = $this->data['category_id'] ?? null;
         $urgencyBand = $this->data['urgency_band'] ?? 'all';
+        $departmentId = $this->data['department_id'] ?? null;
 
         $query = BatchInventory::query()
             ->with(['item.category'])
@@ -124,7 +140,11 @@ class ExpiryReportPage extends Page implements HasForms
             ->when($tenantId, fn ($q) => $q->where('branch_id', $tenantId))
             ->when($categoryId, function ($q) use ($categoryId) {
                 $q->whereHas('item', fn ($qi) => $qi->where('category_id', $categoryId));
-            });
+            })
+            ->when($departmentId, fn ($q) => $q->whereIn('item_id',
+                \App\Models\StockMovement::where('department_id', $departmentId)
+                    ->distinct()->pluck('item_id')
+            ));
 
         // Calculate days to expiry and filter
         $batches = $query->get()->map(function ($batch) {

@@ -16,12 +16,12 @@
         .bar-fill { height: 100%; border-radius: 4px; background: #10b981; }
     </style>
 
-    <div class="space-y-6">
+    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
         {{-- Filter Form --}}
         <x-filament::card>
-            <form wire:submit.prevent="submit" class="space-y-4">
+            <form wire:submit.prevent="submit" style="display: flex; flex-direction: column; gap: 1rem;">
                 {{ $this->form }}
-                <div class="flex items-center gap-3 mt-4">
+                <div style="display: flex; align-items: center; gap: 0.75rem; margin-top: 1rem;">
                     <x-filament::button type="submit" color="primary">
                         Apply Filters
                     </x-filament::button>
@@ -51,21 +51,21 @@
 
         {{-- Summary Cards --}}
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
-            <div class="bg-zinc-800/60 rounded-xl p-4 border border-zinc-700">
-                <div class="text-xs text-zinc-400 uppercase tracking-wider font-semibold">Products Shown</div>
-                <div class="text-2xl font-bold text-white mt-1">{{ $data['products']->count() }}</div>
+            <div style="background: rgba(39,39,42,0.6); border-radius: 0.75rem; padding: 1rem; border: 1px solid #3f3f46;">
+                <div style="font-size:0.75rem; color:#a1a1aa; text-transform:uppercase; letter-spacing:0.05em; font-weight:600;">Products Shown</div>
+                <div style="font-size:1.5rem; font-weight:700; color:#fff; margin-top:0.25rem;">{{ $data['products']->count() }}</div>
             </div>
-            <div class="bg-zinc-800/60 rounded-xl p-4 border border-zinc-700">
-                <div class="text-xs text-zinc-400 uppercase tracking-wider font-semibold">Total Revenue</div>
-                <div class="text-2xl font-bold text-emerald-400 mt-1">FCFA {{ number_format($data['grand_revenue'], 0) }}</div>
+            <div style="background: rgba(39,39,42,0.6); border-radius: 0.75rem; padding: 1rem; border: 1px solid #3f3f46;">
+                <div style="font-size:0.75rem; color:#a1a1aa; text-transform:uppercase; letter-spacing:0.05em; font-weight:600;">Total Revenue</div>
+                <div style="font-size:1.5rem; font-weight:700; color:#34d399; margin-top:0.25rem;">FCFA {{ number_format($data['grand_revenue'], 0) }}</div>
             </div>
-            <div class="bg-zinc-800/60 rounded-xl p-4 border border-zinc-700">
-                <div class="text-xs text-zinc-400 uppercase tracking-wider font-semibold">Total Qty Sold</div>
-                <div class="text-2xl font-bold text-sky-400 mt-1">{{ number_format($data['grand_qty']) }}</div>
+            <div style="background: rgba(39,39,42,0.6); border-radius: 0.75rem; padding: 1rem; border: 1px solid #3f3f46;">
+                <div style="font-size:0.75rem; color:#a1a1aa; text-transform:uppercase; letter-spacing:0.05em; font-weight:600;">Total Qty Sold</div>
+                <div style="font-size:1.5rem; font-weight:700; color:#38bdf8; margin-top:0.25rem;">{{ number_format($data['grand_qty']) }}</div>
             </div>
-            <div class="bg-zinc-800/60 rounded-xl p-4 border border-zinc-700">
-                <div class="text-xs text-zinc-400 uppercase tracking-wider font-semibold">Total Profit</div>
-                <div class="text-2xl font-bold {{ $data['grand_profit'] >= 0 ? 'text-emerald-400' : 'text-rose-400' }} mt-1">
+            <div style="background: rgba(39,39,42,0.6); border-radius: 0.75rem; padding: 1rem; border: 1px solid #3f3f46;">
+                <div style="font-size:0.75rem; color:#a1a1aa; text-transform:uppercase; letter-spacing:0.05em; font-weight:600;">Total Profit</div>
+                <div style="font-size:1.5rem; font-weight:700; color:{{ $data['grand_profit'] >= 0 ? '#34d399' : '#fb7185' }}; margin-top:0.25rem;">
                     FCFA {{ number_format($data['grand_profit'], 0) }}
                 </div>
             </div>
@@ -73,11 +73,11 @@
 
         {{-- Products Table --}}
         <x-filament::card>
-            <h3 class="text-lg font-bold text-white mb-4">🔥 Trending Products — Ranked by {{ $sortLabel }}</h3>
+            <h3 style="font-size:1.125rem; font-weight:700; color:#fff; margin-bottom:1rem;">🔥 Trending Products — Ranked by {{ $sortLabel }}</h3>
             @if($data['products']->isEmpty())
-                <div class="text-center py-12 text-zinc-500">No sales data found for the selected period.</div>
+                <div style="text-align:center; padding:3rem 0; color:#71717a;">No sales data found for the selected period.</div>
             @else
-            <div class="overflow-x-auto">
+            <div style="overflow-x: auto;">
                 <table class="report-table">
                     <thead>
                         <tr>
@@ -102,23 +102,23 @@
                                 @php $rankClass = match(true) { $row->rank === 1 => 'rank-1', $row->rank === 2 => 'rank-2', $row->rank === 3 => 'rank-3', default => 'rank-other' }; @endphp
                                 <span class="rank-badge {{ $rankClass }}">{{ $row->rank }}</span>
                             </td>
-                            <td class="font-semibold text-white">{{ $row->item_name }}</td>
-                            <td class="text-zinc-400 text-xs">{{ $row->category_name ?? '—' }}</td>
-                            <td class="text-right text-sky-300 font-semibold">{{ number_format($row->total_qty) }}</td>
-                            <td class="text-right text-zinc-300">FCFA {{ number_format($row->avg_price, 0) }}</td>
-                            <td class="text-right text-emerald-400 font-semibold">FCFA {{ number_format($row->total_revenue, 0) }}</td>
-                            <td class="text-right text-rose-400">FCFA {{ number_format($row->total_cost, 0) }}</td>
-                            <td class="text-right font-bold {{ $row->total_profit >= 0 ? 'text-emerald-400' : 'text-rose-500' }}">
+                            <td style="font-weight:600; color:#fff;">{{ $row->item_name }}</td>
+                            <td style="color:#a1a1aa; font-size:0.75rem;">{{ $row->category_name ?? '—' }}</td>
+                            <td class="text-right" style="color:#7dd3fc; font-weight:600;">{{ number_format($row->total_qty) }}</td>
+                            <td class="text-right" style="color:#d4d4d8;">FCFA {{ number_format($row->avg_price, 0) }}</td>
+                            <td class="text-right" style="color:#34d399; font-weight:600;">FCFA {{ number_format($row->total_revenue, 0) }}</td>
+                            <td class="text-right" style="color:#fb7185;">FCFA {{ number_format($row->total_cost, 0) }}</td>
+                            <td class="text-right" style="font-weight:700; color:{{ $row->total_profit >= 0 ? '#34d399' : '#fb7185' }};">
                                 FCFA {{ number_format($row->total_profit, 0) }}
                             </td>
                             <td class="text-right">
                                 @php
-                                    $mc = $row->margin_pct < 0 ? 'text-rose-400' : ($row->margin_pct < 20 ? 'text-amber-400' : 'text-emerald-400');
+                                    $mc = $row->margin_pct < 0 ? '#fb7185' : ($row->margin_pct < 20 ? '#fbbf24' : '#34d399');
                                 @endphp
-                                <span class="{{ $mc }} font-semibold">{{ $row->margin_pct }}%</span>
+                                <span style="color:{{ $mc }}; font-weight:600;">{{ $row->margin_pct }}%</span>
                             </td>
                             <td class="text-right">
-                                <span class="text-zinc-300 text-xs">{{ $row->revenue_share }}%</span>
+                                <span style="color:#d4d4d8; font-size:0.75rem;">{{ $row->revenue_share }}%</span>
                                 <div class="bar-container">
                                     <div class="bar-fill" style="width:{{ min($row->revenue_share, 100) }}%"></div>
                                 </div>
@@ -128,12 +128,12 @@
                     </tbody>
                     <tfoot>
                         <tr>
-                            <td colspan="4" class="text-white font-bold">TOTALS</td>
-                            <td class="text-right text-sky-300">{{ number_format($data['grand_qty']) }}</td>
+                            <td colspan="4" style="color:#fff; font-weight:700;">TOTALS</td>
+                            <td class="text-right" style="color:#7dd3fc;">{{ number_format($data['grand_qty']) }}</td>
                             <td></td>
-                            <td class="text-right text-emerald-400">FCFA {{ number_format($data['grand_revenue'], 0) }}</td>
+                            <td class="text-right" style="color:#34d399;">FCFA {{ number_format($data['grand_revenue'], 0) }}</td>
                             <td></td>
-                            <td class="text-right {{ $data['grand_profit'] >= 0 ? 'text-emerald-400' : 'text-rose-400' }}">
+                            <td class="text-right" style="color:{{ $data['grand_profit'] >= 0 ? '#34d399' : '#fb7185' }};">
                                 FCFA {{ number_format($data['grand_profit'], 0) }}
                             </td>
                             <td colspan="3"></td>

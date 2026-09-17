@@ -57,6 +57,13 @@ return [
             'collation' => env('DB_COLLATION', 'utf8mb4_unicode_ci'),
             'prefix' => '',
             'prefix_indexes' => true,
+            'dump' => [
+                'dump_binary_path' => env('MYSQL_DUMP_PATH', ''),
+                'use_single_transaction' => true,
+                'timeout' => 60 * 5,
+                'do_not_use_column_statistics',
+                'set_gtid_purged' => 'OFF',
+            ],
             'strict' => true,
             'engine' => null,
             'options' => extension_loaded('pdo_mysql') ? array_filter([

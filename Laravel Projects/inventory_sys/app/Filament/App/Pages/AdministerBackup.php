@@ -32,15 +32,24 @@ class AdministerBackup extends Page
         ];
     }
 
-    public function createBackup()
+        public function createBackup()
     {
         try {
-            Artisan::call("backup:run", ["--only-db" => true]);
+            $exitCode = Artisan::call("backup:run", ["--only-db" => true]);
             
-            Notification::make()
-                ->title("Backup completed successfully!")
-                ->success()
-                ->send();
+            if ($exitCode === 0) {
+                Notification::make()
+                    ->title("Backup completed successfully!")
+                    ->success()
+                    ->send();
+            } else {
+                $output = Artisan::output();
+                Notification::make()
+                    ->title("Backup failed!")
+                    ->body("The backup process failed. Please check your system configuration (e.g. mysqldump path). Output: " . substr($output, 0, 200))
+                    ->danger()
+                    ->send();
+            }
                 
         } catch (\Exception $e) {
             Notification::make()
@@ -59,6 +68,7 @@ class AdministerBackup extends Page
         }
         
         Notification::make()->title("File not found")->danger()->send();
+                $this->loadBackups();
     }
 
     public function deleteBackup($file)
@@ -67,7 +77,42 @@ class AdministerBackup extends Page
         if (Storage::disk("local")->exists($path)) {
             Storage::disk("local")->delete($path);
             Notification::make()->title("Backup deleted")->success()->send();
+                $this->loadBackups();
+            $this->loadBackups();
         }
+    }
+
+    public array $backups = [];
+
+    public function mount()
+    {
+        $this->loadBackups();
+    }
+
+    public function loadBackups()
+    {
+        $files = Storage::disk("local")->files("backups");
+        
+        $this->backups = collect($files)->map(function ($file) {
+            $size = Storage::disk("local")->size($file);
+            $lastModified = Storage::disk("local")->lastModified($file);
+            
+            $units = ["B", "KB", "MB", "GB", "TB"];
+            $bytes = max($size, 0);
+            $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
+            $pow = min($pow, count($units) - 1);
+            $bytes /= (1 << (10 * $pow));
+            $formattedSize = round($bytes, 2) . " " . $units[$pow];
+
+            return [
+                "file_name" => basename($file),
+                "path" => $file,
+                "size" => $formattedSize,
+                "date" => Carbon::createFromTimestamp($lastModified)->format("Y-m-d H:i:s"),
+                "age" => Carbon::createFromTimestamp($lastModified)->diffForHumans(),
+                "timestamp" => $lastModified
+            ];
+        })->sortByDesc("timestamp")->values()->toArray();
     }
 
     protected function getViewData(): array

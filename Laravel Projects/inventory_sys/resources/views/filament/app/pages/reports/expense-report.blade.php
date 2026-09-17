@@ -10,7 +10,7 @@
         <x-filament::card>
             <form wire:submit.prevent="submit" class="space-y-4">
                 {{ $this->form }}
-                <div class="flex items-center gap-3 mt-4">
+                <div style="display: flex; align-items: center; gap: 0.75rem; margin-top: 1rem; flex-wrap: wrap;">
                     <x-filament::button type="submit" color="primary">Filter Report</x-filament::button>
                     <x-filament::button type="button" wire:click="exportPdf('reports.expenses.pdf')" color="success" icon="heroicon-o-document-arrow-down">
                         Export PDF
@@ -26,18 +26,18 @@
         </x-filament::card>
 
         <x-filament::card>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <div class="rounded-lg border border-zinc-700 p-4">
-                    <div class="text-sm text-zinc-400">Total Expenses</div>
-                    <div class="text-2xl font-bold text-white">FCFA {{ number_format($reportData['total_amount'], 2) }}</div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+                <div style="background: rgba(39,39,42,0.6); border-radius: 0.5rem; padding: 1rem; border: 1px solid #3f3f46;">
+                    <div style="font-size: 0.875rem; color: #a1a1aa; font-weight: 600;">Total Expenses</div>
+                    <div style="font-size: 1.5rem; font-weight: bold; color: #fff; margin-top: 0.25rem;">FCFA {{ number_format($reportData['total_amount'], 2) }}</div>
                 </div>
-                <div class="rounded-lg border border-zinc-700 p-4">
-                    <div class="text-sm text-zinc-400">Expense Entries</div>
-                    <div class="text-2xl font-bold text-white">{{ number_format($reportData['expense_count']) }}</div>
+                <div style="background: rgba(39,39,42,0.6); border-radius: 0.5rem; padding: 1rem; border: 1px solid #3f3f46;">
+                    <div style="font-size: 0.875rem; color: #a1a1aa; font-weight: 600;">Expense Entries</div>
+                    <div style="font-size: 1.5rem; font-weight: bold; color: #fff; margin-top: 0.25rem;">{{ number_format($reportData['expense_count']) }}</div>
                 </div>
-                <div class="rounded-lg border border-zinc-700 p-4">
-                    <div class="text-sm text-zinc-400">Included in P&amp;L</div>
-                    <div class="text-sm text-emerald-400 mt-2">These totals feed the Profit &amp; Loss report for the same date range.</div>
+                <div style="background: rgba(39,39,42,0.6); border-radius: 0.5rem; padding: 1rem; border: 1px solid #3f3f46;">
+                    <div style="font-size: 0.875rem; color: #a1a1aa; font-weight: 600;">Included in P&amp;L</div>
+                    <div style="font-size: 0.875rem; color: #34d399; margin-top: 0.5rem;">These totals feed the Profit &amp; Loss report for the same date range.</div>
                 </div>
             </div>
 

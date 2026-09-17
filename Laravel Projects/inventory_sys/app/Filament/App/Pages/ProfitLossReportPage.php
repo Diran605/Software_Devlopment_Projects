@@ -50,9 +50,10 @@ class ProfitLossReportPage extends Page implements HasForms
     public function mount(): void
     {
         $this->form->fill([
-            'branch_id' => Filament::getTenant()?->id,
-            'date_from' => now()->startOfMonth()->format('Y-m-d'),
-            'date_to'   => now()->endOfMonth()->format('Y-m-d'),
+            'branch_id'     => Filament::getTenant()?->id,
+            'date_from'     => now()->startOfMonth()->format('Y-m-d'),
+            'date_to'       => now()->endOfMonth()->format('Y-m-d'),
+            'department_id' => null,
         ]);
     }
 
@@ -60,7 +61,7 @@ class ProfitLossReportPage extends Page implements HasForms
     {
         return $form
             ->schema([
-                Grid::make(Filament::getTenant() ? 2 : 3)
+                Grid::make(Filament::getTenant() ? 3 : 4)
                     ->schema([
                         Select::make('branch_id')
                             ->label('Branch')
@@ -75,6 +76,20 @@ class ProfitLossReportPage extends Page implements HasForms
                             ->live(),
                         DatePicker::make('date_to')
                             ->label('To Date')
+                            ->live(),
+                        Select::make('department_id')
+                            ->label('Department')
+                            ->options(function () {
+                                $branchId = Filament::getTenant()?->id ?? ($this->data['branch_id'] ?? null);
+                                return \App\Models\Department::query()
+                                    ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
+                                    ->where('is_active', true)
+                                    ->orderBy('name')
+                                    ->pluck('name', 'id');
+                            })
+                            ->nullable()
+                            ->searchable()
+                            ->preload()
                             ->live(),
                     ])
             ])
@@ -93,6 +108,7 @@ class ProfitLossReportPage extends Page implements HasForms
 
         $from = $this->data['date_from'] ?? null;
         $to   = $this->data['date_to'] ?? null;
+        $departmentId = $this->data['department_id'] ?? null;
 
         // Revenue & COGS from sales
         $salesAgg = \App\Models\SalesOrderLine::query()
@@ -100,6 +116,7 @@ class ProfitLossReportPage extends Page implements HasForms
             ->when($tenantId, fn ($q) => $q->where('sales_orders.branch_id', $tenantId))
             ->when($from, fn ($q) => $q->whereDate('sales_orders.sold_at', '>=', $from))
             ->when($to,   fn ($q) => $q->whereDate('sales_orders.sold_at', '<=', $to))
+            ->when($departmentId, fn ($q) => $q->where('sales_orders.department_id', $departmentId))
             ->select(
                 DB::raw('COALESCE(SUM(sales_order_lines.line_total), 0) as revenue'),
                 DB::raw('COALESCE(SUM(sales_order_lines.line_cost), 0) as cogs'),
@@ -118,6 +135,7 @@ class ProfitLossReportPage extends Page implements HasForms
             ->when($tenantId, fn ($q) => $q->where('branch_id', $tenantId))
             ->when($from, fn ($q) => $q->whereDate('expense_date', '>=', $from))
             ->when($to,   fn ($q) => $q->whereDate('expense_date', '<=', $to))
+            ->when($departmentId, fn ($q) => $q->where('expenses.department_id', $departmentId))
             ->sum('amount');
 
         $netProfit = $grossProfit - $totalExpenses;
@@ -128,6 +146,7 @@ class ProfitLossReportPage extends Page implements HasForms
             ->when($tenantId, fn ($q) => $q->where('expenses.branch_id', $tenantId))
             ->when($from, fn ($q) => $q->whereDate('expenses.expense_date', '>=', $from))
             ->when($to,   fn ($q) => $q->whereDate('expenses.expense_date', '<=', $to))
+            ->when($departmentId, fn ($q) => $q->where('expenses.department_id', $departmentId))
             ->select(
                 DB::raw('COALESCE(expense_categories.name, "Uncategorized") as category_name'),
                 DB::raw('SUM(expenses.amount) as total_amount'),
@@ -143,6 +162,7 @@ class ProfitLossReportPage extends Page implements HasForms
             ->when($tenantId, fn ($q) => $q->where('sales_orders.branch_id', $tenantId))
             ->when($from, fn ($q) => $q->whereDate('sales_orders.sold_at', '>=', $from))
             ->when($to,   fn ($q) => $q->whereDate('sales_orders.sold_at', '<=', $to))
+            ->when($departmentId, fn ($q) => $q->where('sales_orders.department_id', $departmentId))
             ->select(
                 DB::raw('DATE(sales_orders.sold_at) as date'),
                 DB::raw('SUM(sales_order_lines.line_total) as amount')
@@ -159,6 +179,7 @@ class ProfitLossReportPage extends Page implements HasForms
             ->when($tenantId, fn ($q) => $q->where('sales_orders.branch_id', $tenantId))
             ->when($from, fn ($q) => $q->whereDate('sales_orders.sold_at', '>=', $from))
             ->when($to,   fn ($q) => $q->whereDate('sales_orders.sold_at', '<=', $to))
+            ->when($departmentId, fn ($q) => $q->where('sales_orders.department_id', $departmentId))
             ->whereNull('sales_orders.deleted_at')
             ->whereNull('sales_order_lines.deleted_at')
             ->where('sales_order_lines.gross_profit', '<', 0)

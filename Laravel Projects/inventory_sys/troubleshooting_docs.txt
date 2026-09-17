@@ -1,0 +1,67 @@
+# Inventory System - Troubleshooting & Solutions Documentation
+
+This document records the major issues encountered during the development and deployment of the Inventory System, specifically focusing on the local Windows environment, and the exact solutions used to resolve them.
+
+---
+
+## 1. Filament Report UI Styling & Layout Issues
+
+### Issue: Tailwind classes not compiling in custom views
+*   **Symptoms:** Custom report blade views (Profit & Loss, Expense Report, etc.) lacked styling. Text colors were invisible, cards had no borders, and tables looked plain.
+*   **Cause:** Filament uses a restricted JIT (Just-In-Time) compiler for Tailwind. Custom classes added to blade files in the `app` or `resources/views/filament` directories are ignored unless explicitly registered in the Filament theme build pipeline, which is difficult in offline/compiled environments.
+*   **Solution:** Removed all Tailwind utility classes from the report blade views and replaced them with robust **inline CSS** (`style="..."`). This ensures that the reports always look perfect regardless of the Tailwind build state.
+
+### Issue: Overlapping buttons on smaller screens / when adding filters
+*   **Symptoms:** When the new "Department" filter dropdown was added, the "Export Summary Only" button shifted and awkwardly overlapped the form fields.
+*   **Cause:** The flex container holding the buttons lacked wrap constraints, causing the buttons to overflow their container.
+*   **Solution:** Applied `flex-wrap: wrap;` and `gap: 0.75rem; margin-top: 1rem;` to the button container across all 12 report pages to ensure graceful wrapping.
+
+### Issue: Table headers and "Grand Totals" misalignment
+*   **Symptoms:** Headers like "EXPECTED REVENUE (at standard price)" were squished. The "Grand Totals" row was shifted to the left, misaligning the data.
+*   **Cause:** Headers had `white-space: nowrap` forcing them into rigid boxes. The Grand Totals row had an incorrect `colspan="5"` that didn't account for the expandable row arrow.
+*   **Solution:** Removed `white-space: nowrap`, gave headers a `min-width`, and adjusted the `colspan` on the footer to strictly align with the data columns above it.
+
+---
+
+## 2. Spatie Backup System Issues (Windows Environment)
+
+### Issue: "Exitcode 2: Misuse of shell builtins"
+*   **Symptoms:** Clicking "Create Backup" in the UI resulted in Exitcode 2.
+*   **Cause:** `mysqldump` could not be found or executed by PHP's `proc_open` due to incorrect quoting of the path in the `.env` file (e.g., spaces in `C:\Program Files\...`).
+*   **Solution:** 
+    1. Added MySQL's `bin` folder directly to the Windows System **PATH** Environment Variables.
+    2. Blanked out the `.env` override (`MYSQL_DUMP_PATH=""`).
+
+### Issue: "Exitcode 1: General error" (GTID Warning)
+*   **Symptoms:** Backup failed with Exitcode 1. Manual tests in PowerShell revealed a warning: *"A partial dump from a server that has GTIDs will by default include the GTIDs of all transactions..."*
+*   **Cause:** MySQL 8 prints a warning about GTIDs. Spatie's `DbDumper` intercepts this warning on `stderr` and interprets it as a critical failure.
+*   **Solution:** Added `'set_gtid_purged' => 'OFF'` to the `dump` array in `config/database.php`. This silences the warning and allows the dump to proceed.
+
+### Issue: "Exitcode 1: General error" (Column Statistics)
+*   **Symptoms:** MySQL 8 throws an error about `column_statistics` not existing in `information_schema` when `mysqldump` is run.
+*   **Cause:** A known incompatibility between MySQL 8's default dump behavior and certain database permissions/versions.
+*   **Solution:** Added `'do_not_use_column_statistics'` to the `dump` array in `config/database.php`.
+
+### Issue: "Got error: 2004: Can't create TCP/IP socket (10106)"
+*   **Symptoms:** When `mysqldump` executes from the web server (via Filament UI), it crashes with socket error 10106.
+*   **Cause:** When a Windows background service (like Apache/XAMPP/Herd) spawns a child process (`mysqldump.exe`) via PHP's `proc_open`, it strips out the `SYSTEMROOT` environment variable. Without `SYSTEMROOT`, Windows Winsock cannot initialize, completely blocking the executable from using network sockets (TCP/IP).
+*   **Attempted Fixes:** 
+    *   Changing `DB_HOST` from `127.0.0.1` to `localhost` triggered error `11003 (Unknown host)`, confirming DNS/Networking was fully disabled for the child process.
+    *   Injecting `putenv('SYSTEMROOT=C:\Windows')` in `AppServiceProvider.php` was attempted, but deeply isolated web server permissions still blocked it.
+*   **Final Guaranteed Solution:** 
+    *   Bypass the restricted web server environment entirely by running the backup directly in the Windows terminal. 
+    *   Running `php artisan backup:run` in PowerShell successfully executes the backup because the terminal has native access to the Windows network stack and `SYSTEMROOT`. 
+    *   *Recommendation:* Create a `backup.bat` script on the desktop for 1-click execution.
+
+---
+
+## 3. Deployment & Syncing Workflows
+
+### Issue: Code changes on development machine not reflecting on the offline machine
+*   **Symptoms:** After copying files to the target desktop, the new pages or changes did not appear.
+*   **Cause:** Laravel caches configurations, views, and routing aggressively for performance. Just replacing the files isn't enough; Laravel doesn't know they changed.
+*   **Solution:** After pasting updated files onto the local machine, always run the following cache-clearing commands in the terminal:
+    ```bash
+    php artisan optimize:clear
+    ```
+    This flushes the config, routes, and compiled views, forcing Laravel to read the new code.

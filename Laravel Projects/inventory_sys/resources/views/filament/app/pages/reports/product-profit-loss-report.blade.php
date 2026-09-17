@@ -14,7 +14,7 @@
         <x-filament::card>
             <form wire:submit.prevent="submit" class="space-y-4">
                 {{ $this->form }}
-                <div class="flex items-center gap-3 mt-4">
+                <div style="display: flex; align-items: center; gap: 0.75rem; margin-top: 1rem; flex-wrap: wrap;">
                     <x-filament::button type="submit" color="primary">
                         Apply Filters
                     </x-filament::button>
@@ -36,27 +36,27 @@
 
         {{-- Summary Cards --}}
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
-            <div class="bg-zinc-800/60 rounded-xl p-4 border border-zinc-700">
-                <div class="text-xs text-zinc-400 uppercase tracking-wider font-semibold">Products</div>
-                <div class="text-2xl font-bold text-white mt-1">{{ $data['rows']->count() }}</div>
+            <div style="background: rgba(39,39,42,0.6); border-radius: 0.75rem; padding: 1rem; border: 1px solid #3f3f46;">
+                <div style="font-size: 0.75rem; color: #a1a1aa; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">Products</div>
+                <div style="font-size: 1.5rem; font-weight: bold; color: #fff; margin-top: 0.25rem;">{{ $data['rows']->count() }}</div>
             </div>
-            <div class="bg-zinc-800/60 rounded-xl p-4 border border-zinc-700">
-                <div class="text-xs text-zinc-400 uppercase tracking-wider font-semibold">Total Revenue</div>
-                <div class="text-2xl font-bold text-emerald-400 mt-1">FCFA {{ number_format($data['total_revenue'], 0) }}</div>
+            <div style="background: rgba(39,39,42,0.6); border-radius: 0.75rem; padding: 1rem; border: 1px solid #3f3f46;">
+                <div style="font-size: 0.75rem; color: #a1a1aa; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">Total Revenue</div>
+                <div style="font-size: 1.5rem; font-weight: bold; color: #34d399; margin-top: 0.25rem;">FCFA {{ number_format($data['total_revenue'], 0) }}</div>
             </div>
-            <div class="bg-zinc-800/60 rounded-xl p-4 border border-zinc-700">
-                <div class="text-xs text-zinc-400 uppercase tracking-wider font-semibold">Total Cost</div>
-                <div class="text-2xl font-bold text-rose-400 mt-1">FCFA {{ number_format($data['total_cost'], 0) }}</div>
+            <div style="background: rgba(39,39,42,0.6); border-radius: 0.75rem; padding: 1rem; border: 1px solid #3f3f46;">
+                <div style="font-size: 0.75rem; color: #a1a1aa; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">Total Cost</div>
+                <div style="font-size: 1.5rem; font-weight: bold; color: #fb7185; margin-top: 0.25rem;">FCFA {{ number_format($data['total_cost'], 0) }}</div>
             </div>
-            <div class="bg-zinc-800/60 rounded-xl p-4 border border-zinc-700">
-                <div class="text-xs text-zinc-400 uppercase tracking-wider font-semibold">Net Profit / (Loss)</div>
-                <div class="text-2xl font-bold {{ $data['total_profit'] >= 0 ? 'text-emerald-400' : 'text-rose-400' }} mt-1">
+            <div style="background: rgba(39,39,42,0.6); border-radius: 0.75rem; padding: 1rem; border: 1px solid #3f3f46;">
+                <div style="font-size: 0.75rem; color: #a1a1aa; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">Net Profit / (Loss)</div>
+                <div style="font-size: 1.5rem; font-weight: bold; color: {{ $data['total_profit'] >= 0 ? '#34d399' : '#fb7185' }}; margin-top: 0.25rem;">
                     FCFA {{ number_format($data['total_profit'], 0) }}
                 </div>
             </div>
-            <div class="bg-zinc-800/60 rounded-xl p-4 border border-zinc-700">
-                <div class="text-xs text-zinc-400 uppercase tracking-wider font-semibold">Overall Margin</div>
-                <div class="text-2xl font-bold {{ $data['overall_margin'] >= 0 ? 'text-emerald-400' : 'text-rose-400' }} mt-1">
+            <div style="background: rgba(39,39,42,0.6); border-radius: 0.75rem; padding: 1rem; border: 1px solid #3f3f46;">
+                <div style="font-size: 0.75rem; color: #a1a1aa; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">Overall Margin</div>
+                <div style="font-size: 1.5rem; font-weight: bold; color: {{ $data['overall_margin'] >= 0 ? '#34d399' : '#fb7185' }}; margin-top: 0.25rem;">
                     {{ $data['overall_margin'] }}%
                 </div>
             </div>
@@ -64,18 +64,18 @@
 
         {{-- Profitable vs Loss-Making --}}
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
-            <div class="bg-emerald-900/30 rounded-xl p-4 border border-emerald-700/40 flex items-center gap-4">
+            <div style="background: rgba(6,78,59,0.3); border-radius: 0.75rem; padding: 1rem; border: 1px solid rgba(4,120,87,0.4); display: flex; align-items: center; gap: 1rem;">
                 <div class="text-3xl">✅</div>
                 <div>
-                    <div class="text-xs text-zinc-400 uppercase font-semibold">Profitable Products</div>
-                    <div class="text-3xl font-bold text-emerald-400">{{ $data['profitable_count'] }}</div>
+                    <div style="font-size: 0.75rem; color: #a1a1aa; text-transform: uppercase; font-weight: 600;">Profitable Products</div>
+                    <div style="font-size: 1.875rem; font-weight: bold; color: #34d399;">{{ $data['profitable_count'] }}</div>
                 </div>
             </div>
-            <div class="bg-rose-900/30 rounded-xl p-4 border border-rose-700/40 flex items-center gap-4">
+            <div style="background: rgba(136,19,55,0.3); border-radius: 0.75rem; padding: 1rem; border: 1px solid rgba(190,18,60,0.4); display: flex; align-items: center; gap: 1rem;">
                 <div class="text-3xl">⚠️</div>
                 <div>
-                    <div class="text-xs text-zinc-400 uppercase font-semibold">Loss-Making Products</div>
-                    <div class="text-3xl font-bold text-rose-400">{{ $data['loss_count'] }}</div>
+                    <div style="font-size: 0.75rem; color: #a1a1aa; text-transform: uppercase; font-weight: 600;">Loss-Making Products</div>
+                    <div style="font-size: 1.875rem; font-weight: bold; color: #fb7185;">{{ $data['loss_count'] }}</div>
                 </div>
             </div>
         </div>
@@ -113,11 +113,12 @@
                     <tbody>
                         @foreach($data['rows'] as $row)
                         <tr @class(['bg-rose-950/20' => $row->is_loss, 'bg-amber-950/20' => $row->is_low_margin && !$row->is_loss])>
-                            <td class="font-semibold text-white">{{ $row->item_name }}</td>
+                            <td class="text-center">{{ $loop->iteration }}</td>
+                            <td class="font-semibold" style="color: #fff;">{{ $row->item_name }}</td>
                             <td class="text-zinc-400 text-xs">{{ $row->category_name ?? '—' }}</td>
                             <td class="text-right text-sky-300 font-semibold">{{ number_format($row->total_qty) }}</td>
-                            <td class="text-right text-emerald-400 font-semibold">{{ number_format($row->total_revenue, 2) }}</td>
-                            <td class="text-right text-rose-400">FCFA {{ number_format($row->total_cost, 2) }}</td>
+                            <td class="text-right font-semibold" style="color: #34d399;">{{ number_format($row->total_revenue, 2) }}</td>
+                            <td class="text-right" style="color: #fb7185;">FCFA {{ number_format($row->total_cost, 2) }}</td>
                             <td class="text-right font-bold {{ $row->is_loss ? 'text-rose-400' : 'text-emerald-400' }}">
                                 @if($row->is_loss)
                                     (FCFA {{ number_format(abs($row->total_profit), 2) }})
@@ -143,9 +144,9 @@
                     </tbody>
                     <tfoot>
                         <tr>
-                            <td colspan="4" class="text-white font-bold">TOTALS</td>
+                            <td colspan="4" style="color: #fff; font-weight: bold;">TOTALS</td>
                             <td class="text-right text-emerald-400">FCFA {{ number_format($data['total_revenue'], 2) }}</td>
-                            <td class="text-right text-rose-400">FCFA {{ number_format($data['total_cost'], 2) }}</td>
+                            <td class="text-right" style="color: #fb7185;">FCFA {{ number_format($data['total_cost'], 2) }}</td>
                             <td class="text-right {{ $data['total_profit'] >= 0 ? 'text-emerald-400' : 'text-rose-400' }}">
                                 @if($data['total_profit'] < 0)
                                     (FCFA {{ number_format(abs($data['total_profit']), 2) }})

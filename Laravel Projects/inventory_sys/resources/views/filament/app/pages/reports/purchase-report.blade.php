@@ -60,12 +60,12 @@
             text-align: center !important;
         }
     </style>
-    <div class="space-y-6">
+    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
         <x-filament::card>
-            <form wire:submit.prevent="submit" class="space-y-4">
+            <form wire:submit.prevent="submit" style="display: flex; flex-direction: column; gap: 1rem;">
                 {{ $this->form }}
                 
-                <div class="flex items-center gap-3 mt-4">
+                <div style="display: flex; align-items: center; gap: 0.75rem; margin-top: 1rem;">
                     <x-filament::button type="submit" color="primary">
                         Filter Report
                     </x-filament::button>
@@ -84,76 +84,76 @@
         </x-filament::card>
 
         <x-filament::card>
-            <div class="overflow-x-auto">
-                <table class="report-table w-full text-left border-collapse text-sm">
+            <div style="overflow-x: auto;">
+                <table class="report-table">
                     <thead>
-                        <tr class="border-b border-zinc-700 bg-zinc-800 text-zinc-300">
+                        <tr>
                             <th class="text-center" style="width:3%; text-align:center;">S/N</th>
-                            <th class="p-3 font-semibold">PO Number</th>
-                            <th class="p-3 font-semibold">Supplier</th>
-                            <th class="p-3 font-semibold">Ordered At</th>
-                            <th class="p-3 font-semibold">Expected Delivery</th>
-                            <th class="p-3 font-semibold text-center">Status</th>
-                            <th class="p-3 font-semibold text-right">Total Cost</th>
+                            <th>PO Number</th>
+                            <th>Supplier</th>
+                            <th>Ordered At</th>
+                            <th>Expected Delivery</th>
+                            <th class="text-center">Status</th>
+                            <th class="text-right">Total Cost</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-zinc-700 text-zinc-300">
+                    <tbody>
                         @forelse($reportData as $row)
-                            <tr class="bg-zinc-900 font-medium text-white border-t border-zinc-700">
+                            <tr style="background: rgba(24,24,27,0.8); font-weight: 500; color: #fff; border-top: 1px solid #3f3f46;">
                                 <td class="text-center" style="text-align:center; color:#888;">{{ $loop->iteration }}</td>
-                            <td class="p-3 font-bold">{{ $row->po_number }}</td>
-                                <td class="p-3 text-zinc-400">{{ $row->supplier?->name }}</td>
-                                <td class="p-3 text-zinc-400">{{ $row->ordered_at ? \Carbon\Carbon::parse($row->ordered_at)->format('M d, Y H:i') : '—' }}</td>
-                                <td class="p-3 text-zinc-400">{{ $row->expected_delivery_at ? \Carbon\Carbon::parse($row->expected_delivery_at)->format('M d, Y') : '—' }}</td>
-                                <td class="p-3 text-center">
+                            <td style="font-weight: 700;">{{ $row->po_number }}</td>
+                                <td style="color: #a1a1aa;">{{ $row->supplier?->name }}</td>
+                                <td style="color: #a1a1aa;">{{ $row->ordered_at ? \Carbon\Carbon::parse($row->ordered_at)->format('M d, Y H:i') : '—' }}</td>
+                                <td style="color: #a1a1aa;">{{ $row->expected_delivery_at ? \Carbon\Carbon::parse($row->expected_delivery_at)->format('M d, Y') : '—' }}</td>
+                                <td style="text-align: center;">
                                     @php
-                                        $color = match ($row->status) {
-                                            'draft' => 'text-zinc-400 bg-zinc-850',
-                                            'issued' => 'text-sky-400 bg-sky-950/40',
-                                            'partially_received' => 'text-amber-400 bg-amber-950/40',
-                                            'fully_received' => 'text-emerald-400 bg-emerald-950/40',
-                                            'cancelled' => 'text-rose-400 bg-rose-950/40',
-                                            default => 'text-zinc-400 bg-zinc-850',
-                                        };
+                                        $styleMap = [
+                                            'draft'              => 'color:#a1a1aa; background:rgba(39,39,42,0.6);',
+                                            'issued'             => 'color:#38bdf8; background:rgba(8,47,73,0.4);',
+                                            'partially_received' => 'color:#fbbf24; background:rgba(69,26,3,0.4);',
+                                            'fully_received'     => 'color:#34d399; background:rgba(6,78,59,0.4);',
+                                            'cancelled'          => 'color:#fb7185; background:rgba(136,19,55,0.4);',
+                                        ];
+                                        $badgeStyle = $styleMap[$row->status] ?? 'color:#a1a1aa; background:rgba(39,39,42,0.6);';
                                         $label = match ($row->status) {
-                                            'draft' => 'Draft',
-                                            'issued' => 'Issued',
+                                            'draft'              => 'Draft',
+                                            'issued'             => 'Issued',
                                             'partially_received' => 'Partially Received',
-                                            'fully_received' => 'Fully Received',
-                                            'cancelled' => 'Cancelled',
-                                            default => ucfirst($row->status),
+                                            'fully_received'     => 'Fully Received',
+                                            'cancelled'          => 'Cancelled',
+                                            default              => ucfirst($row->status),
                                         };
                                     @endphp
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold {{ $color }}">
+                                    <span style="display:inline-flex; align-items:center; padding:0.125rem 0.5rem; border-radius:0.25rem; font-size:0.75rem; font-weight:600; {{ $badgeStyle }}">
                                         {{ $label }}
                                     </span>
                                 </td>
-                                <td class="p-3 text-right font-bold text-success-400">FCFA {{ number_format($row->total_amount, 2) }}</td>
+                                <td class="text-right" style="font-weight:700; color:#34d399;">FCFA {{ number_format($row->total_amount, 2) }}</td>
                             </tr>
                             @if($row->purchaseOrderLines && $row->purchaseOrderLines->isNotEmpty())
                                 <tr>
-                                    <td colspan="7" class="p-0 bg-zinc-950/40">
-                                        <div class="pl-8 pr-3 py-2">
+                                    <td colspan="7" style="padding:0; background:rgba(9,9,11,0.4);">
+                                        <div style="padding-left:2rem; padding-right:0.75rem; padding-top:0.5rem; padding-bottom:0.5rem;">
                                             <table class="nested-report-table">
                                                 <thead>
-                                                    <tr class="border-b border-zinc-800 text-zinc-400 font-semibold">
+                                                    <tr>
                                                         <th class="text-center" style="width:3%; text-align:center;">S/N</th>
-                            <th class="py-1 px-2">Item</th>
-                                                        <th class="py-1 px-2 text-right">Qty Ordered</th>
-                                                        <th class="py-1 px-2 text-right">Qty Received</th>
-                                                        <th class="py-1 px-2 text-right">Unit Cost</th>
-                                                        <th class="py-1 px-2 text-right">Line Total</th>
+                                    <th>Item</th>
+                                                        <th class="text-right">Qty Ordered</th>
+                                                        <th class="text-right">Qty Received</th>
+                                                        <th class="text-right">Unit Cost</th>
+                                                        <th class="text-right">Line Total</th>
                                                     </tr>
                                                 </thead>
-                                                <tbody class="divide-y divide-zinc-900 text-zinc-400">
+                                                <tbody>
                                                     @foreach($row->purchaseOrderLines as $line)
                                                         <tr>
                                                             <td class="text-center" style="text-align:center; color:#888;">{{ $loop->iteration }}</td>
-                            <td class="py-1 px-2 font-semibold text-zinc-300">{{ $line->item?->name }}</td>
-                                                            <td class="py-1 px-2 text-right">{{ number_format($line->qty_ordered) }}</td>
-                                                            <td class="py-1 px-2 text-right">{{ number_format($line->qty_received) }}</td>
-                                                            <td class="py-1 px-2 text-right">FCFA {{ number_format($line->unit_cost, 2) }}</td>
-                                                            <td class="py-1 px-2 text-right">FCFA {{ number_format($line->qty_ordered * $line->unit_cost, 2) }}</td>
+                                    <td style="font-weight:600; color:#d4d4d8;">{{ $line->item?->name }}</td>
+                                                            <td class="text-right">{{ number_format($line->qty_ordered) }}</td>
+                                                            <td class="text-right">{{ number_format($line->qty_received) }}</td>
+                                                            <td class="text-right">FCFA {{ number_format($line->unit_cost, 2) }}</td>
+                                                            <td class="text-right">FCFA {{ number_format($line->qty_ordered * $line->unit_cost, 2) }}</td>
                                                         </tr>
                                                     @endforeach
                                                 </tbody>
@@ -164,15 +164,15 @@
                             @endif
                         @empty
                             <tr>
-                                <td colspan="7" class="p-4 text-center text-zinc-500">No purchase orders found for the selected supplier or status.</td>
+                                <td colspan="7" style="padding: 1rem; text-align: center; color: #71717a;">No purchase orders found for the selected supplier or status.</td>
                             </tr>
                         @endforelse
                     </tbody>
                     @if($reportData->isNotEmpty())
                         <tfoot>
-                            <tr class="border-t-2 border-zinc-500 bg-zinc-800/80 font-bold text-white">
-                                <td colspan="6" class="p-3 text-left">Grand Total</td>
-                                <td class="p-3 text-right text-success-400">FCFA {{ number_format($reportData->sum('total_amount'), 2) }}</td>
+                            <tr>
+                                <td colspan="6" style="text-align:left;">Grand Total</td>
+                                <td class="text-right" style="color:#34d399;">FCFA {{ number_format($reportData->sum('total_amount'), 2) }}</td>
                             </tr>
                         </tfoot>
                     @endif

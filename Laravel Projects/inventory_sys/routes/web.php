@@ -44,3 +44,46 @@ Route::get('/logout', function () {
     request()->session()->regenerateToken();
     return redirect('/admin/login');
 })->name('logout');
+
+// Debug Backup Route to trace exact MySQL error
+Route::get('/debug-backup', function () {
+    try {
+        $dbConfig = config('database.connections.mysql');
+        $host = $dbConfig['host'];
+        $port = $dbConfig['port'] ?? 3306;
+        $db = $dbConfig['database'];
+        $user = $dbConfig['username'];
+        $pass = $dbConfig['password'] ?? '';
+        
+        $dumpPath = $dbConfig['dump']['dump_binary_path'] ?? '';
+        if ($dumpPath !== '' && substr($dumpPath, -1) !== '/' && substr($dumpPath, -1) !== '\\') {
+            $dumpPath .= '/';
+        }
+        
+        $cmd = '"' . $dumpPath . 'mysqldump" --user=' . escapeshellarg($user) . ' --host=' . escapeshellarg($host) . ' --port=' . escapeshellarg($port) . ' --single-transaction --skip-column-statistics --set-gtid-purged=OFF ';
+        if ($pass) {
+            $cmd .= '--password=' . escapeshellarg($pass) . ' ';
+        }
+        $cmd .= escapeshellarg($db) . ' > ' . escapeshellarg(storage_path('app/private/debug_dump.sql')) . ' 2>&1';
+        
+        // Ensure SYSTEMROOT is in the environment
+        $systemRoot = getenv('SYSTEMROOT') ?: 'C:\\Windows';
+        putenv("SYSTEMROOT=$systemRoot");
+
+        $output = shell_exec($cmd);
+        
+        if (file_exists(storage_path('app/private/debug_dump.sql')) && filesize(storage_path('app/private/debug_dump.sql')) > 100) {
+            return "SUCCESS! Dump created. Output was: " . htmlspecialchars($output);
+        } else {
+            return "<h1 style='color:red'>BACKUP FAILED</h1>" .
+                   "<h3>Direct Command Output:</h3>" .
+                   "<pre style='background:#111; color:#fff; padding:20px; font-size: 16px; white-space:pre-wrap; border-radius:5px;'>" . 
+                   htmlspecialchars($output ?: 'No output') . 
+                   "</pre>" .
+                   "<h3>Command Executed:</h3>" .
+                   "<pre>" . htmlspecialchars($cmd) . "</pre>";
+        }
+    } catch (\Exception $e) {
+        return "Error: " . $e->getMessage();
+    }
+});

@@ -37,12 +37,12 @@
             text-align: center !important;
         }
     </style>
-    <div class="space-y-6">
+    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
         <x-filament::card>
-            <form wire:submit.prevent="submit" class="space-y-4">
+            <form wire:submit.prevent="submit" style="display: flex; flex-direction: column; gap: 1rem;">
                 {{ $this->form }}
                 
-                <div class="flex items-center gap-3 mt-4">
+                <div style="display: flex; align-items: center; gap: 0.75rem; margin-top: 1rem;">
                     <x-filament::button type="submit" color="primary">
                         Filter Report
                     </x-filament::button>
@@ -61,37 +61,37 @@
         </x-filament::card>
 
         <x-filament::card>
-            <div class="overflow-x-auto">
-                <table class="report-table w-full text-left border-collapse text-sm">
+            <div style="overflow-x: auto;">
+                <table class="report-table">
                     <thead>
-                        <tr class="border-b border-zinc-700 bg-zinc-800 text-zinc-300">
+                        <tr>
                             <th class="text-center" style="width:3%; text-align:center;">S/N</th>
-                            <th class="p-3 font-semibold">Item</th>
-                            <th class="p-3 font-semibold">Category</th>
-                            <th class="p-3 font-semibold">Batch #</th>
-                            <th class="p-3 font-semibold">Expiry Date</th>
-                            <th class="p-3 font-semibold text-right">Days to Expiry</th>
-                            <th class="p-3 font-semibold text-right">Qty Remaining</th>
-                            <th class="p-3 font-semibold text-right">Unit Cost</th>
-                            <th class="p-3 font-semibold text-right">Total Value</th>
-                            <th class="p-3 font-semibold">Urgency</th>
+                            <th>Item</th>
+                            <th>Category</th>
+                            <th>Batch #</th>
+                            <th>Expiry Date</th>
+                            <th class="text-right">Days to Expiry</th>
+                            <th class="text-right">Qty Remaining</th>
+                            <th class="text-right">Unit Cost</th>
+                            <th class="text-right">Total Value</th>
+                            <th>Urgency</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-zinc-700 text-zinc-300">
+                    <tbody>
                         @forelse($reportData as $row)
-                            <tr class="hover:bg-zinc-800/50">
+                            <tr>
                                 <td class="text-center" style="text-align:center; color:#888;">{{ $loop->iteration }}</td>
-                            <td class="p-3 font-medium">{{ $row->item->name }}</td>
-                                <td class="p-3">{{ $row->item->category?->name ?? '—' }}</td>
-                                <td class="p-3">{{ $row->batch_number }}</td>
-                                <td class="p-3">{{ $row->expiry_date ? $row->expiry_date->format('M d, Y') : '—' }}</td>
-                                <td class="p-3 text-right font-semibold {{ $row->days_to_expiry <= 6 ? 'text-red-500' : ($row->days_to_expiry <= 30 ? 'text-amber-500' : 'text-zinc-400') }}">
+                            <td style="font-weight:500;">{{ $row->item->name }}</td>
+                                <td>{{ $row->item->category?->name ?? '—' }}</td>
+                                <td>{{ $row->batch_number }}</td>
+                                <td>{{ $row->expiry_date ? $row->expiry_date->format('M d, Y') : '—' }}</td>
+                                <td class="text-right" style="font-weight:600; color:{{ $row->days_to_expiry <= 6 ? '#ef4444' : ($row->days_to_expiry <= 30 ? '#f59e0b' : '#a1a1aa') }};">
                                     {{ $row->days_to_expiry }}
                                 </td>
-                                <td class="p-3 text-right">{{ number_format($row->qty_remaining) }}</td>
-                                <td class="p-3 text-right">FCFA {{ number_format($row->unit_cost, 2) }}</td>
-                                <td class="p-3 text-right font-medium">FCFA {{ number_format($row->total_cost, 2) }}</td>
-                                <td class="p-3">
+                                <td class="text-right">{{ number_format($row->qty_remaining) }}</td>
+                                <td class="text-right">FCFA {{ number_format($row->unit_cost, 2) }}</td>
+                                <td class="text-right" style="font-weight:500;">FCFA {{ number_format($row->total_cost, 2) }}</td>
+                                <td>
                                     <x-filament::badge :color="$row->urgency_color">
                                         {{ $row->urgency_label }}
                                     </x-filament::badge>
@@ -99,18 +99,18 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="10" class="p-4 text-center text-zinc-500">No records found for the selected criteria.</td>
+                                <td colspan="10" style="padding: 1rem; text-align: center; color: #71717a;">No records found for the selected criteria.</td>
                             </tr>
                         @endforelse
                     </tbody>
                     @if($reportData->isNotEmpty())
                         <tfoot>
-                            <tr class="border-t-2 border-zinc-500 bg-zinc-800/80 font-bold text-white">
-                                <td class="p-3" colspan="6">Total</td>
-                                <td class="p-3 text-right">{{ number_format($reportData->sum('qty_remaining')) }}</td>
-                                <td class="p-3 text-right">—</td>
-                                <td class="p-3 text-right">FCFA {{ number_format($reportData->sum('total_cost'), 2) }}</td>
-                                <td class="p-3">—</td>
+                            <tr>
+                                <td colspan="6">Total</td>
+                                <td class="text-right">{{ number_format($reportData->sum('qty_remaining')) }}</td>
+                                <td class="text-right">—</td>
+                                <td class="text-right">FCFA {{ number_format($reportData->sum('total_cost'), 2) }}</td>
+                                <td>—</td>
                             </tr>
                         </tfoot>
                     @endif

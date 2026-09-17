@@ -7,11 +7,11 @@
         .report-table tbody tr:hover { background-color: rgba(39, 39, 42, 0.4); }
         .text-right { text-align: right !important; }
     </style>
-    <div class="space-y-6">
+    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
         <x-filament::card>
-            <form wire:submit.prevent="submit" class="space-y-4">
+            <form wire:submit.prevent="submit" style="display: flex; flex-direction: column; gap: 1rem;">
                 {{ $this->form }}
-                <div class="flex items-center gap-3 mt-4">
+                <div style="display: flex; align-items: center; gap: 0.75rem; margin-top: 1rem;">
                     <x-filament::button type="submit" color="primary">Filter Report</x-filament::button>
                     <x-filament::button type="button" wire:click="exportPdf('reports.low-stock.pdf')" color="success" icon="heroicon-o-document-arrow-down">
                         Export PDF
@@ -27,8 +27,8 @@
         </x-filament::card>
 
         <x-filament::card>
-            <div class="overflow-x-auto">
-                <table class="report-table w-full">
+            <div style="overflow-x: auto;">
+                <table class="report-table">
                     <thead>
                         <tr>
                             <th class="text-center" style="width:3%; text-align:center;">S/N</th>
@@ -47,10 +47,10 @@
                                 <td>{{ $row->item->category?->name ?? '—' }}</td>
                                 <td class="text-right">{{ number_format($row->qty_on_hand) }}</td>
                                 <td class="text-right">{{ number_format($row->item->reorder_level) }}</td>
-                                <td class="text-right text-danger-500">{{ number_format(max(0, $row->item->reorder_level - $row->qty_on_hand)) }}</td>
+                                <td class="text-right" style="color:#f87171; font-weight:600;">{{ number_format(max(0, $row->item->reorder_level - $row->qty_on_hand)) }}</td>
                             </tr>
                         @empty
-                            <tr><td colspan="6" class="p-4 text-center text-zinc-500">No low stock items found.</td></tr>
+                            <tr><td colspan="6" style="padding: 1rem; text-align: center; color: #71717a;">No low stock items found.</td></tr>
                         @endforelse
                     </tbody>
                 </table>

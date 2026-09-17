@@ -51,10 +51,11 @@ class ExpenseReportPage extends Page implements HasForms
     public function mount(): void
     {
         $this->form->fill([
-            'branch_id' => Filament::getTenant()?->id,
-            'date_from' => now()->startOfMonth()->format('Y-m-d'),
-            'date_to' => now()->endOfMonth()->format('Y-m-d'),
-            'category_id' => null,
+            'branch_id'     => Filament::getTenant()?->id,
+            'date_from'     => now()->startOfMonth()->format('Y-m-d'),
+            'date_to'       => now()->endOfMonth()->format('Y-m-d'),
+            'category_id'   => null,
+            'department_id' => null,
         ]);
     }
 
@@ -62,7 +63,7 @@ class ExpenseReportPage extends Page implements HasForms
     {
         return $form
             ->schema([
-                Grid::make(Filament::getTenant() ? 3 : 4)
+                Grid::make(Filament::getTenant() ? 4 : 5)
                     ->schema([
                         Select::make('branch_id')
                             ->label('Branch')
@@ -92,6 +93,20 @@ class ExpenseReportPage extends Page implements HasForms
                             ->searchable()
                             ->preload()
                             ->live(),
+                        Select::make('department_id')
+                            ->label('Department')
+                            ->options(function () {
+                                $branchId = Filament::getTenant()?->id ?? ($this->data['branch_id'] ?? null);
+                                return \App\Models\Department::query()
+                                    ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
+                                    ->where('is_active', true)
+                                    ->orderBy('name')
+                                    ->pluck('name', 'id');
+                            })
+                            ->nullable()
+                            ->searchable()
+                            ->preload()
+                            ->live(),
                     ]),
             ])
             ->statePath('data');
@@ -108,6 +123,7 @@ class ExpenseReportPage extends Page implements HasForms
         $from = $this->data['date_from'] ?? null;
         $to = $this->data['date_to'] ?? null;
         $categoryId = $this->data['category_id'] ?? null;
+        $departmentId = $this->data['department_id'] ?? null;
 
         $rows = Expense::query()
             ->with(['category', 'department', 'createdBy'])
@@ -115,6 +131,7 @@ class ExpenseReportPage extends Page implements HasForms
             ->when($from, fn ($q) => $q->whereDate('expense_date', '>=', $from))
             ->when($to, fn ($q) => $q->whereDate('expense_date', '<=', $to))
             ->when($categoryId, fn ($q) => $q->where('category_id', $categoryId))
+            ->when($departmentId, fn ($q) => $q->where('expenses.department_id', $departmentId))
             ->orderByDesc('expense_date')
             ->get();
 
@@ -124,6 +141,7 @@ class ExpenseReportPage extends Page implements HasForms
             ->when($from, fn ($q) => $q->whereDate('expenses.expense_date', '>=', $from))
             ->when($to, fn ($q) => $q->whereDate('expenses.expense_date', '<=', $to))
             ->when($categoryId, fn ($q) => $q->where('expenses.category_id', $categoryId))
+            ->when($departmentId, fn ($q) => $q->where('expenses.department_id', $departmentId))
             ->selectRaw('COALESCE(expense_categories.name, "Uncategorized") as category_name')
             ->selectRaw('SUM(expenses.amount) as total_amount')
             ->selectRaw('COUNT(*) as expense_count')

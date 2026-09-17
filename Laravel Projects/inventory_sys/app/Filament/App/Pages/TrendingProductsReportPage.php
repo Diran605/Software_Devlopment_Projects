@@ -50,12 +50,13 @@ class TrendingProductsReportPage extends Page implements HasForms
     public function mount(): void
     {
         $this->form->fill([
-            'branch_id' => Filament::getTenant()?->id,
-            'date_from' => now()->startOfMonth()->format('Y-m-d'),
-            'date_to'   => now()->endOfMonth()->format('Y-m-d'),
-            'sort_by'      => 'revenue',
-            'limit_preset' => 20,
-            'limit_custom' => 100,
+            'branch_id'     => Filament::getTenant()?->id,
+            'date_from'     => now()->startOfMonth()->format('Y-m-d'),
+            'date_to'       => now()->endOfMonth()->format('Y-m-d'),
+            'sort_by'       => 'revenue',
+            'limit_preset'  => 20,
+            'limit_custom'  => 100,
+            'department_id' => null,
         ]);
     }
 
@@ -63,7 +64,7 @@ class TrendingProductsReportPage extends Page implements HasForms
     {
         return $form
             ->schema([
-                Grid::make(Filament::getTenant() ? 4 : 5)
+                Grid::make(Filament::getTenant() ? 5 : 6)
                     ->schema([
                         Select::make('branch_id')
                             ->label('Branch')
@@ -106,6 +107,20 @@ class TrendingProductsReportPage extends Page implements HasForms
                             ->default(100)
                             ->live(debounce: 500)
                             ->visible(fn (callable $get) => $get('limit_preset') === 'custom'),
+                        Select::make('department_id')
+                            ->label('Department')
+                            ->options(function () {
+                                $branchId = Filament::getTenant()?->id ?? ($this->data['branch_id'] ?? null);
+                                return \App\Models\Department::query()
+                                    ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
+                                    ->where('is_active', true)
+                                    ->orderBy('name')
+                                    ->pluck('name', 'id');
+                            })
+                            ->nullable()
+                            ->searchable()
+                            ->preload()
+                            ->live(),
                     ])
             ])
             ->statePath('data');
@@ -123,6 +138,7 @@ class TrendingProductsReportPage extends Page implements HasForms
         $from     = $this->data['date_from'] ?? null;
         $to       = $this->data['date_to'] ?? null;
         $sortBy   = $this->data['sort_by'] ?? 'revenue';
+        $departmentId = $this->data['department_id'] ?? null;
         $limitPreset = $this->data['limit_preset'] ?? 20;
         if ($limitPreset === 'all') {
             $limit = 1000000;
@@ -146,6 +162,7 @@ class TrendingProductsReportPage extends Page implements HasForms
             ->when($branchId, fn ($q) => $q->where('sales_orders.branch_id', $branchId))
             ->when($from, fn ($q) => $q->whereDate('sales_orders.sold_at', '>=', $from))
             ->when($to,   fn ($q) => $q->whereDate('sales_orders.sold_at', '<=', $to))
+            ->when($departmentId, fn ($q) => $q->where('sales_orders.department_id', $departmentId))
             ->whereNull('sales_orders.deleted_at')
             ->whereNull('sales_order_lines.deleted_at')
             ->select(

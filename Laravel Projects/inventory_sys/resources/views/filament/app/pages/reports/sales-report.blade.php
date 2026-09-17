@@ -37,12 +37,12 @@
             text-align: center !important;
         }
     </style>
-    <div class="space-y-6">
+    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
         <x-filament::card>
-            <form wire:submit.prevent="submit" class="space-y-4">
+            <form wire:submit.prevent="submit" style="display: flex; flex-direction: column; gap: 1rem;">
                 {{ $this->form }}
                 
-                <div class="flex items-center gap-3 mt-4">
+                <div style="display: flex; align-items: center; gap: 0.75rem; margin-top: 1rem;">
                     <x-filament::button type="submit" color="primary">
                         Filter Report
                     </x-filament::button>
@@ -61,42 +61,42 @@
         </x-filament::card>
 
         <x-filament::card>
-            <div class="overflow-x-auto">
-                <table class="report-table w-full text-left border-collapse text-sm">
+            <div style="overflow-x: auto;">
+                <table class="report-table">
                     <thead>
-                        <tr class="border-b border-zinc-700 bg-zinc-800 text-zinc-300">
+                        <tr>
                             <th class="text-center" style="width:3%; text-align:center;">S/N</th>
-                            <th class="p-3 font-semibold">Grouped By ({{ ucfirst($data['group_by'] ?? 'date') }})</th>
-                            <th class="p-3 font-semibold text-right">Orders Count</th>
-                            <th class="p-3 font-semibold text-right">Total Units Sold</th>
-                            <th class="p-3 font-semibold text-right">Revenue</th>
-                            <th class="p-3 font-semibold text-right">Gross Profit</th>
+                            <th>Grouped By ({{ ucfirst($data['group_by'] ?? 'date') }})</th>
+                            <th class="text-right">Orders Count</th>
+                            <th class="text-right">Total Units Sold</th>
+                            <th class="text-right">Revenue</th>
+                            <th class="text-right">Gross Profit</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-zinc-700 text-zinc-300">
+                    <tbody>
                         @forelse($reportData as $row)
-                            <tr class="hover:bg-zinc-800/50">
+                            <tr>
                                 <td class="text-center" style="text-align:center; color:#888;">{{ $loop->iteration }}</td>
-                            <td class="p-3 font-medium">{{ $row->label }}</td>
-                                <td class="p-3 text-right">{{ number_format($row->order_count) }}</td>
-                                <td class="p-3 text-right">{{ number_format($row->total_qty) }}</td>
-                                <td class="p-3 text-right">FCFA {{ number_format($row->total_revenue, 2) }}</td>
-                                <td class="p-3 text-right">FCFA {{ number_format($row->total_profit, 2) }}</td>
+                            <td>{{ $row->label }}</td>
+                                <td class="text-right">{{ number_format($row->order_count) }}</td>
+                                <td class="text-right">{{ number_format($row->total_qty) }}</td>
+                                <td class="text-right">FCFA {{ number_format($row->total_revenue, 2) }}</td>
+                                <td class="text-right">FCFA {{ number_format($row->total_profit, 2) }}</td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="p-4 text-center text-zinc-500">No records found for the selected period.</td>
+                                <td colspan="6" style="padding: 1rem; text-align: center; color: #71717a;">No records found for the selected period.</td>
                             </tr>
                         @endforelse
                     </tbody>
                     @if($reportData->isNotEmpty())
                         <tfoot>
-                            <tr class="border-t-2 border-zinc-500 bg-zinc-800/80 font-bold text-white">
-                                <td colspan="2" class="p-3">Total</td>
-                                <td class="p-3 text-right">{{ number_format($reportData->sum('order_count')) }}</td>
-                                <td class="p-3 text-right">{{ number_format($reportData->sum('total_qty')) }}</td>
-                                <td class="p-3 text-right">FCFA {{ number_format($reportData->sum('total_revenue'), 2) }}</td>
-                                <td class="p-3 text-right">FCFA {{ number_format($reportData->sum('total_profit'), 2) }}</td>
+                            <tr>
+                                <td colspan="2">Total</td>
+                                <td class="text-right">{{ number_format($reportData->sum('order_count')) }}</td>
+                                <td class="text-right">{{ number_format($reportData->sum('total_qty')) }}</td>
+                                <td class="text-right">FCFA {{ number_format($reportData->sum('total_revenue'), 2) }}</td>
+                                <td class="text-right">FCFA {{ number_format($reportData->sum('total_profit'), 2) }}</td>
                             </tr>
                         </tfoot>
                     @endif
