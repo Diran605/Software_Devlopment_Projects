@@ -40,7 +40,7 @@ class PackagingRecords extends Page implements HasTable
 
     public static function canAccess(): bool
     {
-        return auth()->user()->can('manage_packaging_records');
+        return auth()->user()->can('view.packaging-records');
     }
 
     public function table(Table $table): Table

@@ -39,6 +39,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'expenses'             => ['view', 'create', 'edit', 'delete'],
             'expense-categories'   => ['view', 'create', 'edit', 'delete'],
             'reports'              => ['view'],
+            'packaging-records'    => ['view'],
         ];
 
         foreach ($modules as $module => $actions) {
@@ -69,6 +70,7 @@ class RolesAndPermissionsSeeder extends Seeder
                 'audit-logs'           => ['view'],
                 'deletion-logs'        => ['view'],
                 'reports'              => ['view'],
+                'packaging-records'    => ['view'],
                 'clearance-manager'    => ['view', 'create', 'edit', 'delete', 'approve'],
                 'disposals'            => ['view', 'create', 'delete'],
                 'donations'            => ['view', 'create', 'delete'],

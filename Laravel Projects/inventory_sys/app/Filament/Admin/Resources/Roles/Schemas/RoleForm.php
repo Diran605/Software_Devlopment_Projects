@@ -127,6 +127,7 @@ class RoleForm
                                         $q->where('name', 'like', '%.audit-logs')
                                           ->orWhere('name', 'like', '%.deletion-logs')
                                           ->orWhere('name', 'like', '%.reports')
+                                          ->orWhere('name', 'like', '%.packaging-records')
                                     ))
                                     ->columns(2)
                                     ->label(''),
