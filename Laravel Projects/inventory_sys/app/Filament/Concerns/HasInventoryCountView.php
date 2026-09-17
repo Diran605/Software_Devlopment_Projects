@@ -91,6 +91,18 @@ trait HasInventoryCountView
                 ->visible(fn () => $this->record->status === 'in_progress')
                 ->requiresConfirmation()
                 ->action(function () {
+                    // Prevent submission if there are uncounted lines
+                    $uncounted = $this->record->lines()->whereNull('qty_counted')->count();
+                    if ($uncounted > 0) {
+                        \Filament\Notifications\Notification::make()
+                            ->title('Cannot Submit')
+                            ->body("There are {$uncounted} line(s) that have not been counted yet. You must enter a quantity (or 0) for every line before submitting.")
+                            ->danger()
+                            ->send();
+                        
+                        throw new \Filament\Support\Exceptions\Halt();
+                    }
+
                     $this->record->update(['status' => 'pending_approval']);
                     $this->refresh();
                 }),
@@ -102,6 +114,17 @@ trait HasInventoryCountView
                 ->modalDescription(fn () => "This will allow posting adjustments for {$varianceCount()} line(s) with variances. Stock levels are not updated until you post.")
                 ->requiresConfirmation()
                 ->action(function () {
+                    // Prevent approval if there are uncounted lines
+                    $uncounted = $this->record->lines()->whereNull('qty_counted')->count();
+                    if ($uncounted > 0) {
+                        \Filament\Notifications\Notification::make()
+                            ->title('Cannot Approve')
+                            ->body("There are {$uncounted} line(s) that have not been counted yet. You must enter a quantity (or 0) for every line before approving.")
+                            ->danger()
+                            ->send();
+                        throw new \Filament\Support\Exceptions\Halt();
+                    }
+
                     $this->record->update([
                         'status' => 'approved',
                         'approved_by' => auth()->id(),
@@ -138,6 +161,17 @@ trait HasInventoryCountView
                 ->modalDescription(fn () => "This will update stock levels for {$varianceCount()} line(s) with variances. This cannot be undone.")
                 ->requiresConfirmation()
                 ->action(function () {
+                    // Prevent posting if there are uncounted lines
+                    $uncounted = $this->record->lines()->whereNull('qty_counted')->count();
+                    if ($uncounted > 0) {
+                        \Filament\Notifications\Notification::make()
+                            ->title('Cannot Post')
+                            ->body("There are {$uncounted} line(s) that have not been counted yet. You must enter a quantity (or 0) for every line before posting.")
+                            ->danger()
+                            ->send();
+                        throw new \Filament\Support\Exceptions\Halt();
+                    }
+
                     DB::transaction(function () {
                         $inventoryService = app(\App\Services\InventoryService::class);
                         $stockMovementService = app(\App\Services\StockMovementService::class);
