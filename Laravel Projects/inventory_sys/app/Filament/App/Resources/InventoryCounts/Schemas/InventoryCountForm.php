@@ -26,7 +26,14 @@ class InventoryCountForm
                             ->relationship('department', 'name')
                             ->searchable()
                             ->preload()
-                            ->nullable(),
+                            ->nullable()
+                            ->label('Filter by Department'),
+                        Select::make('category_id')
+                            ->relationship('category', 'name')
+                            ->searchable()
+                            ->preload()
+                            ->nullable()
+                            ->label('Filter by Category'),
                         DatePicker::make('count_at')
                             ->required()
                             ->default(now())

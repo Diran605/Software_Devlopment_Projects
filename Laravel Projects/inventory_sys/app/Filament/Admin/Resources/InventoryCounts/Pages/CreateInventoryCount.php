@@ -22,14 +22,21 @@ class CreateInventoryCount extends CreateRecord
     {
         $branchId = $this->record->branch_id;
         $departmentId = $this->record->department_id;
+        $categoryId = $this->record->category_id;
 
-        DB::transaction(function () use ($branchId, $departmentId) {
+        DB::transaction(function () use ($branchId, $departmentId, $categoryId) {
             $batches = BatchInventory::query()
                 ->where('branch_id', $branchId)
                 ->where('qty_remaining', '>', 0);
 
             if ($departmentId) {
                 $batches->where('department_id', $departmentId);
+            }
+
+            if ($categoryId) {
+                $batches->whereHas('item', function ($query) use ($categoryId) {
+                    $query->where('category_id', $categoryId);
+                });
             }
 
             $batches = $batches->with('item')->orderBy('expiry_date')->get();

@@ -19,12 +19,14 @@ class InventoryCountsTable
     {
         return $table
             ->columns([
-                TextColumn::make('branch_id')
-                    ->numeric()
+                TextColumn::make('branch.name')
                     ->sortable(),
-                TextColumn::make('department_id')
-                    ->numeric()
-                    ->sortable(),
+                TextColumn::make('department.name')
+                    ->sortable()
+                    ->placeholder('—'),
+                TextColumn::make('category.name')
+                    ->sortable()
+                    ->placeholder('—'),
                 TextColumn::make('created_by')
                     ->numeric()
                     ->sortable(),
@@ -62,6 +64,12 @@ class InventoryCountsTable
             ])
             ->filters([
                 TrashedFilter::make(),
+                \Filament\Tables\Filters\SelectFilter::make('department_id')
+                    ->relationship('department', 'name')
+                    ->label('Department'),
+                \Filament\Tables\Filters\SelectFilter::make('category_id')
+                    ->relationship('category', 'name')
+                    ->label('Category'),
             ])
             ->actions([
                 ViewAction::make(),

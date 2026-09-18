@@ -21,12 +21,16 @@ class InventoryCountsTable
                 TextColumn::make('department.name')
                     ->placeholder('—')
                     ->sortable(),
+                TextColumn::make('category.name')
+                    ->placeholder('—')
+                    ->sortable(),
                 TextColumn::make('status')
                     ->badge()
                     ->color(fn(string $state): string => match ($state) {
                         'draft' => 'gray',
+                        'in_progress' => 'info',
                         'pending_approval' => 'warning',
-                        'approved' => 'info',
+                        'approved' => 'success',
                         'posted' => 'success',
                         'cancelled' => 'danger',
                         default => 'gray',
@@ -56,6 +60,9 @@ class InventoryCountsTable
                 SelectFilter::make('department_id')
                     ->relationship('department', 'name')
                     ->label('Department'),
+                SelectFilter::make('category_id')
+                    ->relationship('category', 'name')
+                    ->label('Category'),
             ])
             ->actions([
                 ViewAction::make(),

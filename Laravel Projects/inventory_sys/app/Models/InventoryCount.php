@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 #[Fillable([
     'branch_id',
     'department_id',
+    'category_id',
     'created_by',
     'approved_by',
     'posted_by',
@@ -38,6 +39,11 @@ class InventoryCount extends Model
     public function department()
     {
         return $this->belongsTo(Department::class);
+    }
+
+    public function category()
+    {
+        return $this->belongsTo(ItemCategory::class, 'category_id');
     }
 
     public function createdBy()
