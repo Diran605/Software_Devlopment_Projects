@@ -113,8 +113,13 @@ class DetailedSalesReportPage extends Page implements HasForms
     {
         $tenant     = Filament::getTenant();
         $branchId   = $tenant ? $tenant->id : ($this->data['branch_id'] ?? null);
-        $from       = $this->data['date_from'] ?? now()->startOfMonth()->format('Y-m-d');
-        $to         = $this->data['date_to']   ?? now()->endOfMonth()->format('Y-m-d');
+        
+        $rawFrom    = !empty($this->data['date_from']) ? $this->data['date_from'] : now()->startOfMonth()->format('Y-m-d');
+        $rawTo      = !empty($this->data['date_to'])   ? $this->data['date_to']   : now()->endOfMonth()->format('Y-m-d');
+        
+        $from       = \Carbon\Carbon::parse($rawFrom)->startOfDay();
+        $to         = \Carbon\Carbon::parse($rawTo)->endOfDay();
+        
         $categoryId = $this->data['category_id'] ?? null;
         $departmentId = $this->data['department_id'] ?? null;
 
@@ -135,7 +140,7 @@ class DetailedSalesReportPage extends Page implements HasForms
             ->select('item_id', DB::raw('SUM(qty_in) - SUM(qty_out) as net_qty'))
             ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->when($departmentId, fn($q) => $q->where('department_id', $departmentId))
-            ->whereDate('moved_at', '<', $from)
+            ->where('moved_at', '<', $from)
             ->groupBy('item_id')
             ->pluck('net_qty', 'item_id');
 
@@ -145,8 +150,8 @@ class DetailedSalesReportPage extends Page implements HasForms
             ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->when($departmentId, fn($q) => $q->where('department_id', $departmentId))
             ->whereIn('movement_type', ['goods_receipt', 'opening_stock'])
-            ->whereDate('moved_at', '>=', $from)
-            ->whereDate('moved_at', '<=', $to)
+            ->where('moved_at', '>=', $from)
+            ->where('moved_at', '<=', $to)
             ->groupBy('item_id')
             ->pluck('qty_in', 'item_id');
 
@@ -159,8 +164,8 @@ class DetailedSalesReportPage extends Page implements HasForms
             ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->when($departmentId, fn($q) => $q->where('department_id', $departmentId))
             ->whereIn('movement_type', ['sale', 'clearance_sale'])
-            ->whereDate('moved_at', '>=', $from)
-            ->whereDate('moved_at', '<=', $to)
+            ->where('moved_at', '>=', $from)
+            ->where('moved_at', '<=', $to)
             ->groupBy('item_id')
             ->get()
             ->keyBy('item_id');

@@ -56,9 +56,6 @@ class ViewOpeningStock extends ViewRecord implements HasTable
                     ->label('Item')
                     ->sortable()
                     ->searchable(),
-                TextColumn::make('item.sku')
-                    ->label('SKU')
-                    ->placeholder('—'),
                 TextColumn::make('batch_number')
                     ->label('Batch #')
                     ->searchable(),

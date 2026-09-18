@@ -338,8 +338,9 @@ trait HasInventoryCountView
                     ->form([
                         \Filament\Forms\Components\Select::make('item_id')
                             ->label('Item')
-                            ->options(\App\Models\Item::pluck('name', 'id'))
                             ->searchable()
+                            ->getSearchResultsUsing(fn (string $search) => \App\Models\Item::where('name', 'like', "%{$search}%")->limit(50)->pluck('name', 'id'))
+                            ->getOptionLabelUsing(fn ($value): ?string => \App\Models\Item::find($value)?->name)
                             ->required()
                             ->reactive()
                             ->afterStateUpdated(fn (callable $set) => $set('batch_inventory_id', null)),
@@ -408,10 +409,6 @@ Action::make('expandAllGroups')
                 TextColumn::make('item.name')
                     ->label('Item')
                     ->sortable()
-                    ->searchable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('item.sku')
-                    ->label('SKU')
                     ->searchable(),
                 TextColumn::make('item.category.name')
                     ->label('Category')

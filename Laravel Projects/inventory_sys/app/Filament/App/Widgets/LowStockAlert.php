@@ -36,8 +36,6 @@ class LowStockAlert extends BaseWidget
                 Tables\Columns\TextColumn::make('item.name')
                     ->label('Item')
                     ->weight('bold'),
-                Tables\Columns\TextColumn::make('item.sku')
-                    ->label('SKU'),
                 Tables\Columns\TextColumn::make('item.category.name')
                     ->label('Category'),
                 Tables\Columns\TextColumn::make('qty_on_hand')
