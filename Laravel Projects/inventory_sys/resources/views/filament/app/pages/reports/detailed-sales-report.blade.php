@@ -111,9 +111,14 @@
             <div class="dsr-card-sub">Received this period</div>
         </div>
         <div class="dsr-card">
+            <div class="dsr-card-label">Net Adjustments</div>
+            <div class="dsr-card-value" style="color: {{ $data['total_adj_stock'] < 0 ? '#fb7185' : ($data['total_adj_stock'] > 0 ? '#34d399' : '#94a3b8') }};">{{ number_format($data['total_adj_stock']) }}</div>
+            <div class="dsr-card-sub">Counts, transfers, etc</div>
+        </div>
+        <div class="dsr-card">
             <div class="dsr-card-label">Total Available</div>
             <div class="dsr-card-value" style="color:#e2e8f0;">{{ number_format($data['total_stock']) }}</div>
-            <div class="dsr-card-sub">Opening + New</div>
+            <div class="dsr-card-sub">Opening + New + Adj</div>
         </div>
         <div class="dsr-card">
             <div class="dsr-card-label">Qty Sold</div>
@@ -167,6 +172,7 @@
                         <th>Category</th>
                         <th class="text-right">Opening<br>Stock</th>
                         <th class="text-right">New Stock<br>(GRN)</th>
+                        <th class="text-right">Adjustments<br>(Net)</th>
                         <th class="text-right">Total<br>Available</th>
                         <th class="text-right">Qty<br>Sold</th>
                         <th class="text-right">Closing<br>Stock</th>
@@ -190,6 +196,7 @@
                         <td style="color: #94a3b8; font-size: 0.78rem;">{{ $row->category_name }}</td>
                         <td class="text-right" style="color: #94a3b8;">{{ number_format($row->opening_stock) }}</td>
                         <td class="text-right" style="color: #38bdf8;">{{ number_format($row->new_stock) }}</td>
+                        <td class="text-right" style="color: {{ $row->adjustments < 0 ? '#fb7185' : ($row->adjustments > 0 ? '#34d399' : '#94a3b8') }};">{{ number_format($row->adjustments) }}</td>
                         <td class="text-right" style="color: #e2e8f0; font-weight: 600;">{{ number_format($row->total_stock) }}</td>
                         <td class="text-right" style="color: #f59e0b; font-weight: 600;">{{ number_format($row->qty_sold) }}</td>
                         <td class="text-right" style="color: {{ $row->closing_stock > 0 ? '#a78bfa' : '#fb7185' }}; font-weight: 600;">{{ number_format($row->closing_stock) }}</td>
@@ -221,6 +228,7 @@
                         <td colspan="3">TOTALS</td>
                         <td class="text-right">{{ number_format($data['total_opening_stock']) }}</td>
                         <td class="text-right" style="color: #38bdf8;">{{ number_format($data['total_new_stock']) }}</td>
+                        <td class="text-right" style="color: {{ $data['total_adj_stock'] < 0 ? '#fb7185' : ($data['total_adj_stock'] > 0 ? '#34d399' : '#94a3b8') }};">{{ number_format($data['total_adj_stock']) }}</td>
                         <td class="text-right">{{ number_format($data['total_stock']) }}</td>
                         <td class="text-right" style="color: #f59e0b;">{{ number_format($data['total_qty_sold']) }}</td>
                         <td class="text-right" style="color: #a78bfa;">{{ number_format($data['total_closing_stock']) }}</td>

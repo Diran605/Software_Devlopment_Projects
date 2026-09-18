@@ -170,10 +170,22 @@ class DetailedSalesReportPage extends Page implements HasForms
             ->get()
             ->keyBy('item_id');
 
+        // Other Adjustments (Counts, Disposals, Transfers)
+        $adjRows = DB::table('stock_movements')
+            ->select('item_id', DB::raw('SUM(qty_in) - SUM(qty_out) as net_adj'))
+            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
+            ->when($departmentId, fn($q) => $q->where('department_id', $departmentId))
+            ->whereNotIn('movement_type', ['goods_receipt', 'opening_stock', 'sale', 'clearance_sale'])
+            ->where('moved_at', '>=', $from)
+            ->where('moved_at', '<=', $to)
+            ->groupBy('item_id')
+            ->pluck('net_adj', 'item_id');
+
         // Build rows
         $rows = [];
         $totalOpeningStock   = 0;
         $totalNewStock       = 0;
+        $totalAdjStock       = 0;
         $totalStockAvailable = 0;
         $totalClosingStock   = 0;
         $totalQtySold        = 0;
@@ -182,43 +194,48 @@ class DetailedSalesReportPage extends Page implements HasForms
         $totalProfit         = 0;
 
         foreach ($items as $item) {
-            $openingStock   = max(0, (float) ($openingRows[$item->id] ?? 0));
-            $newStock       = (float) ($newStockRows[$item->id] ?? 0);
-            $totalStock     = $openingStock + $newStock;
+            $opening = $openingRows[$item->id] ?? 0;
+            $newIn   = $newStockRows[$item->id] ?? 0;
+            $adj     = $adjRows[$item->id] ?? 0;
+            $available = $opening + $newIn + $adj;
+            
+            $saleRow = $soldRows[$item->id] ?? null;
+            $qtySold = $saleRow ? $saleRow->qty_out : 0;
+            $revenue = $saleRow ? $saleRow->total_revenue : 0;
+            $cost    = $saleRow ? $saleRow->total_cost : 0;
+            
+            $closing = $available - $qtySold;
 
-            $saleRow        = $soldRows[$item->id] ?? null;
-            $qtySold        = $saleRow ? (float) $saleRow->qty_out        : 0;
-            $revenue        = $saleRow ? (float) $saleRow->total_revenue  : 0;
-            $cost           = $saleRow ? (float) $saleRow->total_cost     : 0;
-            $profit         = $revenue - $cost;
-
-            $closingStock   = max(0, $totalStock - $qtySold);
-
-            // Only include items that had ANY activity during the period
-            if ($qtySold == 0 && $newStock == 0 && $openingStock == 0) {
+            // Skip items with zero activity in this period if they also have zero stock
+            if ($opening == 0 && $newIn == 0 && $qtySold == 0 && $closing == 0 && $adj == 0) {
                 continue;
             }
 
-            $rows[] = (object) [
-                'item_name'      => $item->name,
-                'category_name'  => $item->category_name ?? '—',
-                'selling_price'  => $item->selling_price,
-                'unit_cost'      => $item->unit_cost,
-                'opening_stock'  => $openingStock,
-                'new_stock'      => $newStock,
-                'total_stock'    => $totalStock,
-                'closing_stock'  => $closingStock,
-                'qty_sold'       => $qtySold,
-                'revenue'        => $revenue,
-                'cost'           => $cost,
-                'profit'         => $profit,
-                'margin_pct'     => $revenue > 0 ? round(($profit / $revenue) * 100, 1) : 0,
+            $profit = $revenue - $cost;
+            $margin = $revenue > 0 ? round(($profit / $revenue) * 100, 1) : 0;
+
+            $rows[] = (object)[
+                'item_name'     => $item->name,
+                'category_name' => $item->category_name ?? '—',
+                'opening_stock' => $opening,
+                'new_stock'     => $newIn,
+                'adjustments'   => $adj,
+                'total_stock'   => $available,
+                'qty_sold'      => $qtySold,
+                'closing_stock' => $closing,
+                'unit_cost'     => $item->unit_cost,
+                'selling_price' => $item->selling_price,
+                'revenue'       => $revenue,
+                'cost'          => $cost,
+                'profit'        => $profit,
+                'margin_pct'    => $margin,
             ];
 
-            $totalOpeningStock   += $openingStock;
-            $totalNewStock       += $newStock;
-            $totalStockAvailable += $totalStock;
-            $totalClosingStock   += $closingStock;
+            $totalOpeningStock   += $opening;
+            $totalNewStock       += $newIn;
+            $totalAdjStock       += $adj;
+            $totalStockAvailable += $available;
+            $totalClosingStock   += $closing;
             $totalQtySold        += $qtySold;
             $totalRevenue        += $revenue;
             $totalCost           += $cost;
@@ -227,10 +244,11 @@ class DetailedSalesReportPage extends Page implements HasForms
 
         return [
             'rows'                 => collect($rows),
-            'date_from'            => $from,
-            'date_to'              => $to,
+            'date_from'            => $from->format('Y-m-d'),
+            'date_to'              => $to->format('Y-m-d'),
             'total_opening_stock'  => $totalOpeningStock,
             'total_new_stock'      => $totalNewStock,
+            'total_adj_stock'      => $totalAdjStock,
             'total_stock'          => $totalStockAvailable,
             'total_closing_stock'  => $totalClosingStock,
             'total_qty_sold'       => $totalQtySold,
