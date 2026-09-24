@@ -553,4 +553,24 @@ class ReportPdfController extends Controller
             ->setPaper('a4', 'landscape')
             ->download('sales-price-audit-'.now()->format('Y-m-d').'.pdf');
     }
+
+    public function detailedSales(Request $request)
+    {
+        $page = new \App\Filament\App\Pages\DetailedSalesReportPage();
+        $page->data = $request->all();
+        
+        $branchId = $request->input("branch_id");
+        $branchName = $branchId ? \App\Models\Branch::find($branchId)?->name : 'All Branches';
+
+        $reportData = $page->getReportData();
+        
+        $pdf = Pdf::loadView("reports.detailed-sales", [
+            "reportData" => $reportData,
+            "branchName" => $branchName,
+            "from" => $reportData["date_from"],
+            "to" => $reportData["date_to"],
+        ])->setPaper("a4", "landscape");
+        
+        return $pdf->stream("detailed-sales-report.pdf");
+    }
 }

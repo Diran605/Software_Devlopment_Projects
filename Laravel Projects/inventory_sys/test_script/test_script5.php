@@ -1,0 +1,1 @@
+<?php require "vendor/autoload.php"; $app = require_once "bootstrap/app.php"; $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class); $kernel->bootstrap(); $c = collect([1 => 10, 2 => 20]); echo "Value string key: " . ($c["1"] ?? 0) . "\n";

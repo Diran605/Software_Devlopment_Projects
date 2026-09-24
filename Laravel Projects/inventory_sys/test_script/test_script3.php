@@ -1,0 +1,1 @@
+<?php require "vendor/autoload.php"; $app = require_once "bootstrap/app.php"; $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class); $kernel->bootstrap(); $from = \Carbon\Carbon::parse("2026-09-21")->startOfDay(); $q = DB::table("stock_movements")->where("moved_at", "<", $from); echo $q->toSql() . "\n"; print_r($q->getBindings());

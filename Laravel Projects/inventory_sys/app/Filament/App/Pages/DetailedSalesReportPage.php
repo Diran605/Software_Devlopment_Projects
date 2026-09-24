@@ -58,6 +58,17 @@ class DetailedSalesReportPage extends Page implements HasForms
         ]);
     }
 
+    public function clearFilters(): void
+    {
+        $this->form->fill([
+            'branch_id'     => Filament::getTenant()?->id,
+            'date_from'     => null,
+            'date_to'       => null,
+            'category_id'   => null,
+            'department_id' => null,
+        ]);
+    }
+
     public function form(Schema $form): Schema
     {
         return $form
@@ -74,9 +85,11 @@ class DetailedSalesReportPage extends Page implements HasForms
                             ->visible(!Filament::getTenant()),
                         DatePicker::make('date_from')
                             ->label('From Date')
+                            ->native(false)
                             ->live(),
                         DatePicker::make('date_to')
                             ->label('To Date')
+                            ->native(false)
                             ->live(),
                         Select::make('category_id')
                             ->label('Category')
@@ -109,16 +122,13 @@ class DetailedSalesReportPage extends Page implements HasForms
         $this->form->getState();
     }
 
-    protected function getReportData(): array
+    public function getReportData(): array
     {
         $tenant     = Filament::getTenant();
         $branchId   = $tenant ? $tenant->id : ($this->data['branch_id'] ?? null);
         
-        $rawFrom    = !empty($this->data['date_from']) ? $this->data['date_from'] : now()->startOfMonth()->format('Y-m-d');
-        $rawTo      = !empty($this->data['date_to'])   ? $this->data['date_to']   : now()->endOfMonth()->format('Y-m-d');
-        
-        $from       = \Carbon\Carbon::parse($rawFrom)->startOfDay();
-        $to         = \Carbon\Carbon::parse($rawTo)->endOfDay();
+        $from       = !empty($this->data['date_from']) ? $this->data['date_from'] : null;
+        $to         = !empty($this->data['date_to'])   ? $this->data['date_to']   : null;
         
         $categoryId = $this->data['category_id'] ?? null;
         $departmentId = $this->data['department_id'] ?? null;
@@ -140,7 +150,8 @@ class DetailedSalesReportPage extends Page implements HasForms
             ->select('item_id', DB::raw('SUM(qty_in) - SUM(qty_out) as net_qty'))
             ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->when($departmentId, fn($q) => $q->where('department_id', $departmentId))
-            ->where('moved_at', '<', $from)
+            ->when($from, fn($q) => $q->whereDate('moved_at', '<', $from))
+            ->when(!$from, fn($q) => $q->where('id', '<', 0)) // If no 'from' date, opening stock is always 0 for all time
             ->groupBy('item_id')
             ->pluck('net_qty', 'item_id');
 
@@ -150,8 +161,8 @@ class DetailedSalesReportPage extends Page implements HasForms
             ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->when($departmentId, fn($q) => $q->where('department_id', $departmentId))
             ->whereIn('movement_type', ['goods_receipt', 'opening_stock'])
-            ->where('moved_at', '>=', $from)
-            ->where('moved_at', '<=', $to)
+            ->when($from, fn($q) => $q->whereDate('moved_at', '>=', $from))
+            ->when($to, fn($q) => $q->whereDate('moved_at', '<=', $to))
             ->groupBy('item_id')
             ->pluck('qty_in', 'item_id');
 
@@ -164,8 +175,8 @@ class DetailedSalesReportPage extends Page implements HasForms
             ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->when($departmentId, fn($q) => $q->where('department_id', $departmentId))
             ->whereIn('movement_type', ['sale', 'clearance_sale'])
-            ->where('moved_at', '>=', $from)
-            ->where('moved_at', '<=', $to)
+            ->when($from, fn($q) => $q->whereDate('moved_at', '>=', $from))
+            ->when($to, fn($q) => $q->whereDate('moved_at', '<=', $to))
             ->groupBy('item_id')
             ->get()
             ->keyBy('item_id');
@@ -176,8 +187,8 @@ class DetailedSalesReportPage extends Page implements HasForms
             ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->when($departmentId, fn($q) => $q->where('department_id', $departmentId))
             ->whereNotIn('movement_type', ['goods_receipt', 'opening_stock', 'sale', 'clearance_sale'])
-            ->where('moved_at', '>=', $from)
-            ->where('moved_at', '<=', $to)
+            ->when($from, fn($q) => $q->whereDate('moved_at', '>=', $from))
+            ->when($to, fn($q) => $q->whereDate('moved_at', '<=', $to))
             ->groupBy('item_id')
             ->pluck('net_adj', 'item_id');
 
@@ -244,8 +255,8 @@ class DetailedSalesReportPage extends Page implements HasForms
 
         return [
             'rows'                 => collect($rows),
-            'date_from'            => $from->format('Y-m-d'),
-            'date_to'              => $to->format('Y-m-d'),
+            'date_from'            => $from ?? 'All Time',
+            'date_to'              => $to ?? 'Today',
             'total_opening_stock'  => $totalOpeningStock,
             'total_new_stock'      => $totalNewStock,
             'total_adj_stock'      => $totalAdjStock,
@@ -259,6 +270,11 @@ class DetailedSalesReportPage extends Page implements HasForms
         ];
     }
 
+    public function getData()
+    {
+        return $this->getReportData()['rows'];
+    }
+
     protected function getViewData(): array
     {
         return [
@@ -267,3 +283,4 @@ class DetailedSalesReportPage extends Page implements HasForms
         ];
     }
 }
+

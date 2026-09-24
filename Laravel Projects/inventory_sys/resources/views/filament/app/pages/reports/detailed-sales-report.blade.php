@@ -78,6 +78,9 @@
                 <x-filament::button type="submit" color="primary" icon="heroicon-o-funnel">
                     Generate Report
                 </x-filament::button>
+                <x-filament::button type="button" wire:click="clearFilters" color="gray" icon="heroicon-o-x-mark">
+                    Clear Dates (All Time)
+                </x-filament::button>
                 <x-filament::button type="button" wire:click="exportPdf('reports.detailed-sales.pdf')" color="success" icon="heroicon-o-document-arrow-down">
                     Export PDF
                 </x-filament::button>
@@ -250,3 +253,4 @@
 </div>
 
 </x-filament-panels::page>
+

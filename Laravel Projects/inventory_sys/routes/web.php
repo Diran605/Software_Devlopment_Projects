@@ -21,6 +21,7 @@ Route::prefix('import-templates')->middleware(['auth'])->group(function () {
 
 // Report PDF routes
 Route::prefix('reports')->middleware(['auth'])->group(function () {
+    Route::get('/detailed-sales/pdf', [\App\Http\Controllers\ReportPdfController::class, 'detailedSales'])->name('reports.detailed-sales.pdf');
     Route::get('/sales/pdf', [\App\Http\Controllers\ReportPdfController::class, 'sales'])->name('reports.sales.pdf');
     Route::get('/stock-valuation/pdf', [\App\Http\Controllers\ReportPdfController::class, 'stockValuation'])->name('reports.stock-valuation.pdf');
     Route::get('/items-list/pdf', [\App\Http\Controllers\ReportPdfController::class, 'itemsList'])->name('reports.items-list.pdf');
@@ -87,3 +88,4 @@ Route::get('/debug-backup', function () {
         return "Error: " . $e->getMessage();
     }
 });
+

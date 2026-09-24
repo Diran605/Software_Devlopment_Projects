@@ -86,8 +86,7 @@ class SalesOrderService
             qtyChange: -$qtySold,
         );
 
-        $this->stockMovementService->record(
-            branchId: $order->branch_id,
+        $this->stockMovementService->record(branchId: $order->branch_id,
             departmentId: $order->department_id,
             itemId: $line->item_id,
             batchInventoryId: $allocations[0]['batch_inventory_id'],
@@ -101,6 +100,7 @@ class SalesOrderService
             unitPrice: $unitPrice,
             referenceType: SalesOrder::class,
             referenceId: $order->id,
+            movedAt: $order->sold_at
         );
 
         return $line;
@@ -155,8 +155,7 @@ class SalesOrderService
             $clearanceStock->clearanceItem?->update(['approval_status' => 'actioned']);
         }
 
-        $this->stockMovementService->record(
-            branchId: $order->branch_id,
+        $this->stockMovementService->record(branchId: $order->branch_id,
             departmentId: $order->department_id,
             itemId: $line->item_id,
             batchInventoryId: $clearanceStock->batch_inventory_id,
@@ -173,6 +172,7 @@ class SalesOrderService
             batchNumber: $clearanceStock->batch_number,
             expiryDate: $clearanceStock->expiry_date,
             notes: 'Clearance sale via sales order',
+            movedAt: $order->sold_at
         );
 
         return $line;
@@ -195,6 +195,7 @@ class SalesOrderService
                 $line->save();
 
                 $this->recalculateOrderTotals($order);
+
                 return;
             }
 
@@ -211,8 +212,7 @@ class SalesOrderService
             );
 
             // 3. Post reversal stock movement
-            $this->stockMovementService->record(
-                branchId: $order->branch_id,
+            $this->stockMovementService->record(branchId: $order->branch_id,
                 departmentId: $order->department_id,
                 itemId: $line->item_id,
                 batchInventoryId: null,
@@ -225,7 +225,8 @@ class SalesOrderService
                 unitCost: $line->unit_cost,
                 referenceType: SalesOrder::class,
                 referenceId: $order->id,
-                notes: "Line edit reversal"
+                notes: 'Line edit reversal',
+                movedAt: $order->sold_at
             );
 
             // 4. Update the line sold qty & price
@@ -265,8 +266,7 @@ class SalesOrderService
             );
 
             // 8. Record new movement
-            $this->stockMovementService->record(
-                branchId: $order->branch_id,
+            $this->stockMovementService->record(branchId: $order->branch_id,
                 departmentId: $order->department_id,
                 itemId: $line->item_id,
                 batchInventoryId: $allocations[0]['batch_inventory_id'],
@@ -279,7 +279,8 @@ class SalesOrderService
                 unitCost: $line->unit_cost,
                 unitPrice: $newUnitPrice,
                 referenceType: SalesOrder::class,
-                referenceId: $order->id
+                referenceId: $order->id,
+                movedAt: $order->sold_at
             );
 
             // 9. Recalculate order totals
@@ -305,8 +306,7 @@ class SalesOrderService
             );
 
             // 3. Record reversal movement
-            $this->stockMovementService->record(
-                branchId: $order->branch_id,
+            $this->stockMovementService->record(branchId: $order->branch_id,
                 departmentId: $order->department_id,
                 itemId: $line->item_id,
                 batchInventoryId: null,
@@ -319,7 +319,8 @@ class SalesOrderService
                 unitCost: $line->unit_cost,
                 referenceType: SalesOrder::class,
                 referenceId: $order->id,
-                notes: "Line deletion reversal"
+                notes: 'Line deletion reversal',
+                movedAt: $order->sold_at
             );
 
             // 4. Soft-delete line
@@ -355,8 +356,7 @@ class SalesOrderService
                 );
 
                 // Record movement reversal
-                $this->stockMovementService->record(
-                    branchId: $order->branch_id,
+                $this->stockMovementService->record(branchId: $order->branch_id,
                     departmentId: $order->department_id,
                     itemId: $line->item_id,
                     batchInventoryId: null,
@@ -369,14 +369,15 @@ class SalesOrderService
                     unitCost: $line->unit_cost,
                     referenceType: SalesOrder::class,
                     referenceId: $order->id,
-                    notes: "Sales Order deletion reversal"
+                    notes: 'Sales Order deletion reversal',
+                    movedAt: $order->sold_at
                 );
 
                 $line->delete();
             }
 
             // 2. Record deletion log
-            $deletionLogService = app(\App\Services\DeletionLogService::class);
+            $deletionLogService = app(DeletionLogService::class);
             $deletionLogService->record(
                 deletedBy: auth()->id() ?? $order->served_by,
                 record: $order,

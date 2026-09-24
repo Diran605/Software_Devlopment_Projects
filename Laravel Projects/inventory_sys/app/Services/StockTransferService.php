@@ -3,9 +3,9 @@
 namespace App\Services;
 
 use App\Exceptions\InsufficientStockException;
+use App\Models\BatchInventory;
 use App\Models\StockTransfer;
 use App\Models\StockTransferLine;
-use App\Models\BatchInventory;
 use Illuminate\Support\Facades\DB;
 
 class StockTransferService
@@ -21,9 +21,9 @@ class StockTransferService
         DB::transaction(function () use ($transfer, $lines) {
             foreach ($lines as $lineData) {
                 // If a batch is specified, check its qty remaining
-                if (!empty($lineData['batch_inventory_id'])) {
+                if (! empty($lineData['batch_inventory_id'])) {
                     $batch = BatchInventory::find($lineData['batch_inventory_id']);
-                    if (!$batch || $batch->qty_remaining < $lineData['qty_requested']) {
+                    if (! $batch || $batch->qty_remaining < $lineData['qty_requested']) {
                         throw new InsufficientStockException(
                             $lineData['item_id'],
                             $lineData['qty_requested'],
@@ -103,8 +103,7 @@ class StockTransferService
                 );
 
                 // 4. Record stock movement at source
-                $this->stockMovementService->record(
-                    branchId: $transfer->from_branch_id,
+                $this->stockMovementService->record(branchId: $transfer->from_branch_id,
                     departmentId: $transfer->from_department_id,
                     itemId: $line->item_id,
                     batchInventoryId: $line->batch_inventory_id,
@@ -119,7 +118,8 @@ class StockTransferService
                     referenceId: $transfer->id,
                     batchNumber: $line->batch_number,
                     expiryDate: $line->expiry_date,
-                    notes: "Stock Transfer Out to Branch {$transfer->to_branch_id}"
+                    notes: "Stock Transfer Out to Branch {$transfer->to_branch_id}",
+                    movedAt: $transfer->transferred_at
                 );
 
                 $line->save();
@@ -149,7 +149,7 @@ class StockTransferService
                     branchId: $transfer->to_branch_id,
                     departmentId: $transfer->to_department_id,
                     itemId: $line->item_id,
-                    batchNumber: $line->batch_number ?? ('TRF-' . $transfer->transfer_number),
+                    batchNumber: $line->batch_number ?? ('TRF-'.$transfer->transfer_number),
                     expiryDate: $line->expiry_date,
                     qtyReceived: $qtyReceived,
                     unitCost: $line->unit_cost ?? 0
@@ -173,8 +173,7 @@ class StockTransferService
                 );
 
                 // 4. Record stock movement at destination
-                $this->stockMovementService->record(
-                    branchId: $transfer->to_branch_id,
+                $this->stockMovementService->record(branchId: $transfer->to_branch_id,
                     departmentId: $transfer->to_department_id,
                     itemId: $line->item_id,
                     batchInventoryId: $destBatch->id,
@@ -189,7 +188,8 @@ class StockTransferService
                     referenceId: $transfer->id,
                     batchNumber: $line->batch_number,
                     expiryDate: $line->expiry_date,
-                    notes: "Stock Transfer In from Branch {$transfer->from_branch_id}"
+                    notes: "Stock Transfer In from Branch {$transfer->from_branch_id}",
+                    movedAt: $transfer->transferred_at
                 );
             }
 

@@ -7,7 +7,7 @@ use Illuminate\Support\Carbon;
 
 class StockMovementService
 {
-    public function record($branchId, $departmentId, $itemId, $batchInventoryId, $recordedBy, $movementType, $qtyIn, $qtyOut, $qtyBefore = null, $qtyAfter = null, $unitCost = null, $unitPrice = null, $referenceType = null, $referenceId = null, $batchNumber = null, $expiryDate = null, $notes = null): StockMovement
+    public function record($branchId, $departmentId, $itemId, $batchInventoryId, $recordedBy, $movementType, $qtyIn, $qtyOut, $qtyBefore = null, $qtyAfter = null, $unitCost = null, $unitPrice = null, $referenceType = null, $referenceId = null, $batchNumber = null, $expiryDate = null, $notes = null, $movedAt = null): StockMovement
     {
         if ($qtyAfter === null) {
             $qtyAfter = \App\Models\ItemStockLevel::where('branch_id', $branchId)
@@ -38,7 +38,7 @@ class StockMovementService
             'batch_number' => $batchNumber,
             'expiry_date' => $expiryDate,
             'notes' => $notes,
-            'moved_at' => Carbon::now()
+            'moved_at' => $movedAt ?? Carbon::now()
         ]);
     }
 }

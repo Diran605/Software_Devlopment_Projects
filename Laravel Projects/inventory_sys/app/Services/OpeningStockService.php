@@ -50,8 +50,7 @@ class OpeningStockService
                     unitCost: $line->unit_cost,
                 );
 
-                $this->stockMovementService->record(
-                    branchId: $entry->branch_id,
+                $this->stockMovementService->record(branchId: $entry->branch_id,
                     departmentId: $entry->department_id,
                     itemId: $line->item_id,
                     batchInventoryId: $batch->id,
@@ -66,6 +65,7 @@ class OpeningStockService
                     referenceId: $entry->id,
                     batchNumber: $line->batch_number,
                     expiryDate: $line->expiry_date,
+                    movedAt: $entry->posted_at
                 );
             }
         });

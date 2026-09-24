@@ -248,6 +248,7 @@ trait HasInventoryCountView
                                     qtyOut: $qtyOut,
                                     qtyBefore: $line->qty_system,
                                     qtyAfter: $line->qty_counted,
+                                    movedAt: $this->record->count_at,
                                     unitCost: $line->unit_cost,
                                     unitPrice: $line->selling_price,
                                     referenceType: get_class($line),

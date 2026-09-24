@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Exceptions\BatchConsumedException;
 use App\Models\GoodsReceivedNote;
 use App\Models\GrnLineItem;
 use App\Models\PurchaseOrder;
@@ -57,8 +58,7 @@ class GoodsReceiptService
                     unitCost: $unitCost,
                 );
 
-                $this->stockMovementService->record(
-                    branchId: $grn->branch_id,
+                $this->stockMovementService->record(branchId: $grn->branch_id,
                     departmentId: $grn->department_id,
                     itemId: $line->item_id,
                     batchInventoryId: $batch->id,
@@ -73,6 +73,7 @@ class GoodsReceiptService
                     referenceId: $grn->id,
                     batchNumber: $line->batch_number,
                     expiryDate: $line->expiry_date,
+                    movedAt: $grn->received_at
                 );
 
                 $totalQty += $qtyReceived;
@@ -124,7 +125,7 @@ class GoodsReceiptService
                 $batch = $line->batchInventory;
                 if ($batch) {
                     if ($batch->qty_remaining < $line->qty_received) {
-                        throw new \App\Exceptions\BatchConsumedException($batch->batch_number);
+                        throw new BatchConsumedException($batch->batch_number);
                     }
                 }
             }
@@ -142,8 +143,7 @@ class GoodsReceiptService
                 );
 
                 // 2. Post reversal stock movements
-                $this->stockMovementService->record(
-                    branchId: $grn->branch_id,
+                $this->stockMovementService->record(branchId: $grn->branch_id,
                     departmentId: $grn->department_id,
                     itemId: $line->item_id,
                     batchInventoryId: $batch ? $batch->id : null,
@@ -158,7 +158,8 @@ class GoodsReceiptService
                     referenceId: $grn->id,
                     batchNumber: $line->batch_number,
                     expiryDate: $line->expiry_date,
-                    notes: "GRN Deletion Reversal: {$reason}"
+                    notes: "GRN Deletion Reversal: {$reason}",
+                    movedAt: $grn->received_at
                 );
 
                 // Keep track for DeletionLog
@@ -192,7 +193,7 @@ class GoodsReceiptService
             }
 
             // 6. Record DeletionLog via DeletionLogService
-            $deletionLogService = app(\App\Services\DeletionLogService::class);
+            $deletionLogService = app(DeletionLogService::class);
             $deletionLogService->record(
                 deletedBy: auth()->id() ?? $grn->received_by,
                 record: $grn,
